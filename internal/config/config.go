@@ -19,6 +19,7 @@ type Config struct {
 	AppEnv    string
 	AppAddr   string
 	ClientURL string
+	SecretKey string
 }
 
 func LoadConfig(log *logger.Logger) *Config {
@@ -41,12 +42,14 @@ func LoadConfig(log *logger.Logger) *Config {
 
 	flagAppAddr := flag.String("b", AppAddr, "server address")
 	flagClientURL := flag.String("c", ClientURL, "client address")
+	flagSecretKey := flag.String("s", "", "JWT secret key")
 	flag.Parse()
 
 	return &Config{
 		AppEnv:    env,
 		AppAddr:   getFlagOrEnvString(*flagAppAddr, "APP_ADDRESS", AppAddr),
 		ClientURL: getFlagOrEnvString(*flagClientURL, "CLIENT_URL", ClientURL),
+		SecretKey: getFlagOrEnvString(*flagSecretKey, "SECRET_KEY", ""),
 	}
 }
 

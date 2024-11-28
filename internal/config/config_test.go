@@ -42,6 +42,7 @@ func Test_LoadConfig(t *testing.T) {
 				AppEnv:    "test",
 				AppAddr:   "localhost:8080",
 				ClientURL: "http://localhost:3000",
+				SecretKey: "jwt-secret-key",
 			},
 		},
 	}
@@ -58,6 +59,7 @@ func Test_LoadConfig(t *testing.T) {
 			assert.Equal(t, tt.expected.AppEnv, result.AppEnv)
 			assert.Equal(t, tt.expected.AppAddr, result.AppAddr)
 			assert.Equal(t, tt.expected.ClientURL, result.ClientURL)
+			assert.Equal(t, tt.expected.SecretKey, result.SecretKey)
 
 			t.Cleanup(func() {
 				for key := range tt.env {
