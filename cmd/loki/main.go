@@ -1,26 +1,28 @@
 package main
 
 import (
-	"context"
-	"log"
 	"os"
-	"os/signal"
-	"syscall"
+
+	"go.uber.org/fx"
+	"go.uber.org/fx/fxevent"
 
 	"loki/internal/app"
+	"loki/internal/config"
 )
 
 func main() {
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	cfg := config.LoadConfig()
 
-	application, err := app.NewApplication(ctx)
-	if err != nil {
-		stop()
-		log.Fatalf("Failed to initialize application: %v", err)
-	}
-
-	if err = application.Run(ctx); err != nil {
-		stop()
-		log.Fatalf("Application error: %v", err)
-	}
+	fx.New(
+		fx.WithLogger(
+			func() fxevent.Logger {
+				if cfg.LogLevel == config.DebugLevel {
+					return &fxevent.ConsoleLogger{W: os.Stdout}
+				}
+				return fxevent.NopLogger
+			},
+		),
+		fx.Supply(cfg),
+		app.Module,
+	).Run()
 }

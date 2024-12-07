@@ -32,3 +32,13 @@ issues:
       linters:
         - gosec
         - dupl
+
+linters-settings:
+  revive:
+    rules:
+      - name: var-naming
+        disabled: true
+  stylecheck:
+    checks: ["^ST.*"]
+    ignored-checks:
+      - ST1003

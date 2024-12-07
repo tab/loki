@@ -11,8 +11,8 @@ package jwt
 
 import (
 	reflect "reflect"
+	time "time"
 
-	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -41,18 +41,18 @@ func (m *MockJwt) EXPECT() *MockJwtMockRecorder {
 }
 
 // Generate mocks base method.
-func (m *MockJwt) Generate(id uuid.UUID) (string, error) {
+func (m *MockJwt) Generate(payload Payload, duration time.Duration) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Generate", id)
+	ret := m.ctrl.Call(m, "Generate", payload, duration)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Generate indicates an expected call of Generate.
-func (mr *MockJwtMockRecorder) Generate(id any) *gomock.Call {
+func (mr *MockJwtMockRecorder) Generate(payload, duration any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Generate", reflect.TypeOf((*MockJwt)(nil).Generate), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Generate", reflect.TypeOf((*MockJwt)(nil).Generate), payload, duration)
 }
 
 // Verify mocks base method.

@@ -7,17 +7,23 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 
+	"loki/internal/app/controllers"
 	"loki/internal/config"
 	"loki/internal/config/router"
 )
 
 func Test_NewServer(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	cfg := &config.Config{
 		AppEnv:  "test",
 		AppAddr: "localhost:8080",
 	}
-	appRouter := router.NewRouter(cfg)
+	mockSmartIdController := controllers.NewMockSmartIdController(ctrl)
+	appRouter := router.NewRouter(cfg, mockSmartIdController)
 
 	srv := NewServer(cfg, appRouter)
 	assert.NotNil(t, srv)

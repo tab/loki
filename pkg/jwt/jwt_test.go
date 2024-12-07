@@ -2,8 +2,8 @@ package jwt
 
 import (
 	"testing"
+	"time"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
@@ -11,11 +11,11 @@ import (
 	"loki/internal/config"
 )
 
-func Test_NewJWTService(t *testing.T) {
+func Test_NewJWT(t *testing.T) {
 	cfg := &config.Config{
 		SecretKey: "jwt-secret-key",
 	}
-	service := NewJWTService(cfg)
+	service := NewJWT(cfg)
 
 	assert.NotNil(t, service)
 }
@@ -24,9 +24,7 @@ func Test_JWTService_Generate(t *testing.T) {
 	cfg := &config.Config{
 		SecretKey: "jwt-secret-key",
 	}
-	service := NewJWTService(cfg)
-
-	UUID, _ := uuid.Parse("123e4567-e89b-12d3-a456-426614174000")
+	service := NewJWT(cfg)
 
 	type result struct {
 		header string
@@ -34,26 +32,23 @@ func Test_JWTService_Generate(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		id       uuid.UUID
+		payload  Payload
 		expected result
 	}{
 		{
 			name: "Success",
-			id:   UUID,
+			payload: Payload{
+				ID: "PNOEE-30303039914",
+			},
 			expected: result{
 				header: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
 			},
 		},
 		{
 			name: "Empty id",
-			id:   uuid.UUID{},
-			expected: result{
-				header: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+			payload: Payload{
+				ID: "",
 			},
-		},
-		{
-			name: "Nil id",
-			id:   uuid.Nil,
 			expected: result{
 				header: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
 			},
@@ -62,7 +57,7 @@ func Test_JWTService_Generate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			token, err := service.Generate(tt.id)
+			token, err := service.Generate(tt.payload, time.Minute*30)
 			assert.NoError(t, err)
 			assert.NotEmpty(t, token)
 			assert.Equal(t, tt.expected.header, token[:36])
@@ -74,23 +69,25 @@ func Test_JWTService_Verify(t *testing.T) {
 	cfg := &config.Config{
 		SecretKey: "jwt-secret-key",
 	}
-	service := NewJWTService(cfg)
+	service := NewJWT(cfg)
 
 	tests := []struct {
 		name     string
-		uuid     uuid.UUID
+		payload  Payload
 		expected bool
 	}{
 		{
-			name:     "Success",
-			uuid:     uuid.New(),
+			name: "Success",
+			payload: Payload{
+				ID: "PNOEE-30303039914",
+			},
 			expected: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			token, err := service.Generate(tt.uuid)
+			token, err := service.Generate(tt.payload, time.Minute*30)
 			assert.NoError(t, err)
 
 			result, err := service.Verify(token)

@@ -33,6 +33,13 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PORT: 5432
 
+  redis:
+    image: redis:7.4-alpine
+    volumes:
+      - loki-redis:/var/lib/redis
+    ports:
+      - 6379:6379
+
 networks:
   loki-network:
     name: loki-network
@@ -40,3 +47,4 @@ networks:
 
 volumes:
   loki-database:
+  loki-redis:

@@ -4,16 +4,17 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 
 	"loki/internal/app/errors"
 	"loki/internal/config"
 )
 
-const TokenExp = time.Minute * 30
+type Payload struct {
+	ID string `json:"id"`
+}
 
 type Jwt interface {
-	Generate(id uuid.UUID) (string, error)
+	Generate(payload Payload, duration time.Duration) (string, error)
 	Verify(token string) (bool, error)
 }
 
@@ -23,27 +24,28 @@ type jwtService struct {
 
 type Claims struct {
 	jwt.RegisteredClaims
-	UserID uuid.UUID
 }
 
-func NewJWTService(cfg *config.Config) Jwt {
+func NewJWT(cfg *config.Config) Jwt {
 	return &jwtService{cfg: cfg}
 }
 
-func (j *jwtService) Generate(id uuid.UUID) (string, error) {
-	result := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
+func (j *jwtService) Generate(payload Payload, duration time.Duration) (string, error) {
+	claims := Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(TokenExp)),
+			ID:        payload.ID,
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)),
 		},
-		UserID: id,
-	})
+	}
 
-	token, err := result.SignedString([]byte(j.cfg.SecretKey))
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	signedToken, err := token.SignedString([]byte(j.cfg.SecretKey))
 	if err != nil {
 		return "", err
 	}
 
-	return token, nil
+	return signedToken, nil
 }
 
 func (j *jwtService) Verify(token string) (bool, error) {
