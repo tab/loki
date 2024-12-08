@@ -23,7 +23,13 @@ func Test_NewServer(t *testing.T) {
 		AppAddr: "localhost:8080",
 	}
 	mockSmartIdController := controllers.NewMockSmartIdController(ctrl)
-	appRouter := router.NewRouter(cfg, mockSmartIdController)
+	mockMobileIdController := controllers.NewMockMobileIdController(ctrl)
+	mockSessionController := controllers.NewMockSessionController(ctrl)
+	appRouter := router.NewRouter(
+		cfg,
+		mockSmartIdController,
+		mockMobileIdController,
+		mockSessionController)
 
 	srv := NewServer(cfg, appRouter)
 	assert.NotNil(t, srv)

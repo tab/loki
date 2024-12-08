@@ -22,6 +22,15 @@ type SmartId struct {
 	Text string
 }
 
+type MobileId struct {
+	BaseURL string
+
+	RelyingPartyName string
+	RelyingPartyUUID string
+
+	Text string
+}
+
 type Config struct {
 	AppEnv      string
 	AppAddr     string
@@ -30,6 +39,7 @@ type Config struct {
 	DatabaseDSN string
 	RedisURI    string
 	SmartId     SmartId
+	MobileId    MobileId
 	LogLevel    string
 }
 
@@ -69,6 +79,12 @@ func LoadConfig() *Config {
 			RelyingPartyName: getEnvString("RELYING_PARTY_NAME"),
 			RelyingPartyUUID: getEnvString("RELYING_PARTY_UUID"),
 			Text:             getEnvString("SMART_ID_DISPLAY_TEXT"),
+		},
+		MobileId: MobileId{
+			BaseURL:          getEnvString("MOBILE_ID_API_URL"),
+			RelyingPartyName: getEnvString("RELYING_PARTY_NAME"),
+			RelyingPartyUUID: getEnvString("RELYING_PARTY_UUID"),
+			Text:             getEnvString("MOBILE_ID_DISPLAY_TEXT"),
 		},
 
 		LogLevel: getEnvString("LOG_LEVEL"),

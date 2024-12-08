@@ -5,8 +5,6 @@ import (
 	"io"
 	"strings"
 
-	"github.com/google/uuid"
-
 	"loki/internal/app/errors"
 )
 
@@ -43,13 +41,7 @@ type SmartIdProviderCertificate struct {
 	CertificateLevel string `json:"certificateLevel"`
 }
 
-type UpdateSmartIdSessionParams struct {
-	ID      uuid.UUID
-	Status  string
-	Payload SmartIdProviderSessionStatusResponse
-}
-
-type SmartIdProviderCertificateExtract struct {
+type ProviderCertificateExtract struct {
 	IdentityNumber string `json:"identity_number"`
 	PersonalCode   string `json:"personal_code"`
 	FirstName      string `json:"first_name"`

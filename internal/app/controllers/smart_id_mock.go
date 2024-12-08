@@ -40,18 +40,6 @@ func (m *MockSmartIdController) EXPECT() *MockSmartIdControllerMockRecorder {
 	return m.recorder
 }
 
-// CompleteSession mocks base method.
-func (m *MockSmartIdController) CompleteSession(w http.ResponseWriter, r *http.Request) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "CompleteSession", w, r)
-}
-
-// CompleteSession indicates an expected call of CompleteSession.
-func (mr *MockSmartIdControllerMockRecorder) CompleteSession(w, r any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CompleteSession", reflect.TypeOf((*MockSmartIdController)(nil).CompleteSession), w, r)
-}
-
 // CreateSession mocks base method.
 func (m *MockSmartIdController) CreateSession(w http.ResponseWriter, r *http.Request) {
 	m.ctrl.T.Helper()
@@ -62,16 +50,4 @@ func (m *MockSmartIdController) CreateSession(w http.ResponseWriter, r *http.Req
 func (mr *MockSmartIdControllerMockRecorder) CreateSession(w, r any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSession", reflect.TypeOf((*MockSmartIdController)(nil).CreateSession), w, r)
-}
-
-// GetSessionStatus mocks base method.
-func (m *MockSmartIdController) GetSessionStatus(w http.ResponseWriter, r *http.Request) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "GetSessionStatus", w, r)
-}
-
-// GetSessionStatus indicates an expected call of GetSessionStatus.
-func (mr *MockSmartIdControllerMockRecorder) GetSessionStatus(w, r any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSessionStatus", reflect.TypeOf((*MockSmartIdController)(nil).GetSessionStatus), w, r)
 }

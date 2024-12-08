@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+
 	"net/http"
 
 	"loki/internal/app/models/dto"
@@ -9,38 +10,38 @@ import (
 	"loki/internal/app/services"
 )
 
-type SmartIdController interface {
+type MobileIdController interface {
 	CreateSession(w http.ResponseWriter, r *http.Request)
 }
 
-type smartIdController struct {
+type mobileIdController struct {
 	authentication services.Authentication
-	provider       services.SmartIdProvider
+	provider       services.MobileIdProvider
 }
 
-func NewSmartIdController(
+func NewMobileIdController(
 	authentication services.Authentication,
-	provider services.SmartIdProvider,
-) SmartIdController {
-	return &smartIdController{
+	provider services.MobileIdProvider,
+) MobileIdController {
+	return &mobileIdController{
 		authentication: authentication,
 		provider:       provider,
 	}
 }
 
-func (c *smartIdController) CreateSession(w http.ResponseWriter, r *http.Request) {
+func (c *mobileIdController) CreateSession(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var params dto.CreateSmartIdSessionRequest
+	var params dto.CreateMobileIdSessionRequest
 	if err := params.Validate(r.Body); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
 		return
 	}
 
-	response, err := c.authentication.CreateSmartIdSession(r.Context(), dto.CreateSmartIdSessionRequest{
-		Country:      params.Country,
+	response, err := c.authentication.CreateMobileIdSession(r.Context(), dto.CreateMobileIdSessionRequest{
 		PersonalCode: params.PersonalCode,
+		PhoneNumber:  params.PhoneNumber,
 	})
 	if err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)

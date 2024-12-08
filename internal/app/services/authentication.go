@@ -22,72 +22,72 @@ import (
 )
 
 type Authentication interface {
-	CreateSmartIdSession(ctx context.Context, params dto.CreateSmartIdSessionRequest) (*serializers.SmartIdSessionSerializer, error)
+	CreateSmartIdSession(ctx context.Context, params dto.CreateSmartIdSessionRequest) (*serializers.SessionSerializer, error)
 	GetSmartIdSessionStatus(ctx context.Context, id uuid.UUID) (*dto.SmartIdProviderSessionStatusResponse, error)
-	UpdateSession(ctx context.Context, params dto.UpdateSmartIdSessionParams) (*serializers.SessionSerializer, error)
+	CreateMobileIdSession(ctx context.Context, params dto.CreateMobileIdSessionRequest) (*serializers.SessionSerializer, error)
+	GetMobileIdSessionStatus(ctx context.Context, id uuid.UUID) (*dto.MobileIdProviderSessionStatusResponse, error)
+	UpdateSession(ctx context.Context, params models.Session) (*serializers.SessionSerializer, error)
 	FindSessionByID(ctx context.Context, id string) (*serializers.SessionSerializer, error)
 	Complete(ctx context.Context, id string) (*serializers.UserSerializer, error)
 }
 
 type authentication struct {
-	cfg             *config.Config
-	smartIdProvider SmartIdProvider
-	smartIDQueue    chan<- *SmartIdQueue
-	database        repositories.Database
-	redis           repositories.Redis
-	jwt             jwt.Jwt
-	log             *logger.Logger
+	cfg              *config.Config
+	smartIdProvider  SmartIdProvider
+	smartIdQueue     chan<- *SmartIdQueue
+	mobileIdProvider MobileIdProvider
+	mobileIdQueue    chan<- *MobileIdQueue
+	database         repositories.Database
+	redis            repositories.Redis
+	jwt              jwt.Jwt
+	log              *logger.Logger
 }
 
 func NewAuthentication(
 	cfg *config.Config,
 	smartIdProvider SmartIdProvider,
-	smartIDQueue chan *SmartIdQueue,
+	smartIdQueue chan *SmartIdQueue,
+	mobileIdProvider MobileIdProvider,
+	mobileIdQueue chan *MobileIdQueue,
 	database repositories.Database,
 	redis repositories.Redis,
 	jwt jwt.Jwt,
 	log *logger.Logger,
 ) Authentication {
 	return &authentication{
-		cfg:             cfg,
-		smartIdProvider: smartIdProvider,
-		smartIDQueue:    smartIDQueue,
-		database:        database,
-		redis:           redis,
-		jwt:             jwt,
-		log:             log,
+		cfg:              cfg,
+		smartIdProvider:  smartIdProvider,
+		smartIdQueue:     smartIdQueue,
+		mobileIdProvider: mobileIdProvider,
+		mobileIdQueue:    mobileIdQueue,
+		database:         database,
+		redis:            redis,
+		jwt:              jwt,
+		log:              log,
 	}
 }
 
-func (a *authentication) CreateSmartIdSession(ctx context.Context, params dto.CreateSmartIdSessionRequest) (response *serializers.SmartIdSessionSerializer, error error) {
+func (a *authentication) CreateSmartIdSession(ctx context.Context, params dto.CreateSmartIdSessionRequest) (response *serializers.SessionSerializer, error error) {
 	result, err := a.smartIdProvider.CreateSession(ctx, params)
 	if err != nil {
 		a.log.Error().Err(err).Msg("Failed to initiate SmartId authentication")
 		return nil, err
 	}
 
-	id, err := uuid.Parse(result.ID)
-	if err != nil {
-		a.log.Error().Err(err).Msg("Invalid session ID format")
-		return nil, err
-	}
-
-	err = a.redis.CreateSession(ctx, &models.Session{
-		ID:           id,
+	id, err := a.createSession(ctx, models.CreateSessionParams{
+		SessionId:    result.ID,
 		PersonalCode: params.PersonalCode,
 		Code:         result.Code,
-		Status:       models.SESSION_RUNNING,
 	})
 	if err != nil {
-		a.log.Error().Err(err).Msg("Failed to create session")
 		return nil, err
 	}
 
-	a.smartIDQueue <- &SmartIdQueue{
+	a.smartIdQueue <- &SmartIdQueue{
 		ID: id,
 	}
 
-	return &serializers.SmartIdSessionSerializer{
+	return &serializers.SessionSerializer{
 		ID:   id,
 		Code: result.Code,
 	}, nil
@@ -103,7 +103,43 @@ func (a *authentication) GetSmartIdSessionStatus(_ context.Context, id uuid.UUID
 	return result, nil
 }
 
-func (a *authentication) UpdateSession(ctx context.Context, params dto.UpdateSmartIdSessionParams) (response *serializers.SessionSerializer, error error) {
+func (a *authentication) CreateMobileIdSession(ctx context.Context, params dto.CreateMobileIdSessionRequest) (response *serializers.SessionSerializer, error error) {
+	result, err := a.mobileIdProvider.CreateSession(ctx, params)
+	if err != nil {
+		a.log.Error().Err(err).Msg("Failed to initiate SmartId authentication")
+		return nil, err
+	}
+
+	id, err := a.createSession(ctx, models.CreateSessionParams{
+		SessionId:    result.ID,
+		PersonalCode: params.PersonalCode,
+		Code:         result.Code,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	a.mobileIdQueue <- &MobileIdQueue{
+		ID: id,
+	}
+
+	return &serializers.SessionSerializer{
+		ID:   id,
+		Code: result.Code,
+	}, nil
+}
+
+func (a *authentication) GetMobileIdSessionStatus(_ context.Context, id uuid.UUID) (response *dto.MobileIdProviderSessionStatusResponse, error error) {
+	result, err := a.mobileIdProvider.GetSessionStatus(id)
+	if err != nil {
+		a.log.Error().Err(err).Msg("Failed to get session status")
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (a *authentication) UpdateSession(ctx context.Context, params models.Session) (response *serializers.SessionSerializer, error error) {
 	err := a.redis.UpdateSession(ctx, &models.Session{
 		ID:     params.ID,
 		Status: params.Status,
@@ -180,8 +216,29 @@ func (a *authentication) Complete(ctx context.Context, sessionId string) (respon
 	}, nil
 }
 
+func (a *authentication) createSession(ctx context.Context, params models.CreateSessionParams) (uuid.UUID, error) {
+	id, err := uuid.Parse(params.SessionId)
+	if err != nil {
+		a.log.Error().Err(err).Msg("Invalid session ID format")
+		return uuid.Nil, err
+	}
+
+	err = a.redis.CreateSession(ctx, &models.Session{
+		ID:           id,
+		PersonalCode: params.PersonalCode,
+		Code:         params.Code,
+		Status:       models.SESSION_RUNNING,
+	})
+	if err != nil {
+		a.log.Error().Err(err).Msg("Failed to create session in redis")
+		return uuid.Nil, err
+	}
+
+	return id, nil
+}
+
 func (a *authentication) createUser(ctx context.Context, payload models.SessionPayload) (*models.User, error) {
-	certificate, err := extractUserFromCertificate(payload.Cert.Value)
+	certificate, err := extractUserFromCertificate(payload.Cert)
 	if err != nil {
 		a.log.Error().Err(err).Msg("Failed to extract user from certificate")
 		return nil, err
@@ -227,7 +284,7 @@ func (a *authentication) createUser(ctx context.Context, payload models.SessionP
 	return user, nil
 }
 
-func extractUserFromCertificate(certValue string) (*dto.SmartIdProviderCertificateExtract, error) {
+func extractUserFromCertificate(certValue string) (*dto.ProviderCertificateExtract, error) {
 	certBytes, err := base64.StdEncoding.DecodeString(certValue)
 	if err != nil {
 		return nil, err
@@ -250,7 +307,7 @@ func extractUserFromCertificate(certValue string) (*dto.SmartIdProviderCertifica
 	firstName := strings.TrimSpace(parts[0])
 	lastName := strings.TrimSpace(parts[1])
 
-	return &dto.SmartIdProviderCertificateExtract{
+	return &dto.ProviderCertificateExtract{
 		IdentityNumber: subject.SerialNumber,
 		PersonalCode:   personalCode,
 		FirstName:      firstName,

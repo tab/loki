@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"loki/internal/app/models"
-	"loki/internal/app/models/dto"
 	"loki/internal/config"
 	"loki/pkg/logger"
 )
@@ -84,15 +83,13 @@ func (w *smartIdWorker) perform(ctx context.Context, req *SmartIdQueue) {
 			case models.SESSION_RESULT_OK:
 				w.log.Info().Msg("SmartId::Worker session result is OK")
 
-				_, err = w.authentication.UpdateSession(ctx, dto.UpdateSmartIdSessionParams{
+				_, err = w.authentication.UpdateSession(ctx, models.Session{
 					ID:     req.ID,
 					Status: models.SESSION_COMPLETE,
-					Payload: dto.SmartIdProviderSessionStatusResponse{
-						State:               response.State,
-						Result:              response.Result,
-						Signature:           response.Signature,
-						Cert:                response.Cert,
-						InteractionFlowUsed: response.InteractionFlowUsed,
+					Payload: models.SessionPayload{
+						State:  response.State,
+						Result: response.Result.EndResult,
+						Cert:   response.Cert.Value,
 					},
 				})
 

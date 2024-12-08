@@ -12,25 +12,26 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
+
 	"loki/internal/app/models/dto"
 	"loki/internal/app/repositories"
 	"loki/internal/config"
 	"loki/pkg/logger"
 )
 
-type AllowedInteraction struct {
+type SmartIdAllowedInteraction struct {
 	Type          string `json:"type"`
 	DisplayText60 string `json:"displayText60"`
 }
 
-type RequestBody struct {
-	RelyingPartyName         string               `json:"relyingPartyName"`
-	RelyingPartyUUID         string               `json:"relyingPartyUUID"`
-	NationalIdentityNumber   string               `json:"nationalIdentityNumber"`
-	CertificateLevel         string               `json:"certificateLevel"`
-	AllowedInteractionsOrder []AllowedInteraction `json:"allowedInteractionsOrder"`
-	Hash                     string               `json:"hash"`
-	HashType                 string               `json:"hashType"`
+type SmartIdRequestBody struct {
+	RelyingPartyName                string                      `json:"relyingPartyName"`
+	RelyingPartyUUID                string                      `json:"relyingPartyUUID"`
+	NationalIdentityNumber          string                      `json:"nationalIdentityNumber"`
+	CertificateLevel                string                      `json:"certificateLevel"`
+	SmartIdAllowedInteractionsOrder []SmartIdAllowedInteraction `json:"allowedInteractionsOrder"`
+	Hash                            string                      `json:"hash"`
+	HashType                        string                      `json:"hashType"`
 }
 
 const (
@@ -75,14 +76,14 @@ func (s *smartIdProvider) CreateSession(_ context.Context, params dto.CreateSmar
 	nationalIdentityNumber := fmt.Sprintf("PNO%s-%s", params.Country, params.PersonalCode)
 	endpoint := fmt.Sprintf("%s/authentication/etsi/%s", s.cfg.SmartId.BaseURL, nationalIdentityNumber)
 
-	body := RequestBody{
+	body := SmartIdRequestBody{
 		RelyingPartyName:       s.cfg.SmartId.RelyingPartyName,
 		RelyingPartyUUID:       s.cfg.SmartId.RelyingPartyUUID,
 		NationalIdentityNumber: nationalIdentityNumber,
 		CertificateLevel:       CertificateLevel,
 		Hash:                   hash,
 		HashType:               HashType,
-		AllowedInteractionsOrder: []AllowedInteraction{
+		SmartIdAllowedInteractionsOrder: []SmartIdAllowedInteraction{
 			{
 				Type:          InteractionType,
 				DisplayText60: s.cfg.SmartId.Text,
@@ -126,7 +127,7 @@ func (s *smartIdProvider) CreateSession(_ context.Context, params dto.CreateSmar
 }
 
 func (s *smartIdProvider) GetSessionStatus(id uuid.UUID) (*dto.SmartIdProviderSessionStatusResponse, error) {
-	endpoint := fmt.Sprintf("https://sid.demo.sk.ee/smart-id-rp/v2/session/%s", id)
+	endpoint := fmt.Sprintf("%s/session/%s", s.cfg.SmartId.BaseURL, id)
 
 	client := resty.New()
 	if s.debug {
