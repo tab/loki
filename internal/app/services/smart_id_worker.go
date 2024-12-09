@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"loki/internal/app/models"
+	"loki/internal/app/models/dto"
 	"loki/internal/config"
 	"loki/pkg/logger"
 )
@@ -77,54 +78,65 @@ func (w *smartIdWorker) perform(ctx context.Context, req *SmartIdQueue) {
 
 		switch response.State {
 		case models.SESSION_COMPLETE:
-			w.log.Info().Msg("SmartId::Worker session is complete")
-
-			switch response.Result.EndResult {
-			case models.SESSION_RESULT_OK:
-				w.log.Info().Msg("SmartId::Worker session result is OK")
-
-				_, err = w.authentication.UpdateSession(ctx, models.Session{
-					ID:     req.ID,
-					Status: models.SESSION_COMPLETE,
-					Payload: models.SessionPayload{
-						State:  response.State,
-						Result: response.Result.EndResult,
-						Cert:   response.Cert.Value,
-					},
-				})
-
-				if err != nil {
-					w.log.Error().Err(err).Msg("SmartId::Worker failed to update session")
-					return
-				}
-
-			case models.SESSION_RESULT_USER_REFUSED:
-				w.log.Info().Msg("User refused")
-			case models.SESSION_RESULT_USER_REFUSED_DISPLAYTEXTANDPIN:
-				w.log.Info().Msg("User refused display text and pin")
-			case models.SESSION_RESULT_USER_REFUSED_VC_CHOICE:
-				w.log.Info().Msg("User refused VC choice")
-			case models.SESSION_RESULT_USER_REFUSED_CONFIRMATIONMESSAGE:
-				w.log.Info().Msg("User refused confirmation message")
-			case models.SESSION_RESULT_USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE:
-				w.log.Info().Msg("User refused confirmation message with VC choice")
-			case models.SESSION_RESULT_USER_REFUSED_CERT_CHOICE:
-				w.log.Info().Msg("User refused cert choice")
-			case models.SESSION_RESULT_WRONG_VC:
-				w.log.Info().Msg("Wrong VC")
-			case models.SESSION_RESULT_TIMEOUT:
-				w.log.Info().Msg("Timeout")
-			default:
-				w.log.Error().Msgf("Unknown session result: %s", response.Result.EndResult)
-			}
-
+			w.handleUpdateSession(ctx, req, response)
 			return
 		case models.SESSION_RUNNING:
 			w.log.Warn().Msg("Session is still running")
 			continue
 		default:
-			w.log.Error().Msgf("Unknown session state: %s", response)
+			w.log.Error().Msgf("Unknown session state: %s", response.State)
 			return
 		}
+	}
+}
+
+func (w *smartIdWorker) handleUpdateSession(ctx context.Context, req *SmartIdQueue, response *dto.SmartIdProviderSessionStatusResponse) {
+	status, message := buildSmartIdStatusAndMessage(response.Result.EndResult)
+	payload := models.SessionPayload{
+		State:  response.State,
+		Result: response.Result.EndResult,
+	}
+
+	if response.Result.EndResult == models.SESSION_RESULT_OK {
+		w.log.Info().Msg("SmartId::Worker session result is OK")
+		payload.Signature = response.Signature.Value
+		payload.Cert = response.Cert.Value
+	} else if status == models.SESSION_ERROR {
+		w.log.Info().Msgf("SmartId::Worker session error is %s", message)
+	}
+
+	if _, err := w.authentication.UpdateSession(ctx, models.Session{
+		ID:      req.ID,
+		Status:  status,
+		Error:   message,
+		Payload: payload,
+	}); err != nil {
+		w.log.Error().Err(err).Msg("SmartId::Worker failed to update session")
+		return
+	}
+}
+
+func buildSmartIdStatusAndMessage(endResult string) (status string, message string) {
+	switch endResult {
+	case models.SESSION_RESULT_OK:
+		return models.SESSION_COMPLETE, ""
+	case models.SESSION_RESULT_USER_REFUSED:
+		return models.SESSION_ERROR, models.SESSION_RESULT_USER_REFUSED
+	case models.SESSION_RESULT_USER_REFUSED_DISPLAYTEXTANDPIN:
+		return models.SESSION_ERROR, models.SESSION_RESULT_USER_REFUSED_DISPLAYTEXTANDPIN
+	case models.SESSION_RESULT_USER_REFUSED_VC_CHOICE:
+		return models.SESSION_ERROR, models.SESSION_RESULT_USER_REFUSED_VC_CHOICE
+	case models.SESSION_RESULT_USER_REFUSED_CONFIRMATIONMESSAGE:
+		return models.SESSION_ERROR, models.SESSION_RESULT_USER_REFUSED_CONFIRMATIONMESSAGE
+	case models.SESSION_RESULT_USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE:
+		return models.SESSION_ERROR, models.SESSION_RESULT_USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE
+	case models.SESSION_RESULT_USER_REFUSED_CERT_CHOICE:
+		return models.SESSION_ERROR, models.SESSION_RESULT_USER_REFUSED_CERT_CHOICE
+	case models.SESSION_RESULT_WRONG_VC:
+		return models.SESSION_ERROR, models.SESSION_RESULT_WRONG_VC
+	case models.SESSION_RESULT_TIMEOUT:
+		return models.SESSION_ERROR, models.SESSION_RESULT_TIMEOUT
+	default:
+		return models.SESSION_ERROR, models.SESSION_RESULT_UNKNOWN
 	}
 }

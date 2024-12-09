@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 
+	"loki/internal/app/errors"
 	"loki/internal/app/models"
 	"loki/internal/config"
 )
@@ -17,7 +18,7 @@ const SessionTTL = 5 * time.Minute
 type Redis interface {
 	CreateSession(ctx context.Context, session *models.Session) error
 	UpdateSession(ctx context.Context, session *models.Session) error
-	FindSessionByID(ctx context.Context, id uuid.UUID) (*models.Session, error)
+	FindSessionById(ctx context.Context, id uuid.UUID) (*models.Session, error)
 	DeleteSessionByID(ctx context.Context, id uuid.UUID) error
 }
 
@@ -54,10 +55,10 @@ func (r *store) UpdateSession(ctx context.Context, session *models.Session) erro
 	return r.client.Set(ctx, session.ID.String(), data, SessionTTL).Err()
 }
 
-func (r *store) FindSessionByID(ctx context.Context, sessionId uuid.UUID) (*models.Session, error) {
+func (r *store) FindSessionById(ctx context.Context, sessionId uuid.UUID) (*models.Session, error) {
 	data, err := r.client.Get(ctx, sessionId.String()).Result()
 	if err != nil {
-		return nil, err
+		return nil, errors.ErrSessionNotFound
 	}
 
 	var result models.Session

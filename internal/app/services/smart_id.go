@@ -13,8 +13,8 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
 
+	"loki/internal/app/errors"
 	"loki/internal/app/models/dto"
-	"loki/internal/app/repositories"
 	"loki/internal/config"
 	"loki/pkg/logger"
 )
@@ -35,10 +35,10 @@ type SmartIdRequestBody struct {
 }
 
 const (
-	CertificateLevel = "QUALIFIED"
-	HashType         = "SHA512"
-	InteractionType  = "displayTextAndPIN"
-	Timeout          = "120000"
+	SmartIdCertificateLevel = "QUALIFIED"
+	SmartIdHashType         = "SHA512"
+	SmartIdInteractionType  = "displayTextAndPIN"
+	SmartIdTimeout          = "120000"
 )
 
 type SmartIdProvider interface {
@@ -48,22 +48,15 @@ type SmartIdProvider interface {
 
 type smartIdProvider struct {
 	cfg   *config.Config
-	repo  repositories.Database
 	log   *logger.Logger
 	debug bool
 }
 
-func NewSmartId(
-	cfg *config.Config,
-	repo repositories.Database,
-	log *logger.Logger,
-) SmartIdProvider {
-
+func NewSmartId(cfg *config.Config, log *logger.Logger) SmartIdProvider {
 	return &smartIdProvider{
 		cfg:   cfg,
-		repo:  repo,
-		log:   log,
 		debug: cfg.LogLevel == config.DebugLevel,
+		log:   log,
 	}
 }
 
@@ -80,12 +73,12 @@ func (s *smartIdProvider) CreateSession(_ context.Context, params dto.CreateSmar
 		RelyingPartyName:       s.cfg.SmartId.RelyingPartyName,
 		RelyingPartyUUID:       s.cfg.SmartId.RelyingPartyUUID,
 		NationalIdentityNumber: nationalIdentityNumber,
-		CertificateLevel:       CertificateLevel,
+		CertificateLevel:       SmartIdCertificateLevel,
 		Hash:                   hash,
-		HashType:               HashType,
+		HashType:               SmartIdHashType,
 		SmartIdAllowedInteractionsOrder: []SmartIdAllowedInteraction{
 			{
-				Type:          InteractionType,
+				Type:          SmartIdInteractionType,
 				DisplayText60: s.cfg.SmartId.Text,
 			},
 		},
@@ -101,13 +94,15 @@ func (s *smartIdProvider) CreateSession(_ context.Context, params dto.CreateSmar
 		SetHeader("Content-Type", "application/json").
 		SetBody(body).
 		Post(endpoint)
-
 	if s.debug {
 		debug(response, err)
 	}
-
 	if err != nil {
 		return nil, err
+	}
+
+	if response.StatusCode() != 200 {
+		return nil, errors.ErrSmartIdProviderError
 	}
 
 	var result dto.SmartIdProviderSessionResponse
@@ -135,17 +130,19 @@ func (s *smartIdProvider) GetSessionStatus(id uuid.UUID) (*dto.SmartIdProviderSe
 	}
 
 	response, err := client.R().
-		SetQueryParam("timeoutMs", Timeout).
+		SetQueryParam("timeoutMs", SmartIdTimeout).
 		SetHeader("Accept", "application/json").
 		SetHeader("Content-Type", "application/json").
 		Get(endpoint)
-
 	if s.debug {
 		debug(response, err)
 	}
-
 	if err != nil {
 		return nil, err
+	}
+
+	if response.StatusCode() != 200 {
+		return nil, errors.ErrSmartIdProviderError
 	}
 
 	var result dto.SmartIdProviderSessionStatusResponse

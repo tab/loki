@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"loki/internal/app/models"
+	"loki/internal/app/models/dto"
 	"loki/internal/config"
 	"loki/pkg/logger"
 )
@@ -14,7 +15,7 @@ type MobileIdWorker interface {
 	Stop()
 }
 
-type mobileIDWorker struct {
+type mobileIdWorker struct {
 	cfg            *config.Config
 	authentication Authentication
 	queue          <-chan *MobileIdQueue
@@ -28,7 +29,7 @@ func NewMobileIdWorker(
 	queue chan *MobileIdQueue,
 	log *logger.Logger,
 ) MobileIdWorker {
-	return &mobileIDWorker{
+	return &mobileIdWorker{
 		cfg:            cfg,
 		authentication: authentication,
 		queue:          queue,
@@ -36,19 +37,19 @@ func NewMobileIdWorker(
 	}
 }
 
-func (w *mobileIDWorker) Start(ctx context.Context) {
+func (w *mobileIdWorker) Start(ctx context.Context) {
 	w.log.Info().Msgf("MobileId::Worker starting in %s environment", w.cfg.AppEnv)
 
 	w.wg.Add(1)
 	go w.run(ctx)
 }
 
-func (w *mobileIDWorker) Stop() {
+func (w *mobileIdWorker) Stop() {
 	w.log.Info().Msg("Stopping MobileId::Worker")
 	w.wg.Wait()
 }
 
-func (w *mobileIDWorker) run(ctx context.Context) {
+func (w *mobileIdWorker) run(ctx context.Context) {
 	defer w.wg.Done()
 	for {
 		select {
@@ -65,64 +66,75 @@ func (w *mobileIDWorker) run(ctx context.Context) {
 	}
 }
 
-func (w *mobileIDWorker) perform(ctx context.Context, req *MobileIdQueue) {
+func (w *mobileIdWorker) perform(ctx context.Context, req *MobileIdQueue) {
 	w.log.Info().Msgf("MobileId::Worker perform %s", req.ID)
 
 	for {
 		response, err := w.authentication.GetMobileIdSessionStatus(ctx, req.ID)
 		if err != nil {
-			w.log.Error().Err(err).Msg("MobileId::Worker failed to get session status")
+			w.log.Error().Err(err).Msg("SmartId::Worker failed to get session status")
 			return
 		}
 
 		switch response.State {
 		case models.SESSION_COMPLETE:
-			w.log.Info().Msg("MobileId::Worker session is complete")
-
-			switch response.Result {
-			case models.SESSION_RESULT_OK:
-				w.log.Info().Msg("MobileId::Worker session result is OK")
-
-				_, err = w.authentication.UpdateSession(ctx, models.Session{
-					ID:     req.ID,
-					Status: models.SESSION_COMPLETE,
-					Payload: models.SessionPayload{
-						State:  response.State,
-						Result: response.Result,
-						Cert:   response.Cert,
-					},
-				})
-
-				if err != nil {
-					w.log.Error().Err(err).Msg("MobileId::Worker failed to update session")
-					return
-				}
-
-			case models.SESSION_RESULT_NOT_MID_CLIENT:
-				w.log.Info().Msg("User is not a Mobile ID client")
-			case models.SESSION_RESULT_USER_CANCELLED:
-				w.log.Info().Msg("User cancelled the authentication")
-			case models.SESSION_RESULT_SIGNATURE_HASH_MISMATCH:
-				w.log.Info().Msg("Signature hash mismatch")
-			case models.SESSION_RESULT_PHONE_ABSENT:
-				w.log.Info().Msg("Phone is absent")
-			case models.SESSION_RESULT_DELIVERY_ERROR:
-				w.log.Info().Msg("SMS delivery error")
-			case models.SESSION_RESULT_SIM_ERROR:
-				w.log.Info().Msg("SIM error")
-			case models.SESSION_RESULT_TIMEOUT:
-				w.log.Info().Msg("Timeout")
-			default:
-				w.log.Error().Msgf("Unknown session result: %s", response.Result)
-			}
-
+			w.handleUpdateSession(ctx, req, response)
 			return
 		case models.SESSION_RUNNING:
 			w.log.Warn().Msg("Session is still running")
 			continue
 		default:
-			w.log.Error().Msgf("Unknown session state: %s", response)
+			w.log.Error().Msgf("Unknown session state: %s", response.State)
 			return
 		}
+	}
+}
+
+func (w *mobileIdWorker) handleUpdateSession(ctx context.Context, req *MobileIdQueue, response *dto.MobileIdProviderSessionStatusResponse) {
+	status, message := buildMobileIdStatusAndMessage(response.Result)
+	payload := models.SessionPayload{
+		State:  response.State,
+		Result: response.Result,
+	}
+
+	if response.Result == models.SESSION_RESULT_OK {
+		w.log.Info().Msg("MobileId::Worker session result is OK")
+		payload.Signature = response.Signature.Value
+		payload.Cert = response.Cert
+	} else if status == models.SESSION_ERROR {
+		w.log.Info().Msgf("MobileId::Worker session error is %s", message)
+	}
+
+	if _, err := w.authentication.UpdateSession(ctx, models.Session{
+		ID:      req.ID,
+		Status:  status,
+		Error:   message,
+		Payload: payload,
+	}); err != nil {
+		w.log.Error().Err(err).Msg("MobileId::Worker failed to update session")
+		return
+	}
+}
+
+func buildMobileIdStatusAndMessage(endResult string) (status string, message string) {
+	switch endResult {
+	case models.SESSION_RESULT_OK:
+		return models.SESSION_COMPLETE, ""
+	case models.SESSION_RESULT_NOT_MID_CLIENT:
+		return models.SESSION_ERROR, models.SESSION_RESULT_NOT_MID_CLIENT
+	case models.SESSION_RESULT_USER_CANCELLED:
+		return models.SESSION_ERROR, models.SESSION_RESULT_USER_CANCELLED
+	case models.SESSION_RESULT_SIGNATURE_HASH_MISMATCH:
+		return models.SESSION_ERROR, models.SESSION_RESULT_SIGNATURE_HASH_MISMATCH
+	case models.SESSION_RESULT_PHONE_ABSENT:
+		return models.SESSION_ERROR, models.SESSION_RESULT_PHONE_ABSENT
+	case models.SESSION_RESULT_DELIVERY_ERROR:
+		return models.SESSION_ERROR, models.SESSION_RESULT_DELIVERY_ERROR
+	case models.SESSION_RESULT_SIM_ERROR:
+		return models.SESSION_ERROR, models.SESSION_RESULT_SIM_ERROR
+	case models.SESSION_RESULT_TIMEOUT:
+		return models.SESSION_ERROR, models.SESSION_RESULT_TIMEOUT
+	default:
+		return models.SESSION_ERROR, models.SESSION_RESULT_UNKNOWN
 	}
 }

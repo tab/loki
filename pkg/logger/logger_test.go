@@ -2,6 +2,7 @@ package logger
 
 import (
 	"bytes"
+	"os"
 	"testing"
 
 	"github.com/rs/zerolog"
@@ -129,6 +130,90 @@ func Test_Logger_Error(t *testing.T) {
 			result := buf.String()
 
 			assert.Contains(t, result, tt.expected)
+		})
+	}
+}
+
+func Test_getLogLevel(t *testing.T) {
+	tests := []struct {
+		name     string
+		before   func()
+		expected zerolog.Level
+	}{
+		{
+			name: "Debug level",
+			before: func() {
+				err := os.Setenv("LOG_LEVEL", "debug")
+				assert.NoError(t, err)
+			},
+			expected: zerolog.DebugLevel,
+		},
+		{
+			name: "Info level",
+			before: func() {
+				err := os.Setenv("LOG_LEVEL", "info")
+				assert.NoError(t, err)
+			},
+			expected: zerolog.InfoLevel,
+		},
+		{
+			name: "Warn level",
+			before: func() {
+				err := os.Setenv("LOG_LEVEL", "warn")
+				assert.NoError(t, err)
+			},
+			expected: zerolog.WarnLevel,
+		},
+		{
+			name: "Error level",
+			before: func() {
+				err := os.Setenv("LOG_LEVEL", "error")
+				assert.NoError(t, err)
+			},
+			expected: zerolog.ErrorLevel,
+		},
+		{
+			name: "Fatal level",
+			before: func() {
+				err := os.Setenv("LOG_LEVEL", "fatal")
+				assert.NoError(t, err)
+			},
+			expected: zerolog.FatalLevel,
+		},
+		{
+			name: "Panic level",
+			before: func() {
+				err := os.Setenv("LOG_LEVEL", "panic")
+				assert.NoError(t, err)
+			},
+			expected: zerolog.PanicLevel,
+		},
+		{
+			name: "Trace level",
+			before: func() {
+				err := os.Setenv("LOG_LEVEL", "trace")
+				assert.NoError(t, err)
+			},
+			expected: zerolog.TraceLevel,
+		},
+		{
+			name:     "Default level",
+			before:   func() {},
+			expected: zerolog.InfoLevel,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.before()
+			level := getLogLevel()
+
+			assert.Equal(t, tt.expected, level)
+
+			t.Cleanup(func() {
+				err := os.Unsetenv("LOG_LEVEL")
+				assert.NoError(t, err)
+			})
 		})
 	}
 }

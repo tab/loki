@@ -8,10 +8,16 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
 
+	"loki/internal/app/errors"
 	"loki/internal/app/models/dto"
-	"loki/internal/app/repositories"
 	"loki/internal/config"
 	"loki/pkg/logger"
+)
+
+const (
+	MobileIdTextFormat = "GSM-7"
+	MobileIdHashType   = "SHA512"
+	MobileIdTimeout    = "120000"
 )
 
 type MobileIdRequestBody struct {
@@ -33,17 +39,15 @@ type MobileIdProvider interface {
 
 type mobileIdProvider struct {
 	cfg   *config.Config
-	repo  repositories.Database
 	log   *logger.Logger
 	debug bool
 }
 
-func NewMobileId(cfg *config.Config, repo repositories.Database, log *logger.Logger) MobileIdProvider {
+func NewMobileId(cfg *config.Config, log *logger.Logger) MobileIdProvider {
 	return &mobileIdProvider{
 		cfg:   cfg,
-		repo:  repo,
-		log:   log,
 		debug: cfg.LogLevel == config.DebugLevel,
+		log:   log,
 	}
 }
 
@@ -61,11 +65,10 @@ func (s *mobileIdProvider) CreateSession(_ context.Context, params dto.CreateMob
 		PhoneNumber:            params.PhoneNumber,
 		NationalIdentityNumber: params.PersonalCode,
 		Hash:                   hash,
-		HashType:               HashType,
-		//Language:               params.Locale,
-		Language:          "ENG",
-		DisplayText:       s.cfg.MobileId.Text,
-		DisplayTextFormat: "GSM-7",
+		HashType:               MobileIdHashType,
+		Language:               params.Locale,
+		DisplayText:            s.cfg.MobileId.Text,
+		DisplayTextFormat:      MobileIdTextFormat,
 	}
 
 	client := resty.New()
@@ -78,13 +81,15 @@ func (s *mobileIdProvider) CreateSession(_ context.Context, params dto.CreateMob
 		SetHeader("Content-Type", "application/json").
 		SetBody(body).
 		Post(endpoint)
-
 	if s.debug {
 		debug(response, err)
 	}
-
 	if err != nil {
 		return nil, err
+	}
+
+	if response.StatusCode() != 200 {
+		return nil, errors.ErrMobileIdProviderError
 	}
 
 	var result dto.MobileIdProviderSessionResponse
@@ -112,17 +117,19 @@ func (s *mobileIdProvider) GetSessionStatus(id uuid.UUID) (*dto.MobileIdProvider
 	}
 
 	response, err := client.R().
-		SetQueryParam("timeoutMs", Timeout).
+		SetQueryParam("timeoutMs", MobileIdTimeout).
 		SetHeader("Accept", "application/json").
 		SetHeader("Content-Type", "application/json").
 		Get(endpoint)
-
 	if s.debug {
 		debug(response, err)
 	}
-
 	if err != nil {
 		return nil, err
+	}
+
+	if response.StatusCode() != 200 {
+		return nil, errors.ErrMobileIdProviderError
 	}
 
 	var result dto.MobileIdProviderSessionStatusResponse

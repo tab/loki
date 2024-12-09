@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-
 	"net/http"
 
 	"loki/internal/app/models/dto"
@@ -40,6 +39,7 @@ func (c *mobileIdController) CreateSession(w http.ResponseWriter, r *http.Reques
 	}
 
 	response, err := c.authentication.CreateMobileIdSession(r.Context(), dto.CreateMobileIdSessionRequest{
+		Locale:       params.Locale,
 		PersonalCode: params.PersonalCode,
 		PhoneNumber:  params.PhoneNumber,
 	})

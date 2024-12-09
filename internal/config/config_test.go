@@ -43,7 +43,7 @@ func Test_LoadConfig(t *testing.T) {
 				DatabaseDSN: "postgres://postgres:postgres@localhost:5432/loki-test?sslmode=disable",
 				RedisURI:    "redis://localhost:6379/1",
 				SmartId: SmartId{
-					BaseURL:          "https://sid.demo.sk.ee/smart-id-rp/v2/",
+					BaseURL:          "https://sid.demo.sk.ee/smart-id-rp/v2",
 					RelyingPartyName: "DEMO",
 					RelyingPartyUUID: "00000000-0000-0000-0000-000000000000",
 					Text:             "Enter PIN1",

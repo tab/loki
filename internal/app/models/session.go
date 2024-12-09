@@ -5,6 +5,7 @@ import "github.com/google/uuid"
 const (
 	SESSION_RUNNING  = "RUNNING"
 	SESSION_COMPLETE = "COMPLETE"
+	SESSION_ERROR    = "ERROR"
 
 	SESSION_RESULT_OK                                              = "OK"
 	SESSION_RESULT_USER_REFUSED                                    = "USER_REFUSED"
@@ -22,6 +23,8 @@ const (
 	SESSION_RESULT_PHONE_ABSENT            = "PHONE_ABSENT"
 	SESSION_RESULT_DELIVERY_ERROR          = "DELIVERY_ERROR"
 	SESSION_RESULT_SIM_ERROR               = "SIM_ERROR"
+
+	SESSION_RESULT_UNKNOWN = "UNKNOWN"
 )
 
 type SessionPayload struct {
@@ -36,6 +39,7 @@ type Session struct {
 	PersonalCode string
 	Code         string
 	Status       string
+	Error        string
 	Payload      SessionPayload
 }
 

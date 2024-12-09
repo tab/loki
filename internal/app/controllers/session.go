@@ -6,13 +6,14 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"loki/internal/app/errors"
 	"loki/internal/app/serializers"
 	"loki/internal/app/services"
 )
 
 type SessionController interface {
-	Authenticate(w http.ResponseWriter, r *http.Request)
 	GetStatus(w http.ResponseWriter, r *http.Request)
+	Authenticate(w http.ResponseWriter, r *http.Request)
 }
 
 type sessionController struct {
@@ -32,8 +33,14 @@ func (c *sessionController) GetStatus(w http.ResponseWriter, r *http.Request) {
 
 	id := chi.URLParam(r, "id")
 
-	response, err := c.authentication.FindSessionByID(r.Context(), id)
+	response, err := c.authentication.FindSessionById(r.Context(), id)
 	if err != nil {
+		if errors.Is(err, errors.ErrSessionNotFound) {
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
+			return
+		}
+
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
 		return

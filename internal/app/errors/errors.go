@@ -12,6 +12,11 @@ var (
 	ErrEmptyLocale       = errors.New("empty locale")
 
 	ErrInvalidIdentityNumber = errors.New("invalid identity number")
+
+	ErrSessionNotFound = errors.New("session not found")
+
+	ErrSmartIdProviderError  = errors.New("smart-id provider error")
+	ErrMobileIdProviderError = errors.New("mobile-id provider error")
 )
 
 var (

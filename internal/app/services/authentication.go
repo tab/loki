@@ -27,7 +27,7 @@ type Authentication interface {
 	CreateMobileIdSession(ctx context.Context, params dto.CreateMobileIdSessionRequest) (*serializers.SessionSerializer, error)
 	GetMobileIdSessionStatus(ctx context.Context, id uuid.UUID) (*dto.MobileIdProviderSessionStatusResponse, error)
 	UpdateSession(ctx context.Context, params models.Session) (*serializers.SessionSerializer, error)
-	FindSessionByID(ctx context.Context, id string) (*serializers.SessionSerializer, error)
+	FindSessionById(ctx context.Context, id string) (*serializers.SessionSerializer, error)
 	Complete(ctx context.Context, id string) (*serializers.UserSerializer, error)
 }
 
@@ -143,6 +143,7 @@ func (a *authentication) UpdateSession(ctx context.Context, params models.Sessio
 	err := a.redis.UpdateSession(ctx, &models.Session{
 		ID:     params.ID,
 		Status: params.Status,
+		Error:  params.Error,
 		Payload: models.SessionPayload{
 			State:     params.Payload.State,
 			Result:    params.Payload.Result,
@@ -161,14 +162,14 @@ func (a *authentication) UpdateSession(ctx context.Context, params models.Sessio
 	}, nil
 }
 
-func (a *authentication) FindSessionByID(ctx context.Context, sessionId string) (response *serializers.SessionSerializer, error error) {
+func (a *authentication) FindSessionById(ctx context.Context, sessionId string) (response *serializers.SessionSerializer, error error) {
 	id, err := uuid.Parse(sessionId)
 	if err != nil {
 		a.log.Error().Err(err).Msg("Invalid session ID format")
 		return nil, err
 	}
 
-	result, err := a.redis.FindSessionByID(ctx, id)
+	result, err := a.redis.FindSessionById(ctx, id)
 	if err != nil {
 		a.log.Error().Err(err).Msg("Failed to find session")
 		return nil, err
@@ -177,6 +178,7 @@ func (a *authentication) FindSessionByID(ctx context.Context, sessionId string) 
 	return &serializers.SessionSerializer{
 		ID:     result.ID,
 		Status: result.Status,
+		Error:  result.Error,
 	}, nil
 }
 
@@ -187,7 +189,7 @@ func (a *authentication) Complete(ctx context.Context, sessionId string) (respon
 		return nil, err
 	}
 
-	result, err := a.redis.FindSessionByID(ctx, id)
+	result, err := a.redis.FindSessionById(ctx, id)
 	if err != nil {
 		a.log.Error().Err(err).Msg("Failed to find session")
 		return nil, err

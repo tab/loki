@@ -2,11 +2,12 @@ package repositories
 
 import (
 	"context"
+
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"loki/internal/app/models/dto"
 
 	"loki/internal/app/models"
+	"loki/internal/app/models/dto"
 	"loki/internal/app/repositories/db"
 	"loki/internal/config"
 )

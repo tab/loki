@@ -34,7 +34,7 @@ func NewRouter(
 	r.Post("/auth/smart_id", smartId.CreateSession)
 	r.Post("/auth/mobile_id", mobileID.CreateSession)
 	r.Get("/auth/sessions/{id}", session.GetStatus)
-	r.Post("/auth/sessions/{id}", session.Authenticate)
+	r.Post("/auth/sessions/{id}/authenticate", session.Authenticate)
 
 	return r
 }
