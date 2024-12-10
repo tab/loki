@@ -23,7 +23,7 @@ func Test_Session_GetStatus(t *testing.T) {
 
 	ctx := gomock.Any()
 	authentication := services.NewMockAuthentication(ctrl)
-	controller := NewSessionController(authentication)
+	controller := NewSessionsController(authentication)
 
 	sessionId := "8fdb516d-1a82-43ba-b82d-be63df569b86"
 	id, _ := uuid.Parse(sessionId)
@@ -121,7 +121,7 @@ func Test_Session_Authenticate(t *testing.T) {
 
 	ctx := gomock.Any()
 	authentication := services.NewMockAuthentication(ctrl)
-	controller := NewSessionController(authentication)
+	controller := NewSessionsController(authentication)
 
 	sessionId := "8fdb516d-1a82-43ba-b82d-be63df569b86"
 	id, _ := uuid.Parse(sessionId)

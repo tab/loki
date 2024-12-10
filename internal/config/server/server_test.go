@@ -24,12 +24,12 @@ func Test_NewServer(t *testing.T) {
 	}
 	mockSmartIdController := controllers.NewMockSmartIdController(ctrl)
 	mockMobileIdController := controllers.NewMockMobileIdController(ctrl)
-	mockSessionController := controllers.NewMockSessionController(ctrl)
+	mockSessionsController := controllers.NewMockSessionsController(ctrl)
 	appRouter := router.NewRouter(
 		cfg,
 		mockSmartIdController,
 		mockMobileIdController,
-		mockSessionController)
+		mockSessionsController)
 
 	srv := NewServer(cfg, appRouter)
 	assert.NotNil(t, srv)

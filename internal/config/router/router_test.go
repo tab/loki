@@ -22,12 +22,12 @@ func Test_HealthCheck(t *testing.T) {
 	}
 	mockSmartIdController := controllers.NewMockSmartIdController(ctrl)
 	mockMobileIdController := controllers.NewMockMobileIdController(ctrl)
-	mockSessionController := controllers.NewMockSessionController(ctrl)
+	mockSessionsController := controllers.NewMockSessionsController(ctrl)
 	router := NewRouter(
 		cfg,
 		mockSmartIdController,
 		mockMobileIdController,
-		mockSessionController)
+		mockSessionsController)
 
 	req := httptest.NewRequest(http.MethodHead, "/health", nil)
 	w := httptest.NewRecorder()

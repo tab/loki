@@ -11,24 +11,24 @@ import (
 	"loki/internal/app/services"
 )
 
-type SessionController interface {
+type SessionsController interface {
 	GetStatus(w http.ResponseWriter, r *http.Request)
 	Authenticate(w http.ResponseWriter, r *http.Request)
 }
 
-type sessionController struct {
+type sessionsController struct {
 	authentication services.Authentication
 }
 
-func NewSessionController(
+func NewSessionsController(
 	authentication services.Authentication,
-) SessionController {
-	return &sessionController{
+) SessionsController {
+	return &sessionsController{
 		authentication: authentication,
 	}
 }
 
-func (c *sessionController) GetStatus(w http.ResponseWriter, r *http.Request) {
+func (c *sessionsController) GetStatus(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	id := chi.URLParam(r, "id")
@@ -50,7 +50,7 @@ func (c *sessionController) GetStatus(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func (c *sessionController) Authenticate(w http.ResponseWriter, r *http.Request) {
+func (c *sessionsController) Authenticate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	id := chi.URLParam(r, "id")

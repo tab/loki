@@ -15,7 +15,7 @@ func NewRouter(
 	cfg *config.Config,
 	smartId controllers.SmartIdController,
 	mobileID controllers.MobileIdController,
-	session controllers.SessionController,
+	sessions controllers.SessionsController,
 ) http.Handler {
 	r := chi.NewRouter()
 
@@ -33,8 +33,8 @@ func NewRouter(
 
 	r.Post("/api/auth/smart_id", smartId.CreateSession)
 	r.Post("/api/auth/mobile_id", mobileID.CreateSession)
-	r.Get("/api/auth/sessions/{id}", session.GetStatus)
-	r.Post("/api/auth/sessions/{id}/authenticate", session.Authenticate)
+	r.Get("/api/auth/sessions/{id}", sessions.GetStatus)
+	r.Post("/api/auth/sessions/{id}/authenticate", sessions.Authenticate)
 
 	return r
 }
