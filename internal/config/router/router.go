@@ -31,10 +31,10 @@ func NewRouter(
 		}),
 	)
 
-	r.Post("/auth/smart_id", smartId.CreateSession)
-	r.Post("/auth/mobile_id", mobileID.CreateSession)
-	r.Get("/auth/sessions/{id}", session.GetStatus)
-	r.Post("/auth/sessions/{id}/authenticate", session.Authenticate)
+	r.Post("/api/auth/smart_id", smartId.CreateSession)
+	r.Post("/api/auth/mobile_id", mobileID.CreateSession)
+	r.Get("/api/auth/sessions/{id}", session.GetStatus)
+	r.Post("/api/auth/sessions/{id}/authenticate", session.Authenticate)
 
 	return r
 }

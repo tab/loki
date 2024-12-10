@@ -93,7 +93,7 @@ func Test_SmartId_CreateSession(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.before()
 
-			r := httptest.NewRequest(http.MethodPost, "/auth/smart_id", tt.body)
+			r := httptest.NewRequest(http.MethodPost, "/api/auth/smart_id", tt.body)
 			w := httptest.NewRecorder()
 
 			controller.CreateSession(w, r)

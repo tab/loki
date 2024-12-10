@@ -3,11 +3,11 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-chi/chi/v5"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -85,11 +85,11 @@ func Test_Session_GetStatus(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.before()
 
-			req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/auth/sessions/%s", sessionId), nil)
+			req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/auth/sessions/%s", sessionId), nil)
 			w := httptest.NewRecorder()
 
 			r := chi.NewRouter()
-			r.Get("/auth/sessions/{id}", controller.GetStatus)
+			r.Get("/api/auth/sessions/{id}", controller.GetStatus)
 			r.ServeHTTP(w, req)
 
 			resp := w.Result()
@@ -182,11 +182,11 @@ func Test_Session_Authenticate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.before()
 
-			req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/auth/sessions/%s/authenticate", sessionId), nil)
+			req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/auth/sessions/%s/authenticate", sessionId), nil)
 			w := httptest.NewRecorder()
 
 			r := chi.NewRouter()
-			r.Get("/auth/sessions/{id}/authenticate", controller.Authenticate)
+			r.Get("/api/auth/sessions/{id}/authenticate", controller.Authenticate)
 			r.ServeHTTP(w, req)
 
 			resp := w.Result()

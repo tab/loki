@@ -95,7 +95,7 @@ func Test_MobileId_CreateSession(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.before()
 
-			r := httptest.NewRequest(http.MethodPost, "/auth/mobile_id", tt.body)
+			r := httptest.NewRequest(http.MethodPost, "/api/auth/mobile_id", tt.body)
 			w := httptest.NewRecorder()
 
 			controller.CreateSession(w, r)
