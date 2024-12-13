@@ -121,8 +121,8 @@ func Test_TokensController_Refresh(t *testing.T) {
 			body: strings.NewReader(`{"refresh_token": "invalid-token"}`),
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: errors.ErrInvalidToken.Error()},
-				status: "400 Bad Request",
-				code:   http.StatusBadRequest,
+				status: "422 Unprocessable Entity",
+				code:   http.StatusUnprocessableEntity,
 			},
 		},
 		{
@@ -140,8 +140,8 @@ func Test_TokensController_Refresh(t *testing.T) {
 			body: strings.NewReader(`{"refresh_token": "refresh-token"}`),
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: assert.AnError.Error()},
-				status: "400 Bad Request",
-				code:   http.StatusBadRequest,
+				status: "422 Unprocessable Entity",
+				code:   http.StatusUnprocessableEntity,
 			},
 		},
 	}

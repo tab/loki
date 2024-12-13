@@ -237,6 +237,39 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorSerializer"
+  /api/tokens/refresh:
+    post:
+      summary: "Refresh tokens by providing a refresh token"
+      description: "Refreshes the access token by providing a refresh token"
+      tags:
+          - tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshAccessTokenRequest"
+      security:
+        - Authentication: []
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserSerializer"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
   /api/me:
     get:
       summary: "Get current_user information"
@@ -293,6 +326,15 @@ components:
         - personal_code
         - phone_number
         - locale
+
+    RefreshAccessTokenRequest:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+          description: "JWT refresh token"
+      required:
+        - refresh_token
 
     SessionSerializer:
       type: object

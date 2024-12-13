@@ -42,7 +42,7 @@ func (c *tokensController) Refresh(w http.ResponseWriter, r *http.Request) {
 
 	response, err := c.tokens.Refresh(r.Context(), currentUser.ID, params.RefreshToken)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusUnprocessableEntity)
 		json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
 		return
 	}
