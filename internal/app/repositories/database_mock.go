@@ -16,6 +16,7 @@ import (
 	db "loki/internal/app/repositories/db"
 	reflect "reflect"
 
+	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -73,6 +74,21 @@ func (mr *MockDatabaseMockRecorder) CreateUser(ctx, params any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockDatabase)(nil).CreateUser), ctx, params)
 }
 
+// FindUserById mocks base method.
+func (m *MockDatabase) FindUserById(ctx context.Context, id uuid.UUID) (*models.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindUserById", ctx, id)
+	ret0, _ := ret[0].(*models.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindUserById indicates an expected call of FindUserById.
+func (mr *MockDatabaseMockRecorder) FindUserById(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserById", reflect.TypeOf((*MockDatabase)(nil).FindUserById), ctx, id)
+}
+
 // FindUserByIdentityNumber mocks base method.
 func (m *MockDatabase) FindUserByIdentityNumber(ctx context.Context, identityNumber string) (*models.User, error) {
 	m.ctrl.T.Helper()
@@ -86,4 +102,19 @@ func (m *MockDatabase) FindUserByIdentityNumber(ctx context.Context, identityNum
 func (mr *MockDatabaseMockRecorder) FindUserByIdentityNumber(ctx, identityNumber any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByIdentityNumber", reflect.TypeOf((*MockDatabase)(nil).FindUserByIdentityNumber), ctx, identityNumber)
+}
+
+// RefreshUserTokens mocks base method.
+func (m *MockDatabase) RefreshUserTokens(ctx context.Context, params dto.RefreshTokenParams) (*models.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RefreshUserTokens", ctx, params)
+	ret0, _ := ret[0].(*models.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RefreshUserTokens indicates an expected call of RefreshUserTokens.
+func (mr *MockDatabaseMockRecorder) RefreshUserTokens(ctx, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshUserTokens", reflect.TypeOf((*MockDatabase)(nil).RefreshUserTokens), ctx, params)
 }

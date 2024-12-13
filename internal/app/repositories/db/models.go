@@ -56,7 +56,7 @@ func (ns NullTokenType) Value() (driver.Value, error) {
 
 type Token struct {
 	ID        uuid.UUID
-	UserID    uuid.UUID
+	UserId    uuid.UUID
 	Type      TokenType
 	Value     string
 	ExpiresAt pgtype.Timestamp

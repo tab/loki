@@ -9,5 +9,8 @@ INSERT INTO tokens (user_id, type, value, expires_at)
 VALUES ($1, $2, $3, $4)
   RETURNING id, type, value, expires_at;
 
+-- name: FindUserById :one
+SELECT id, identity_number, personal_code, first_name, last_name FROM users WHERE id = $1;
+
 -- name: FindUserByIdentityNumber :one
 SELECT id, identity_number, personal_code, first_name, last_name FROM users WHERE identity_number = $1;

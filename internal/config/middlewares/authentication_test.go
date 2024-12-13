@@ -114,11 +114,14 @@ func Test_AuthMiddleware_Authenticate(t *testing.T) {
 
 			middleware.Authenticate(handler).ServeHTTP(rw, req)
 
+			res := rw.Result()
+			defer res.Body.Close()
+
 			if tt.error != nil {
 				assert.Error(t, tt.error)
 			} else {
-				assert.Equal(t, tt.expected.code, rw.Code)
-				assert.Equal(t, tt.expected.status, rw.Result().Status)
+				assert.Equal(t, tt.expected.code, res.StatusCode)
+				assert.Equal(t, tt.expected.status, res.Status)
 			}
 		})
 	}

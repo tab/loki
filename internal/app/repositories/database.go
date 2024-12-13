@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -15,6 +16,8 @@ import (
 type Database interface {
 	CreateUser(ctx context.Context, params db.CreateUserParams) (*models.User, error)
 	CreateOrUpdateUserWithTokens(ctx context.Context, params dto.CreateUserParams) (*models.User, error)
+	RefreshUserTokens(ctx context.Context, params dto.RefreshTokenParams) (*models.User, error)
+	FindUserById(ctx context.Context, id uuid.UUID) (*models.User, error)
 	FindUserByIdentityNumber(ctx context.Context, identityNumber string) (*models.User, error)
 }
 
@@ -74,7 +77,7 @@ func (d *database) CreateOrUpdateUserWithTokens(ctx context.Context, params dto.
 	}
 
 	accessToken, err := q.CreateToken(ctx, db.CreateTokenParams{
-		UserID: user.ID,
+		UserId: user.ID,
 		Type:   db.TokenType(params.AccessToken.Type),
 		Value:  params.AccessToken.Value,
 		ExpiresAt: pgtype.Timestamp{
@@ -87,7 +90,7 @@ func (d *database) CreateOrUpdateUserWithTokens(ctx context.Context, params dto.
 	}
 
 	refreshToken, err := q.CreateToken(ctx, db.CreateTokenParams{
-		UserID: user.ID,
+		UserId: user.ID,
 		Type:   db.TokenType(params.RefreshToken.Type),
 		Value:  params.RefreshToken.Value,
 		ExpiresAt: pgtype.Timestamp{
@@ -108,6 +111,72 @@ func (d *database) CreateOrUpdateUserWithTokens(ctx context.Context, params dto.
 		AccessToken:    accessToken.Value,
 		RefreshToken:   refreshToken.Value,
 	}, tx.Commit(ctx)
+}
+
+func (d *database) RefreshUserTokens(ctx context.Context, params dto.RefreshTokenParams) (*models.User, error) {
+	tx, err := d.db.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	q := d.queries.WithTx(tx)
+
+	user, err := q.FindUserById(ctx, params.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	accessToken, err := q.CreateToken(ctx, db.CreateTokenParams{
+		UserId: user.ID,
+		Type:   db.TokenType(params.AccessToken.Type),
+		Value:  params.AccessToken.Value,
+		ExpiresAt: pgtype.Timestamp{
+			Time:  params.AccessToken.ExpiresAt,
+			Valid: true,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	refreshToken, err := q.CreateToken(ctx, db.CreateTokenParams{
+		UserId: user.ID,
+		Type:   db.TokenType(params.RefreshToken.Type),
+		Value:  params.RefreshToken.Value,
+		ExpiresAt: pgtype.Timestamp{
+			Time:  params.RefreshToken.ExpiresAt,
+			Valid: true,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.User{
+		ID:             user.ID,
+		IdentityNumber: user.IdentityNumber,
+		PersonalCode:   user.PersonalCode,
+		FirstName:      user.FirstName,
+		LastName:       user.LastName,
+		AccessToken:    accessToken.Value,
+		RefreshToken:   refreshToken.Value,
+	}, tx.Commit(ctx)
+}
+
+func (d *database) FindUserById(ctx context.Context, id uuid.UUID) (*models.User, error) {
+	record, err := d.queries.FindUserById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.User{
+		ID:             record.ID,
+		IdentityNumber: record.IdentityNumber,
+		PersonalCode:   record.PersonalCode,
+		FirstName:      record.FirstName,
+		LastName:       record.LastName,
+	}, nil
 }
 
 func (d *database) FindUserByIdentityNumber(ctx context.Context, identityNumber string) (*models.User, error) {

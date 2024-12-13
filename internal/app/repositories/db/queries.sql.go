@@ -19,7 +19,7 @@ VALUES ($1, $2, $3, $4)
 `
 
 type CreateTokenParams struct {
-	UserID    uuid.UUID
+	UserId    uuid.UUID
 	Type      TokenType
 	Value     string
 	ExpiresAt pgtype.Timestamp
@@ -34,7 +34,7 @@ type CreateTokenRow struct {
 
 func (q *Queries) CreateToken(ctx context.Context, arg CreateTokenParams) (CreateTokenRow, error) {
 	row := q.db.QueryRow(ctx, createToken,
-		arg.UserID,
+		arg.UserId,
 		arg.Type,
 		arg.Value,
 		arg.ExpiresAt,
@@ -79,6 +79,31 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 		arg.LastName,
 	)
 	var i CreateUserRow
+	err := row.Scan(
+		&i.ID,
+		&i.IdentityNumber,
+		&i.PersonalCode,
+		&i.FirstName,
+		&i.LastName,
+	)
+	return i, err
+}
+
+const findUserById = `-- name: FindUserById :one
+SELECT id, identity_number, personal_code, first_name, last_name FROM users WHERE id = $1
+`
+
+type FindUserByIdRow struct {
+	ID             uuid.UUID
+	IdentityNumber string
+	PersonalCode   string
+	FirstName      string
+	LastName       string
+}
+
+func (q *Queries) FindUserById(ctx context.Context, id uuid.UUID) (FindUserByIdRow, error) {
+	row := q.db.QueryRow(ctx, findUserById, id)
+	var i FindUserByIdRow
 	err := row.Scan(
 		&i.ID,
 		&i.IdentityNumber,

@@ -20,6 +20,7 @@ func NewRouter(
 	smartId controllers.SmartIdController,
 	mobileID controllers.MobileIdController,
 	sessions controllers.SessionsController,
+	tokens controllers.TokensController,
 	users controllers.UsersController,
 ) http.Handler {
 	r := chi.NewRouter()
@@ -43,6 +44,7 @@ func NewRouter(
 
 	r.Group(func(r chi.Router) {
 		r.Use(authMiddleware.Authenticate)
+		r.Post("/api/tokens/refresh", tokens.Refresh)
 		r.Get("/api/me", users.Me)
 	})
 

@@ -4,8 +4,8 @@ import (
 	"context"
 	"loki/pkg/logger"
 
-	"loki/internal/app/serializers"
 	"loki/internal/app/repositories"
+	"loki/internal/app/serializers"
 )
 
 type Users interface {
