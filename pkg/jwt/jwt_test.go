@@ -20,7 +20,7 @@ func Test_NewJWT(t *testing.T) {
 	assert.NotNil(t, service)
 }
 
-func Test_JWTService_Generate(t *testing.T) {
+func Test_JWT_Generate(t *testing.T) {
 	cfg := &config.Config{
 		SecretKey: "jwt-secret-key",
 	}
@@ -65,7 +65,7 @@ func Test_JWTService_Generate(t *testing.T) {
 	}
 }
 
-func Test_JWTService_Verify(t *testing.T) {
+func Test_JWT_Verify(t *testing.T) {
 	cfg := &config.Config{
 		SecretKey: "jwt-secret-key",
 	}
@@ -97,7 +97,7 @@ func Test_JWTService_Verify(t *testing.T) {
 	}
 }
 
-func Test_JWTService_Verify_Mocked(t *testing.T) {
+func Test_JWT_Verify_Mocked(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -160,6 +160,107 @@ func Test_JWTService_Verify_Mocked(t *testing.T) {
 				assert.NoError(t, err)
 			}
 			assert.Equal(t, tt.valid, result)
+		})
+	}
+}
+
+func Test_JWT_Decode(t *testing.T) {
+	cfg := &config.Config{
+		SecretKey: "jwt-secret-key",
+	}
+	service := NewJWT(cfg)
+
+	tests := []struct {
+		name     string
+		payload  Payload
+		expected *Payload
+	}{
+		{
+			name: "Success",
+			payload: Payload{
+				ID: "PNOEE-30303039914",
+			},
+			expected: &Payload{
+				ID: "PNOEE-30303039914",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			token, err := service.Generate(tt.payload, time.Minute*30)
+			assert.NoError(t, err)
+
+			result, err := service.Decode(token)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func Test_JWT_Decode_Mocked(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	service := NewMockJwt(ctrl)
+
+	tests := []struct {
+		name     string
+		token    string
+		before   func(token string)
+		valid    bool
+		expected *Payload
+	}{
+		{
+			name:  "Success",
+			token: "eyAAA.BBB.CCC",
+			before: func(token string) {
+				service.EXPECT().Decode(token).Return(&Payload{
+					ID: "PNOEE-30303039914",
+				}, nil)
+			},
+			expected: &Payload{
+				ID: "PNOEE-30303039914",
+			},
+		},
+		{
+			name:  "Invalid token",
+			token: "eyAAA.BBB.CCC",
+			before: func(token string) {
+				service.EXPECT().Decode(token).Return(nil, assert.AnError)
+			},
+			expected: nil,
+		},
+		{
+			name:  "Invalid signing method",
+			token: "eyAAA.BBB.CCC",
+			before: func(token string) {
+				service.EXPECT().Decode(token).Return(nil, errors.ErrInvalidSigningMethod)
+			},
+			expected: nil,
+		},
+		{
+			name:  "Invalid token",
+			token: "invalid-token",
+			before: func(token string) {
+				service.EXPECT().Decode(token).Return(nil, errors.ErrInvalidToken)
+			},
+			expected: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.before(tt.token)
+
+			result, err := service.Decode(tt.token)
+
+			if tt.expected != nil {
+				assert.Equal(t, tt.expected, result)
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+			}
 		})
 	}
 }

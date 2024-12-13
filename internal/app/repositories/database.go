@@ -15,6 +15,7 @@ import (
 type Database interface {
 	CreateUser(ctx context.Context, params db.CreateUserParams) (*models.User, error)
 	CreateOrUpdateUserWithTokens(ctx context.Context, params dto.CreateUserParams) (*models.User, error)
+	FindUserByIdentityNumber(ctx context.Context, identityNumber string) (*models.User, error)
 }
 
 type database struct {
@@ -107,4 +108,19 @@ func (d *database) CreateOrUpdateUserWithTokens(ctx context.Context, params dto.
 		AccessToken:    accessToken.Value,
 		RefreshToken:   refreshToken.Value,
 	}, tx.Commit(ctx)
+}
+
+func (d *database) FindUserByIdentityNumber(ctx context.Context, identityNumber string) (*models.User, error) {
+	record, err := d.queries.FindUserByIdentityNumber(ctx, identityNumber)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.User{
+		ID:             record.ID,
+		IdentityNumber: record.IdentityNumber,
+		PersonalCode:   record.PersonalCode,
+		FirstName:      record.FirstName,
+		LastName:       record.LastName,
+	}, nil
 }

@@ -11,6 +11,7 @@ import (
 
 	"loki/internal/app/controllers"
 	"loki/internal/config"
+	"loki/internal/config/middlewares"
 	"loki/internal/config/router"
 )
 
@@ -22,14 +23,27 @@ func Test_NewServer(t *testing.T) {
 		AppEnv:  "test",
 		AppAddr: "localhost:8080",
 	}
+	mockAuthMiddleware := middlewares.NewMockAuthMiddleware(ctrl)
 	mockSmartIdController := controllers.NewMockSmartIdController(ctrl)
 	mockMobileIdController := controllers.NewMockMobileIdController(ctrl)
 	mockSessionsController := controllers.NewMockSessionsController(ctrl)
+	mockUsersController := controllers.NewMockUsersController(ctrl)
+
+	mockAuthMiddleware.EXPECT().
+		Authenticate(gomock.Any()).
+		AnyTimes().
+		DoAndReturn(func(next http.Handler) http.Handler {
+			return next
+		})
+
 	appRouter := router.NewRouter(
 		cfg,
+		mockAuthMiddleware,
 		mockSmartIdController,
 		mockMobileIdController,
-		mockSessionsController)
+		mockSessionsController,
+		mockUsersController,
+	)
 
 	srv := NewServer(cfg, appRouter)
 	assert.NotNil(t, srv)

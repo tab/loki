@@ -25,6 +25,8 @@ var Module = fx.Options(
 		},
 	),
 	fx.Provide(NewAuthentication),
+	fx.Provide(NewSessions),
+	fx.Provide(NewUsers),
 	fx.Provide(NewSmartId),
 	fx.Provide(NewSmartIdWorker),
 	fx.Provide(NewMobileId),

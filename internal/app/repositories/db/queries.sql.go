@@ -88,3 +88,28 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 	)
 	return i, err
 }
+
+const findUserByIdentityNumber = `-- name: FindUserByIdentityNumber :one
+SELECT id, identity_number, personal_code, first_name, last_name FROM users WHERE identity_number = $1
+`
+
+type FindUserByIdentityNumberRow struct {
+	ID             uuid.UUID
+	IdentityNumber string
+	PersonalCode   string
+	FirstName      string
+	LastName       string
+}
+
+func (q *Queries) FindUserByIdentityNumber(ctx context.Context, identityNumber string) (FindUserByIdentityNumberRow, error) {
+	row := q.db.QueryRow(ctx, findUserByIdentityNumber, identityNumber)
+	var i FindUserByIdentityNumberRow
+	err := row.Scan(
+		&i.ID,
+		&i.IdentityNumber,
+		&i.PersonalCode,
+		&i.FirstName,
+		&i.LastName,
+	)
+	return i, err
+}

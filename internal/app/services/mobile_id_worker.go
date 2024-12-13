@@ -18,6 +18,7 @@ type MobileIdWorker interface {
 type mobileIdWorker struct {
 	cfg            *config.Config
 	authentication Authentication
+	sessions       Sessions
 	queue          <-chan *MobileIdQueue
 	wg             sync.WaitGroup
 	log            *logger.Logger
@@ -26,12 +27,14 @@ type mobileIdWorker struct {
 func NewMobileIdWorker(
 	cfg *config.Config,
 	authentication Authentication,
+	sessions Sessions,
 	queue chan *MobileIdQueue,
 	log *logger.Logger,
 ) MobileIdWorker {
 	return &mobileIdWorker{
 		cfg:            cfg,
 		authentication: authentication,
+		sessions:       sessions,
 		queue:          queue,
 		log:            log,
 	}
@@ -105,7 +108,7 @@ func (w *mobileIdWorker) handleUpdateSession(ctx context.Context, req *MobileIdQ
 		w.log.Info().Msgf("MobileId::Worker session error is %s", message)
 	}
 
-	if _, err := w.authentication.UpdateSession(ctx, models.Session{
+	if _, err := w.sessions.Update(ctx, models.Session{
 		ID:      req.ID,
 		Status:  status,
 		Error:   message,

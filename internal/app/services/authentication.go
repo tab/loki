@@ -26,8 +26,6 @@ type Authentication interface {
 	GetSmartIdSessionStatus(ctx context.Context, id uuid.UUID) (*dto.SmartIdProviderSessionStatusResponse, error)
 	CreateMobileIdSession(ctx context.Context, params dto.CreateMobileIdSessionRequest) (*serializers.SessionSerializer, error)
 	GetMobileIdSessionStatus(ctx context.Context, id uuid.UUID) (*dto.MobileIdProviderSessionStatusResponse, error)
-	UpdateSession(ctx context.Context, params models.Session) (*serializers.SessionSerializer, error)
-	FindSessionById(ctx context.Context, id string) (*serializers.SessionSerializer, error)
 	Complete(ctx context.Context, id string) (*serializers.UserSerializer, error)
 }
 
@@ -137,49 +135,6 @@ func (a *authentication) GetMobileIdSessionStatus(_ context.Context, id uuid.UUI
 	}
 
 	return result, nil
-}
-
-func (a *authentication) UpdateSession(ctx context.Context, params models.Session) (response *serializers.SessionSerializer, error error) {
-	err := a.redis.UpdateSession(ctx, &models.Session{
-		ID:     params.ID,
-		Status: params.Status,
-		Error:  params.Error,
-		Payload: models.SessionPayload{
-			State:     params.Payload.State,
-			Result:    params.Payload.Result,
-			Signature: params.Payload.Signature,
-			Cert:      params.Payload.Cert,
-		},
-	})
-	if err != nil {
-		a.log.Error().Err(err).Msg("Failed to update session")
-		return nil, err
-	}
-
-	return &serializers.SessionSerializer{
-		ID:     params.ID,
-		Status: params.Status,
-	}, nil
-}
-
-func (a *authentication) FindSessionById(ctx context.Context, sessionId string) (response *serializers.SessionSerializer, error error) {
-	id, err := uuid.Parse(sessionId)
-	if err != nil {
-		a.log.Error().Err(err).Msg("Invalid session ID format")
-		return nil, err
-	}
-
-	result, err := a.redis.FindSessionById(ctx, id)
-	if err != nil {
-		a.log.Error().Err(err).Msg("Failed to find session")
-		return nil, err
-	}
-
-	return &serializers.SessionSerializer{
-		ID:     result.ID,
-		Status: result.Status,
-		Error:  result.Error,
-	}, nil
 }
 
 func (a *authentication) Complete(ctx context.Context, sessionId string) (response *serializers.UserSerializer, error error) {

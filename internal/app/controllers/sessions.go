@@ -18,13 +18,16 @@ type SessionsController interface {
 
 type sessionsController struct {
 	authentication services.Authentication
+	sessions       services.Sessions
 }
 
 func NewSessionsController(
 	authentication services.Authentication,
+	sessions services.Sessions,
 ) SessionsController {
 	return &sessionsController{
 		authentication: authentication,
+		sessions:       sessions,
 	}
 }
 
@@ -33,7 +36,7 @@ func (c *sessionsController) GetStatus(w http.ResponseWriter, r *http.Request) {
 
 	id := chi.URLParam(r, "id")
 
-	response, err := c.authentication.FindSessionById(r.Context(), id)
+	response, err := c.sessions.FindById(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, errors.ErrSessionNotFound) {
 			w.WriteHeader(http.StatusNotFound)

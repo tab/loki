@@ -17,7 +17,7 @@ import (
 	"loki/internal/app/services"
 )
 
-func Test_MobileId_CreateSession(t *testing.T) {
+func Test_MobileIdController_CreateSession(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -59,8 +59,8 @@ func Test_MobileId_CreateSession(t *testing.T) {
 					ID:   sessionId,
 					Code: "1234",
 				},
-				status: "200 OK",
-				code:   http.StatusOK,
+				status: "201 Created",
+				code:   http.StatusCreated,
 			},
 		},
 		{

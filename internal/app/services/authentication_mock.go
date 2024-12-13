@@ -11,7 +11,6 @@ package services
 
 import (
 	context "context"
-	models "loki/internal/app/models"
 	dto "loki/internal/app/models/dto"
 	serializers "loki/internal/app/serializers"
 	reflect "reflect"
@@ -89,21 +88,6 @@ func (mr *MockAuthenticationMockRecorder) CreateSmartIdSession(ctx, params any) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSmartIdSession", reflect.TypeOf((*MockAuthentication)(nil).CreateSmartIdSession), ctx, params)
 }
 
-// FindSessionById mocks base method.
-func (m *MockAuthentication) FindSessionById(ctx context.Context, id string) (*serializers.SessionSerializer, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindSessionById", ctx, id)
-	ret0, _ := ret[0].(*serializers.SessionSerializer)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindSessionById indicates an expected call of FindSessionById.
-func (mr *MockAuthenticationMockRecorder) FindSessionById(ctx, id any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindSessionById", reflect.TypeOf((*MockAuthentication)(nil).FindSessionById), ctx, id)
-}
-
 // GetMobileIdSessionStatus mocks base method.
 func (m *MockAuthentication) GetMobileIdSessionStatus(ctx context.Context, id uuid.UUID) (*dto.MobileIdProviderSessionStatusResponse, error) {
 	m.ctrl.T.Helper()
@@ -132,19 +116,4 @@ func (m *MockAuthentication) GetSmartIdSessionStatus(ctx context.Context, id uui
 func (mr *MockAuthenticationMockRecorder) GetSmartIdSessionStatus(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSmartIdSessionStatus", reflect.TypeOf((*MockAuthentication)(nil).GetSmartIdSessionStatus), ctx, id)
-}
-
-// UpdateSession mocks base method.
-func (m *MockAuthentication) UpdateSession(ctx context.Context, params models.Session) (*serializers.SessionSerializer, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateSession", ctx, params)
-	ret0, _ := ret[0].(*serializers.SessionSerializer)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UpdateSession indicates an expected call of UpdateSession.
-func (mr *MockAuthenticationMockRecorder) UpdateSession(ctx, params any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSession", reflect.TypeOf((*MockAuthentication)(nil).UpdateSession), ctx, params)
 }

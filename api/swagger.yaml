@@ -74,8 +74,8 @@ paths:
                   country: "EE"
                   personal_code: "30403039983"
       responses:
-        "200":
-          description: "OK"
+        "201":
+          description: "Created"
           content:
             application/json:
               schema:
@@ -162,8 +162,8 @@ paths:
                   phone_number: "+37266000266"
                   personal_code: "50001018908"
       responses:
-        "200":
-          description: "OK"
+        "201":
+          description: "Created"
           content:
             application/json:
               schema:
@@ -237,7 +237,32 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorSerializer"
+  /api/me:
+    get:
+      summary: "Get current_user information"
+      description: "Retrieves the current user information"
+      tags:
+        - user
+      security:
+        - Authentication: []
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserSerializer"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
 components:
+  securitySchemes:
+    Authentication:
+      type: http
+      scheme: Bearer
   schemas:
     CreateSmartIdSessionRequest:
       type: object

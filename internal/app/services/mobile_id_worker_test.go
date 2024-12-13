@@ -31,8 +31,9 @@ func Test_MobileIdWorker_Perform(t *testing.T) {
 
 	mobileIdQueue := make(chan *MobileIdQueue, 1)
 	authenticationService := NewMockAuthentication(ctrl)
+	sessionService := NewMockSessions(ctrl)
 	log := logger.NewLogger()
-	worker := NewMobileIdWorker(cfg, authenticationService, mobileIdQueue, log)
+	worker := NewMobileIdWorker(cfg, authenticationService, sessionService, mobileIdQueue, log)
 
 	tests := []struct {
 		name   string
@@ -52,7 +53,7 @@ func Test_MobileIdWorker_Perform(t *testing.T) {
 						},
 						Cert: "certificate",
 					}, nil)
-				authenticationService.EXPECT().UpdateSession(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), models.Session{
 					ID:     sessionId,
 					Status: "COMPLETE",
 					Payload: models.SessionPayload{
@@ -76,7 +77,7 @@ func Test_MobileIdWorker_Perform(t *testing.T) {
 						State:  "COMPLETE",
 						Result: "NOT_MID_CLIENT",
 					}, nil)
-				authenticationService.EXPECT().UpdateSession(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), models.Session{
 					ID:     sessionId,
 					Status: "ERROR",
 					Error:  "NOT_MID_CLIENT",
@@ -100,7 +101,7 @@ func Test_MobileIdWorker_Perform(t *testing.T) {
 						State:  "COMPLETE",
 						Result: "USER_CANCELLED",
 					}, nil)
-				authenticationService.EXPECT().UpdateSession(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), models.Session{
 					ID:     sessionId,
 					Status: "ERROR",
 					Error:  "USER_CANCELLED",
@@ -124,7 +125,7 @@ func Test_MobileIdWorker_Perform(t *testing.T) {
 						State:  "COMPLETE",
 						Result: "SIGNATURE_HASH_MISMATCH",
 					}, nil)
-				authenticationService.EXPECT().UpdateSession(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), models.Session{
 					ID:     sessionId,
 					Status: "ERROR",
 					Error:  "SIGNATURE_HASH_MISMATCH",
@@ -148,7 +149,7 @@ func Test_MobileIdWorker_Perform(t *testing.T) {
 						State:  "COMPLETE",
 						Result: "PHONE_ABSENT",
 					}, nil)
-				authenticationService.EXPECT().UpdateSession(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), models.Session{
 					ID:     sessionId,
 					Status: "ERROR",
 					Error:  "PHONE_ABSENT",
@@ -172,7 +173,7 @@ func Test_MobileIdWorker_Perform(t *testing.T) {
 						State:  "COMPLETE",
 						Result: "DELIVERY_ERROR",
 					}, nil)
-				authenticationService.EXPECT().UpdateSession(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), models.Session{
 					ID:     sessionId,
 					Status: "ERROR",
 					Error:  "DELIVERY_ERROR",
@@ -196,7 +197,7 @@ func Test_MobileIdWorker_Perform(t *testing.T) {
 						State:  "COMPLETE",
 						Result: "SIM_ERROR",
 					}, nil)
-				authenticationService.EXPECT().UpdateSession(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), models.Session{
 					ID:     sessionId,
 					Status: "ERROR",
 					Error:  "SIM_ERROR",
@@ -220,7 +221,7 @@ func Test_MobileIdWorker_Perform(t *testing.T) {
 						State:  "COMPLETE",
 						Result: "TIMEOUT",
 					}, nil)
-				authenticationService.EXPECT().UpdateSession(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), models.Session{
 					ID:     sessionId,
 					Status: "ERROR",
 					Error:  "TIMEOUT",

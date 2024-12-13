@@ -6,4 +6,5 @@ var Module = fx.Options(
 	fx.Provide(NewMobileIdController),
 	fx.Provide(NewSmartIdController),
 	fx.Provide(NewSessionsController),
+	fx.Provide(NewUsersController),
 )

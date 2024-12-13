@@ -10,6 +10,7 @@ import (
 
 	"loki/internal/app/controllers"
 	"loki/internal/config"
+	"loki/internal/config/middlewares"
 )
 
 func Test_HealthCheck(t *testing.T) {
@@ -20,22 +21,35 @@ func Test_HealthCheck(t *testing.T) {
 		AppEnv:  "test",
 		AppAddr: "localhost:8080",
 	}
+
+	mockAuthMiddleware := middlewares.NewMockAuthMiddleware(ctrl)
 	mockSmartIdController := controllers.NewMockSmartIdController(ctrl)
 	mockMobileIdController := controllers.NewMockMobileIdController(ctrl)
 	mockSessionsController := controllers.NewMockSessionsController(ctrl)
+	mockUsersController := controllers.NewMockUsersController(ctrl)
+
+	mockAuthMiddleware.EXPECT().
+		Authenticate(gomock.Any()).
+		AnyTimes().
+		DoAndReturn(func(next http.Handler) http.Handler {
+			return next
+		})
+
 	router := NewRouter(
 		cfg,
+		mockAuthMiddleware,
 		mockSmartIdController,
 		mockMobileIdController,
-		mockSessionsController)
+		mockSessionsController,
+		mockUsersController,
+	)
 
 	req := httptest.NewRequest(http.MethodHead, "/health", nil)
 	w := httptest.NewRecorder()
 
+	router.ServeHTTP(w, req)
 	resp := w.Result()
 	defer resp.Body.Close()
-
-	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }

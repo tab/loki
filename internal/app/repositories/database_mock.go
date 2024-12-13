@@ -72,3 +72,18 @@ func (mr *MockDatabaseMockRecorder) CreateUser(ctx, params any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockDatabase)(nil).CreateUser), ctx, params)
 }
+
+// FindUserByIdentityNumber mocks base method.
+func (m *MockDatabase) FindUserByIdentityNumber(ctx context.Context, identityNumber string) (*models.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindUserByIdentityNumber", ctx, identityNumber)
+	ret0, _ := ret[0].(*models.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindUserByIdentityNumber indicates an expected call of FindUserByIdentityNumber.
+func (mr *MockDatabaseMockRecorder) FindUserByIdentityNumber(ctx, identityNumber any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByIdentityNumber", reflect.TypeOf((*MockDatabase)(nil).FindUserByIdentityNumber), ctx, identityNumber)
+}

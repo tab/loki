@@ -31,9 +31,10 @@ func Test_SmartIdWorker_Perform(t *testing.T) {
 
 	smartIdQueue := make(chan *SmartIdQueue, 1)
 	authenticationService := NewMockAuthentication(ctrl)
+	sessionService := NewMockSessions(ctrl)
 	log := logger.NewLogger()
 
-	worker := NewSmartIdWorker(cfg, authenticationService, smartIdQueue, log)
+	worker := NewSmartIdWorker(cfg, authenticationService, sessionService, smartIdQueue, log)
 
 	tests := []struct {
 		name   string
@@ -59,7 +60,7 @@ func Test_SmartIdWorker_Perform(t *testing.T) {
 						},
 						InteractionFlowUsed: "interactionFlowUsed",
 					}, nil)
-				authenticationService.EXPECT().UpdateSession(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), models.Session{
 					ID:     sessionId,
 					Status: "COMPLETE",
 					Payload: models.SessionPayload{
@@ -85,7 +86,7 @@ func Test_SmartIdWorker_Perform(t *testing.T) {
 							EndResult: "USER_REFUSED",
 						},
 					}, nil)
-				authenticationService.EXPECT().UpdateSession(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), models.Session{
 					ID:     sessionId,
 					Status: "ERROR",
 					Error:  "USER_REFUSED",
@@ -111,7 +112,7 @@ func Test_SmartIdWorker_Perform(t *testing.T) {
 							EndResult: "USER_REFUSED_VC_CHOICE",
 						},
 					}, nil)
-				authenticationService.EXPECT().UpdateSession(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), models.Session{
 					ID:     sessionId,
 					Status: "ERROR",
 					Error:  "USER_REFUSED_VC_CHOICE",
@@ -137,7 +138,7 @@ func Test_SmartIdWorker_Perform(t *testing.T) {
 							EndResult: "USER_REFUSED_DISPLAYTEXTANDPIN",
 						},
 					}, nil)
-				authenticationService.EXPECT().UpdateSession(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), models.Session{
 					ID:     sessionId,
 					Status: "ERROR",
 					Error:  "USER_REFUSED_DISPLAYTEXTANDPIN",
@@ -163,7 +164,7 @@ func Test_SmartIdWorker_Perform(t *testing.T) {
 							EndResult: "USER_REFUSED_VC_CHOICE",
 						},
 					}, nil)
-				authenticationService.EXPECT().UpdateSession(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), models.Session{
 					ID:     sessionId,
 					Status: "ERROR",
 					Error:  "USER_REFUSED_VC_CHOICE",
@@ -189,7 +190,7 @@ func Test_SmartIdWorker_Perform(t *testing.T) {
 							EndResult: "USER_REFUSED_CONFIRMATIONMESSAGE",
 						},
 					}, nil)
-				authenticationService.EXPECT().UpdateSession(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), models.Session{
 					ID:     sessionId,
 					Status: "ERROR",
 					Error:  "USER_REFUSED_CONFIRMATIONMESSAGE",
@@ -215,7 +216,7 @@ func Test_SmartIdWorker_Perform(t *testing.T) {
 							EndResult: "USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE",
 						},
 					}, nil)
-				authenticationService.EXPECT().UpdateSession(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), models.Session{
 					ID:     sessionId,
 					Status: "ERROR",
 					Error:  "USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE",
@@ -241,7 +242,7 @@ func Test_SmartIdWorker_Perform(t *testing.T) {
 							EndResult: "USER_REFUSED_CERT_CHOICE",
 						},
 					}, nil)
-				authenticationService.EXPECT().UpdateSession(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), models.Session{
 					ID:     sessionId,
 					Status: "ERROR",
 					Error:  "USER_REFUSED_CERT_CHOICE",
@@ -267,7 +268,7 @@ func Test_SmartIdWorker_Perform(t *testing.T) {
 							EndResult: "WRONG_VC",
 						},
 					}, nil)
-				authenticationService.EXPECT().UpdateSession(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), models.Session{
 					ID:     sessionId,
 					Status: "ERROR",
 					Error:  "WRONG_VC",
@@ -293,7 +294,7 @@ func Test_SmartIdWorker_Perform(t *testing.T) {
 							EndResult: "TIMEOUT",
 						},
 					}, nil)
-				authenticationService.EXPECT().UpdateSession(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), models.Session{
 					ID:     sessionId,
 					Status: "ERROR",
 					Error:  "TIMEOUT",

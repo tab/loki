@@ -18,6 +18,7 @@ type SmartIdWorker interface {
 type smartIdWorker struct {
 	cfg            *config.Config
 	authentication Authentication
+	sessions       Sessions
 	queue          <-chan *SmartIdQueue
 	wg             sync.WaitGroup
 	log            *logger.Logger
@@ -26,12 +27,14 @@ type smartIdWorker struct {
 func NewSmartIdWorker(
 	cfg *config.Config,
 	authentication Authentication,
+	sessions Sessions,
 	queue chan *SmartIdQueue,
 	log *logger.Logger,
 ) SmartIdWorker {
 	return &smartIdWorker{
 		cfg:            cfg,
 		authentication: authentication,
+		sessions:       sessions,
 		queue:          queue,
 		log:            log,
 	}
@@ -105,7 +108,7 @@ func (w *smartIdWorker) handleUpdateSession(ctx context.Context, req *SmartIdQue
 		w.log.Info().Msgf("SmartId::Worker session error is %s", message)
 	}
 
-	if _, err := w.authentication.UpdateSession(ctx, models.Session{
+	if _, err := w.sessions.Update(ctx, models.Session{
 		ID:      req.ID,
 		Status:  status,
 		Error:   message,

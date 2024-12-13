@@ -2,10 +2,11 @@ package services
 
 import (
 	"context"
+	"testing"
+
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
-	"testing"
 
 	"loki/internal/app/models"
 	"loki/internal/app/models/dto"
@@ -41,9 +42,6 @@ func Test_Authentication_CreateSmartIdSession(t *testing.T) {
 	jwtMock := jwt.NewMockJwt(ctrl)
 	log := logger.NewLogger()
 
-	id, _ := uuid.Parse("8fdb516d-1a82-43ba-b82d-be63df569b86")
-	sessionId := id.String()
-
 	service := NewAuthentication(
 		cfg,
 		smartIdMock,
@@ -54,6 +52,9 @@ func Test_Authentication_CreateSmartIdSession(t *testing.T) {
 		redis,
 		jwtMock,
 		log)
+
+	id, _ := uuid.Parse("8fdb516d-1a82-43ba-b82d-be63df569b86")
+	sessionId := id.String()
 
 	tests := []struct {
 		name     string
@@ -174,8 +175,6 @@ func Test_Authentication_GetSmartIdSessionStatus(t *testing.T) {
 	jwtMock := jwt.NewMockJwt(ctrl)
 	log := logger.NewLogger()
 
-	id, _ := uuid.Parse("8fdb516d-1a82-43ba-b82d-be63df569b86")
-
 	service := NewAuthentication(
 		cfg,
 		smartIdMock,
@@ -186,6 +185,8 @@ func Test_Authentication_GetSmartIdSessionStatus(t *testing.T) {
 		redis,
 		jwtMock,
 		log)
+
+	id, _ := uuid.Parse("8fdb516d-1a82-43ba-b82d-be63df569b86")
 
 	tests := []struct {
 		name     string
@@ -283,9 +284,6 @@ func Test_Authentication_CreateMobileIdSession(t *testing.T) {
 	jwtMock := jwt.NewMockJwt(ctrl)
 	log := logger.NewLogger()
 
-	id, _ := uuid.Parse("5eab0e6a-c3e7-4526-a47e-398f0d31f514")
-	sessionId := id.String()
-
 	service := NewAuthentication(
 		cfg,
 		smartIdMock,
@@ -296,6 +294,9 @@ func Test_Authentication_CreateMobileIdSession(t *testing.T) {
 		redis,
 		jwtMock,
 		log)
+
+	id, _ := uuid.Parse("5eab0e6a-c3e7-4526-a47e-398f0d31f514")
+	sessionId := id.String()
 
 	tests := []struct {
 		name     string
@@ -422,8 +423,6 @@ func Test_Authentication_GetMobileIdSessionStatus(t *testing.T) {
 	jwtMock := jwt.NewMockJwt(ctrl)
 	log := logger.NewLogger()
 
-	id, _ := uuid.Parse("5eab0e6a-c3e7-4526-a47e-398f0d31f514")
-
 	service := NewAuthentication(
 		cfg,
 		smartIdMock,
@@ -434,6 +433,8 @@ func Test_Authentication_GetMobileIdSessionStatus(t *testing.T) {
 		redis,
 		jwtMock,
 		log)
+
+	id, _ := uuid.Parse("5eab0e6a-c3e7-4526-a47e-398f0d31f514")
 
 	tests := []struct {
 		name     string
@@ -482,232 +483,6 @@ func Test_Authentication_GetMobileIdSessionStatus(t *testing.T) {
 			tt.before()
 
 			result, err := service.GetMobileIdSessionStatus(ctx, tt.id)
-
-			if tt.error != nil {
-				assert.Error(t, err)
-				assert.Nil(t, result)
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.expected, result)
-			}
-		})
-	}
-}
-
-func Test_Authentication_UpdateSession(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	ctx := context.Background()
-	cfg := &config.Config{
-		SmartId: config.SmartId{
-			BaseURL:          "https://sid.demo.sk.ee/smart-id-rp/v2",
-			RelyingPartyName: "DEMO",
-			RelyingPartyUUID: "00000000-0000-0000-0000-000000000000",
-			Text:             "Enter PIN1",
-		},
-		MobileId: config.MobileId{
-			BaseURL:          "https://tsp.demo.sk.ee/mid-api",
-			RelyingPartyName: "DEMO",
-			RelyingPartyUUID: "00000000-0000-0000-0000-000000000000",
-			Text:             "Enter PIN1",
-		},
-	}
-	smartIdMock := NewMockSmartIdProvider(ctrl)
-	smartIdQueue := make(chan *SmartIdQueue, 1)
-
-	mobileIdMock := NewMockMobileIdProvider(ctrl)
-	mobileIdQueue := make(chan *MobileIdQueue, 1)
-
-	database := repositories.NewMockDatabase(ctrl)
-	redis := repositories.NewMockRedis(ctrl)
-
-	jwtMock := jwt.NewMockJwt(ctrl)
-	log := logger.NewLogger()
-
-	id, _ := uuid.Parse("5eab0e6a-c3e7-4526-a47e-398f0d31f514")
-
-	service := NewAuthentication(
-		cfg,
-		smartIdMock,
-		smartIdQueue,
-		mobileIdMock,
-		mobileIdQueue,
-		database,
-		redis,
-		jwtMock,
-		log)
-
-	tests := []struct {
-		name     string
-		before   func()
-		params   models.Session
-		expected *serializers.SessionSerializer
-		error    error
-	}{
-		{
-			name: "Success",
-			before: func() {
-				redis.EXPECT().UpdateSession(ctx, &models.Session{
-					ID:     id,
-					Status: "COMPLETE",
-					Payload: models.SessionPayload{
-						State:     "COMPLETE",
-						Result:    "OK",
-						Signature: "signature",
-						Cert:      "certificate",
-					},
-				}).Return(nil)
-			},
-			params: models.Session{
-				ID:     id,
-				Status: "COMPLETE",
-				Payload: models.SessionPayload{
-					State:     "COMPLETE",
-					Result:    "OK",
-					Signature: "signature",
-					Cert:      "certificate",
-				},
-			},
-			expected: &serializers.SessionSerializer{
-				ID:     id,
-				Status: "COMPLETE",
-			},
-		},
-		{
-			name: "Error",
-			before: func() {
-				redis.EXPECT().UpdateSession(ctx, &models.Session{
-					ID:     id,
-					Status: "COMPLETE",
-					Payload: models.SessionPayload{
-						State:     "COMPLETE",
-						Result:    "OK",
-						Signature: "signature",
-						Cert:      "certificate",
-					},
-				}).Return(assert.AnError)
-			},
-			params: models.Session{
-				ID:     id,
-				Status: "COMPLETE",
-				Payload: models.SessionPayload{
-					State:     "COMPLETE",
-					Result:    "OK",
-					Signature: "signature",
-					Cert:      "certificate",
-				},
-			},
-			expected: nil,
-			error:    assert.AnError,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.before()
-
-			result, err := service.UpdateSession(ctx, tt.params)
-
-			if tt.error != nil {
-				assert.Error(t, err)
-				assert.Nil(t, result)
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.expected, result)
-			}
-		})
-	}
-}
-
-func Test_Authentication_FindSessionById(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	ctx := context.Background()
-	cfg := &config.Config{
-		SmartId: config.SmartId{
-			BaseURL:          "https://sid.demo.sk.ee/smart-id-rp/v2",
-			RelyingPartyName: "DEMO",
-			RelyingPartyUUID: "00000000-0000-0000-0000-000000000000",
-			Text:             "Enter PIN1",
-		},
-		MobileId: config.MobileId{
-			BaseURL:          "https://tsp.demo.sk.ee/mid-api",
-			RelyingPartyName: "DEMO",
-			RelyingPartyUUID: "00000000-0000-0000-0000-000000000000",
-			Text:             "Enter PIN1",
-		},
-	}
-	smartIdMock := NewMockSmartIdProvider(ctrl)
-	smartIdQueue := make(chan *SmartIdQueue, 1)
-
-	mobileIdMock := NewMockMobileIdProvider(ctrl)
-	mobileIdQueue := make(chan *MobileIdQueue, 1)
-
-	database := repositories.NewMockDatabase(ctrl)
-	redis := repositories.NewMockRedis(ctrl)
-
-	jwtMock := jwt.NewMockJwt(ctrl)
-	log := logger.NewLogger()
-
-	id, _ := uuid.Parse("5eab0e6a-c3e7-4526-a47e-398f0d31f514")
-	sessionId := id.String()
-
-	service := NewAuthentication(
-		cfg,
-		smartIdMock,
-		smartIdQueue,
-		mobileIdMock,
-		mobileIdQueue,
-		database,
-		redis,
-		jwtMock,
-		log)
-
-	tests := []struct {
-		name      string
-		before    func()
-		sessionId string
-		expected  *serializers.SessionSerializer
-		error     error
-	}{
-		{
-			name: "Success",
-			before: func() {
-				redis.EXPECT().FindSessionById(ctx, id).Return(&models.Session{
-					ID:     id,
-					Status: "COMPLETE",
-					Payload: models.SessionPayload{
-						State:     "COMPLETE",
-						Result:    "OK",
-						Signature: "signature",
-						Cert:      "certificate",
-					},
-				}, nil)
-			},
-			sessionId: sessionId,
-			expected: &serializers.SessionSerializer{
-				ID:     id,
-				Status: "COMPLETE",
-			},
-		},
-		{
-			name: "Error",
-			before: func() {
-				redis.EXPECT().FindSessionById(ctx, id).Return(nil, assert.AnError)
-			},
-			sessionId: sessionId,
-			expected:  nil,
-			error:     assert.AnError,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.before()
-
-			result, err := service.FindSessionById(ctx, tt.sessionId)
 
 			if tt.error != nil {
 				assert.Error(t, err)

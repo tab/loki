@@ -11,6 +11,7 @@ import (
 	"loki/internal/app/repositories"
 	"loki/internal/app/services"
 	"loki/internal/config"
+	"loki/internal/config/middlewares"
 	"loki/internal/config/router"
 	"loki/internal/config/server"
 	"loki/pkg/jwt"
@@ -24,6 +25,8 @@ var Module = fx.Options(
 	repositories.Module,
 	jwt.Module,
 	services.Module,
+
+	middlewares.Module,
 
 	server.Module,
 	router.Module,

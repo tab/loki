@@ -16,6 +16,7 @@ type Payload struct {
 type Jwt interface {
 	Generate(payload Payload, duration time.Duration) (string, error)
 	Verify(token string) (bool, error)
+	Decode(token string) (*Payload, error)
 }
 
 type jwtService struct {
@@ -68,4 +69,28 @@ func (j *jwtService) Verify(token string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (j *jwtService) Decode(token string) (*Payload, error) {
+	claims := &Claims{}
+
+	result, err := jwt.ParseWithClaims(token, claims,
+		func(t *jwt.Token) (interface{}, error) {
+			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+				return false, errors.ErrInvalidSigningMethod
+			}
+			return []byte(j.cfg.SecretKey), nil
+		})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !result.Valid {
+		return nil, errors.ErrInvalidToken
+	}
+
+	return &Payload{
+		ID: claims.ID,
+	}, nil
 }

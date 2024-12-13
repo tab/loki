@@ -9,13 +9,18 @@ import (
 
 	"loki/internal/app/controllers"
 	"loki/internal/config"
+	"loki/internal/config/middlewares"
 )
 
 func NewRouter(
 	cfg *config.Config,
+
+	authMiddleware middlewares.AuthMiddleware,
+
 	smartId controllers.SmartIdController,
 	mobileID controllers.MobileIdController,
 	sessions controllers.SessionsController,
+	users controllers.UsersController,
 ) http.Handler {
 	r := chi.NewRouter()
 
@@ -35,6 +40,11 @@ func NewRouter(
 	r.Post("/api/auth/mobile_id", mobileID.CreateSession)
 	r.Get("/api/auth/sessions/{id}", sessions.GetStatus)
 	r.Post("/api/auth/sessions/{id}/authenticate", sessions.Authenticate)
+
+	r.Group(func(r chi.Router) {
+		r.Use(authMiddleware.Authenticate)
+		r.Get("/api/me", users.Me)
+	})
 
 	return r
 }

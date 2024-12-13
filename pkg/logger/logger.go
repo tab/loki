@@ -1,10 +1,11 @@
 package logger
 
 import (
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/pkgerrors"
 	"io"
 	"os"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/pkgerrors"
 )
 
 type Logger struct {

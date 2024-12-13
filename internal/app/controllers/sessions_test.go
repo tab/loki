@@ -17,13 +17,14 @@ import (
 	"loki/internal/app/services"
 )
 
-func Test_Session_GetStatus(t *testing.T) {
+func Test_SessionsController_GetStatus(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	ctx := gomock.Any()
 	authentication := services.NewMockAuthentication(ctrl)
-	controller := NewSessionsController(authentication)
+	sessions := services.NewMockSessions(ctrl)
+	controller := NewSessionsController(authentication, sessions)
 
 	sessionId := "8fdb516d-1a82-43ba-b82d-be63df569b86"
 	id, _ := uuid.Parse(sessionId)
@@ -43,7 +44,7 @@ func Test_Session_GetStatus(t *testing.T) {
 		{
 			name: "Success",
 			before: func() {
-				authentication.EXPECT().FindSessionById(ctx, sessionId).Return(&serializers.SessionSerializer{
+				sessions.EXPECT().FindById(ctx, sessionId).Return(&serializers.SessionSerializer{
 					ID:     id,
 					Status: "COMPLETED",
 				}, nil)
@@ -60,7 +61,7 @@ func Test_Session_GetStatus(t *testing.T) {
 		{
 			name: "Not found",
 			before: func() {
-				authentication.EXPECT().FindSessionById(ctx, sessionId).Return(nil, errors.ErrSessionNotFound)
+				sessions.EXPECT().FindById(ctx, sessionId).Return(nil, errors.ErrSessionNotFound)
 			},
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: "session not found"},
@@ -71,7 +72,7 @@ func Test_Session_GetStatus(t *testing.T) {
 		{
 			name: "Error",
 			before: func() {
-				authentication.EXPECT().FindSessionById(ctx, sessionId).Return(nil, fmt.Errorf("Redis error"))
+				sessions.EXPECT().FindById(ctx, sessionId).Return(nil, fmt.Errorf("Redis error"))
 			},
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: "Redis error"},
@@ -115,13 +116,14 @@ func Test_Session_GetStatus(t *testing.T) {
 	}
 }
 
-func Test_Session_Authenticate(t *testing.T) {
+func Test_SessionsController_Authenticate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	ctx := gomock.Any()
 	authentication := services.NewMockAuthentication(ctrl)
-	controller := NewSessionsController(authentication)
+	sessions := services.NewMockSessions(ctrl)
+	controller := NewSessionsController(authentication, sessions)
 
 	sessionId := "8fdb516d-1a82-43ba-b82d-be63df569b86"
 	id, _ := uuid.Parse(sessionId)

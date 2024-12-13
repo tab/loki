@@ -14,9 +14,12 @@ var (
 	ErrInvalidIdentityNumber = errors.New("invalid identity number")
 
 	ErrSessionNotFound = errors.New("session not found")
+	ErrUserNotFound    = errors.New("user not found")
 
 	ErrSmartIdProviderError  = errors.New("smart-id provider error")
 	ErrMobileIdProviderError = errors.New("mobile-id provider error")
+
+	ErrUnauthorized = errors.New("unauthorized")
 )
 
 var (

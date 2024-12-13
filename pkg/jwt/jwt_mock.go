@@ -40,6 +40,21 @@ func (m *MockJwt) EXPECT() *MockJwtMockRecorder {
 	return m.recorder
 }
 
+// Decode mocks base method.
+func (m *MockJwt) Decode(token string) (*Payload, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Decode", token)
+	ret0, _ := ret[0].(*Payload)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Decode indicates an expected call of Decode.
+func (mr *MockJwtMockRecorder) Decode(token any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Decode", reflect.TypeOf((*MockJwt)(nil).Decode), token)
+}
+
 // Generate mocks base method.
 func (m *MockJwt) Generate(payload Payload, duration time.Duration) (string, error) {
 	m.ctrl.T.Helper()
