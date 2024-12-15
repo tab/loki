@@ -77,7 +77,7 @@ func (d *database) CreateOrUpdateUserWithTokens(ctx context.Context, params dto.
 	}
 
 	accessToken, err := q.CreateToken(ctx, db.CreateTokenParams{
-		UserId: user.ID,
+		UserID: user.ID,
 		Type:   db.TokenType(params.AccessToken.Type),
 		Value:  params.AccessToken.Value,
 		ExpiresAt: pgtype.Timestamp{
@@ -90,7 +90,7 @@ func (d *database) CreateOrUpdateUserWithTokens(ctx context.Context, params dto.
 	}
 
 	refreshToken, err := q.CreateToken(ctx, db.CreateTokenParams{
-		UserId: user.ID,
+		UserID: user.ID,
 		Type:   db.TokenType(params.RefreshToken.Type),
 		Value:  params.RefreshToken.Value,
 		ExpiresAt: pgtype.Timestamp{
@@ -128,7 +128,7 @@ func (d *database) RefreshUserTokens(ctx context.Context, params dto.RefreshToke
 	}
 
 	accessToken, err := q.CreateToken(ctx, db.CreateTokenParams{
-		UserId: user.ID,
+		UserID: user.ID,
 		Type:   db.TokenType(params.AccessToken.Type),
 		Value:  params.AccessToken.Value,
 		ExpiresAt: pgtype.Timestamp{
@@ -141,7 +141,7 @@ func (d *database) RefreshUserTokens(ctx context.Context, params dto.RefreshToke
 	}
 
 	refreshToken, err := q.CreateToken(ctx, db.CreateTokenParams{
-		UserId: user.ID,
+		UserID: user.ID,
 		Type:   db.TokenType(params.RefreshToken.Type),
 		Value:  params.RefreshToken.Value,
 		ExpiresAt: pgtype.Timestamp{

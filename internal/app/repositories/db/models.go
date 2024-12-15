@@ -54,9 +54,40 @@ func (ns NullTokenType) Value() (driver.Value, error) {
 	return string(ns.TokenType), nil
 }
 
+type Permission struct {
+	ID          uuid.UUID
+	Name        string
+	Description pgtype.Text
+	CreatedAt   pgtype.Timestamp
+	UpdatedAt   pgtype.Timestamp
+}
+
+type Role struct {
+	ID          uuid.UUID
+	Name        string
+	Description pgtype.Text
+	CreatedAt   pgtype.Timestamp
+	UpdatedAt   pgtype.Timestamp
+}
+
+type RolePermission struct {
+	RoleID       uuid.UUID
+	PermissionID uuid.UUID
+	CreatedAt    pgtype.Timestamp
+	UpdatedAt    pgtype.Timestamp
+}
+
+type Scope struct {
+	ID          uuid.UUID
+	Name        string
+	Description pgtype.Text
+	CreatedAt   pgtype.Timestamp
+	UpdatedAt   pgtype.Timestamp
+}
+
 type Token struct {
 	ID        uuid.UUID
-	UserId    uuid.UUID
+	UserID    uuid.UUID
 	Type      TokenType
 	Value     string
 	ExpiresAt pgtype.Timestamp
@@ -72,4 +103,18 @@ type User struct {
 	LastName       string
 	CreatedAt      pgtype.Timestamp
 	UpdatedAt      pgtype.Timestamp
+}
+
+type UserRole struct {
+	UserID    uuid.UUID
+	RoleID    uuid.UUID
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
+}
+
+type UserScope struct {
+	UserID    uuid.UUID
+	ScopeID   uuid.UUID
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
 }

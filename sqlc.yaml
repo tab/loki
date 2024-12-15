@@ -3,7 +3,11 @@ sql:
   - name: postgresql
     engine: postgresql
     schema: db/schema.sql
-    queries: db/sqlc/queries.sql
+    queries:
+      - db/sqlc/role.sql
+      - db/sqlc/scope.sql
+      - db/sqlc/token.sql
+      - db/sqlc/user.sql
     gen:
       go:
         package: db
