@@ -11,6 +11,7 @@ package services
 
 import (
 	context "context"
+	models "loki/internal/app/models"
 	serializers "loki/internal/app/serializers"
 	reflect "reflect"
 
@@ -39,6 +40,21 @@ func NewMockUsers(ctrl *gomock.Controller) *MockUsers {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockUsers) EXPECT() *MockUsersMockRecorder {
 	return m.recorder
+}
+
+// Create mocks base method.
+func (m *MockUsers) Create(ctx context.Context, params *models.User) (*models.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Create", ctx, params)
+	ret0, _ := ret[0].(*models.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create.
+func (mr *MockUsersMockRecorder) Create(ctx, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockUsers)(nil).Create), ctx, params)
 }
 
 // FindByIdentityNumber mocks base method.

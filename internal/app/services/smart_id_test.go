@@ -110,7 +110,7 @@ func Test_SmartIdProvider_CreateSession(t *testing.T) {
 }
 
 func Test_SmartIdProvider_GetSessionStatus(t *testing.T) {
-	id, _ := uuid.Parse("8fdb516d-1a82-43ba-b82d-be63df569b86")
+	id := uuid.MustParse("8fdb516d-1a82-43ba-b82d-be63df569b86")
 
 	tests := []struct {
 		name      string

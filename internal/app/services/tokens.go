@@ -66,8 +66,8 @@ func (t *tokens) Refresh(ctx context.Context, userId uuid.UUID, token string) (*
 		return nil, err
 	}
 
-	_, err = t.database.RefreshUserTokens(ctx, dto.RefreshTokenParams{
-		UserId: user.ID,
+	_, err = t.database.CreateUserTokens(ctx, dto.CreateUserTokensParams{
+		IdentityNumber: user.IdentityNumber,
 		AccessToken: dto.CreateTokenParams{
 			Type:      models.AccessTokenType,
 			Value:     accessToken,

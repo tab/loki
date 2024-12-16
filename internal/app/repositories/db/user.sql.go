@@ -18,7 +18,7 @@ VALUES ($1, $2, $3, $4)
 RETURNING id, identity_number, personal_code, first_name, last_name
 `
 
-type CreateUserParams struct {
+type CreateUserTokensParams struct {
 	IdentityNumber string
 	PersonalCode   string
 	FirstName      string
@@ -33,7 +33,7 @@ type CreateUserRow struct {
 	LastName       string
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserTokensParams) (CreateUserRow, error) {
 	row := q.db.QueryRow(ctx, createUser,
 		arg.IdentityNumber,
 		arg.PersonalCode,

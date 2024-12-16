@@ -43,15 +43,17 @@ func Test_Database_CreateUser(t *testing.T) {
 	tests := []struct {
 		name     string
 		before   func()
-		params   db.CreateUserParams
+		params   db.CreateUserTokensParams
 		expected *models.User
 		error    bool
 	}{
 		{
 			name: "Success",
 			before: func() {
+				err := spec.DbSeed(ctx, cfg.DatabaseDSN)
+				assert.NoError(t, err)
 			},
-			params: db.CreateUserParams{
+			params: db.CreateUserTokensParams{
 				IdentityNumber: "PNOEE-30303039914",
 				PersonalCode:   "30303039914",
 				FirstName:      "TESTNUMBER",
@@ -68,7 +70,10 @@ func Test_Database_CreateUser(t *testing.T) {
 		{
 			name: "User already exists",
 			before: func() {
-				_, err := repo.CreateUser(ctx, db.CreateUserParams{
+				err := spec.DbSeed(ctx, cfg.DatabaseDSN)
+				assert.NoError(t, err)
+
+				_, err = repo.CreateUser(ctx, db.CreateUserTokensParams{
 					IdentityNumber: "PNOEE-30303039914",
 					PersonalCode:   "30303039914",
 					FirstName:      "TESTNUMBER",
@@ -76,7 +81,7 @@ func Test_Database_CreateUser(t *testing.T) {
 				})
 				assert.NoError(t, err)
 			},
-			params: db.CreateUserParams{
+			params: db.CreateUserTokensParams{
 				IdentityNumber: "PNOEE-30303039914",
 				PersonalCode:   "30303039914",
 				FirstName:      "JOHN",
@@ -91,9 +96,12 @@ func Test_Database_CreateUser(t *testing.T) {
 			error: false,
 		},
 		{
-			name:   "Invalid identity number",
-			before: func() {},
-			params: db.CreateUserParams{
+			name: "Invalid identity number",
+			before: func() {
+				err := spec.DbSeed(ctx, cfg.DatabaseDSN)
+				assert.NoError(t, err)
+			},
+			params: db.CreateUserTokensParams{
 				IdentityNumber: "",
 				PersonalCode:   "",
 				FirstName:      "TESTNUMBER",
@@ -130,7 +138,7 @@ func Test_Database_CreateUser(t *testing.T) {
 	}
 }
 
-func Test_Database_CreateOrUpdateUserWithTokens(t *testing.T) {
+func Test_Database_CreateUserTokens(t *testing.T) {
 	ctx := context.Background()
 	cfg := &config.Config{
 		DatabaseDSN: os.Getenv("DATABASE_DSN"),
@@ -142,44 +150,17 @@ func Test_Database_CreateOrUpdateUserWithTokens(t *testing.T) {
 	tests := []struct {
 		name     string
 		before   func()
-		params   dto.CreateUserParams
+		params   dto.CreateUserTokensParams
 		expected *models.User
 		error    bool
 	}{
 		{
 			name: "Success",
 			before: func() {
-			},
-			params: dto.CreateUserParams{
-				IdentityNumber: "PNOEE-30303039914",
-				PersonalCode:   "30303039914",
-				FirstName:      "TESTNUMBER",
-				LastName:       "OK",
-				AccessToken: dto.CreateTokenParams{
-					Type:      "access_token",
-					Value:     "aaa.bbb.ccc",
-					ExpiresAt: time.Now().Add(time.Hour),
-				},
-				RefreshToken: dto.CreateTokenParams{
-					Type:      "refresh_token",
-					Value:     "ddd.eee.fff",
-					ExpiresAt: time.Now().Add(time.Hour * 24),
-				},
-			},
-			expected: &models.User{
-				IdentityNumber: "PNOEE-30303039914",
-				PersonalCode:   "30303039914",
-				FirstName:      "TESTNUMBER",
-				LastName:       "OK",
-				AccessToken:    "aaa.bbb.ccc",
-				RefreshToken:   "ddd.eee.fff",
-			},
-			error: false,
-		},
-		{
-			name: "User already exists",
-			before: func() {
-				_, err := repo.CreateUser(ctx, db.CreateUserParams{
+				err := spec.DbSeed(ctx, cfg.DatabaseDSN)
+				assert.NoError(t, err)
+
+				_, err = repo.CreateUser(ctx, db.CreateUserTokensParams{
 					IdentityNumber: "PNOEE-30303039914",
 					PersonalCode:   "30303039914",
 					FirstName:      "TESTNUMBER",
@@ -187,11 +168,8 @@ func Test_Database_CreateOrUpdateUserWithTokens(t *testing.T) {
 				})
 				assert.NoError(t, err)
 			},
-			params: dto.CreateUserParams{
+			params: dto.CreateUserTokensParams{
 				IdentityNumber: "PNOEE-30303039914",
-				PersonalCode:   "30303039914",
-				FirstName:      "JOHN",
-				LastName:       "DOE",
 				AccessToken: dto.CreateTokenParams{
 					Type:      "access_token",
 					Value:     "aaa.bbb.ccc",
@@ -206,33 +184,49 @@ func Test_Database_CreateOrUpdateUserWithTokens(t *testing.T) {
 			expected: &models.User{
 				IdentityNumber: "PNOEE-30303039914",
 				PersonalCode:   "30303039914",
-				FirstName:      "JOHN",
-				LastName:       "DOE",
+				FirstName:      "TESTNUMBER",
+				LastName:       "OK",
 				AccessToken:    "aaa.bbb.ccc",
 				RefreshToken:   "ddd.eee.fff",
 			},
 			error: false,
 		},
 		{
-			name:   "Invalid identity number",
-			before: func() {},
-			params: dto.CreateUserParams{
+			name: "Invalid identity number",
+			before: func() {
+				err := spec.DbSeed(ctx, cfg.DatabaseDSN)
+				assert.NoError(t, err)
+
+				_, err = repo.CreateUser(ctx, db.CreateUserTokensParams{
+					IdentityNumber: "PNOEE-30303039914",
+					PersonalCode:   "30303039914",
+					FirstName:      "TESTNUMBER",
+					LastName:       "OK",
+				})
+				assert.NoError(t, err)
+			},
+			params: dto.CreateUserTokensParams{
 				IdentityNumber: "",
-				PersonalCode:   "",
-				FirstName:      "TESTNUMBER",
-				LastName:       "NOT OK",
 			},
 			expected: nil,
 			error:    true,
 		},
 		{
-			name:   "Invalid access token",
-			before: func() {},
-			params: dto.CreateUserParams{
+			name: "Invalid access token",
+			before: func() {
+				err := spec.DbSeed(ctx, cfg.DatabaseDSN)
+				assert.NoError(t, err)
+
+				_, err = repo.CreateUser(ctx, db.CreateUserTokensParams{
+					IdentityNumber: "PNOEE-30303039914",
+					PersonalCode:   "30303039914",
+					FirstName:      "TESTNUMBER",
+					LastName:       "OK",
+				})
+				assert.NoError(t, err)
+			},
+			params: dto.CreateUserTokensParams{
 				IdentityNumber: "PNOEE-30303039914",
-				PersonalCode:   "30303039914",
-				FirstName:      "TESTNUMBER",
-				LastName:       "NOT OK",
 				AccessToken: dto.CreateTokenParams{
 					Type:      "",
 					Value:     "",
@@ -248,13 +242,21 @@ func Test_Database_CreateOrUpdateUserWithTokens(t *testing.T) {
 			error:    true,
 		},
 		{
-			name:   "Invalid refresh token",
-			before: func() {},
-			params: dto.CreateUserParams{
+			name: "Invalid refresh token",
+			before: func() {
+				err := spec.DbSeed(ctx, cfg.DatabaseDSN)
+				assert.NoError(t, err)
+
+				_, err = repo.CreateUser(ctx, db.CreateUserTokensParams{
+					IdentityNumber: "PNOEE-30303039914",
+					PersonalCode:   "30303039914",
+					FirstName:      "TESTNUMBER",
+					LastName:       "OK",
+				})
+				assert.NoError(t, err)
+			},
+			params: dto.CreateUserTokensParams{
 				IdentityNumber: "PNOEE-30303039914",
-				PersonalCode:   "30303039914",
-				FirstName:      "TESTNUMBER",
-				LastName:       "NOT OK",
 				AccessToken: dto.CreateTokenParams{
 					Type:      "access_token",
 					Value:     "aaa.bbb.ccc",
@@ -275,135 +277,7 @@ func Test_Database_CreateOrUpdateUserWithTokens(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.before()
 
-			user, err := repo.CreateOrUpdateUserWithTokens(ctx, tt.params)
-
-			if tt.error {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-
-				assert.NotEqual(t, uuid.Nil, user.ID)
-				assert.Equal(t, tt.expected.IdentityNumber, user.IdentityNumber)
-				assert.Equal(t, tt.expected.PersonalCode, user.PersonalCode)
-				assert.Equal(t, tt.expected.FirstName, user.FirstName)
-				assert.Equal(t, tt.expected.LastName, user.LastName)
-			}
-
-			t.Cleanup(func() {
-				err = spec.TruncateTables(ctx, cfg.DatabaseDSN)
-				require.NoError(t, err)
-			})
-		})
-	}
-}
-
-func Test_Database_RefreshUserTokens(t *testing.T) {
-	ctx := context.Background()
-	cfg := &config.Config{
-		DatabaseDSN: os.Getenv("DATABASE_DSN"),
-	}
-
-	repo, err := NewDatabase(cfg)
-	assert.NoError(t, err)
-
-	user, err := repo.CreateUser(ctx, db.CreateUserParams{
-		IdentityNumber: "PNOEE-30303039914",
-		PersonalCode:   "30303039914",
-		FirstName:      "TESTNUMBER",
-		LastName:       "OK",
-	})
-	assert.NoError(t, err)
-
-	tests := []struct {
-		name     string
-		params   dto.RefreshTokenParams
-		expected *models.User
-		error    bool
-	}{
-		{
-			name: "Success",
-			params: dto.RefreshTokenParams{
-				UserId: user.ID,
-				AccessToken: dto.CreateTokenParams{
-					Type:      "access_token",
-					Value:     "aaa.bbb.ccc",
-					ExpiresAt: time.Now().Add(time.Hour),
-				},
-				RefreshToken: dto.CreateTokenParams{
-					Type:      "refresh_token",
-					Value:     "ddd.eee.fff",
-					ExpiresAt: time.Now().Add(time.Hour * 24),
-				},
-			},
-			expected: &models.User{
-				IdentityNumber: "PNOEE-30303039914",
-				PersonalCode:   "30303039914",
-				FirstName:      "TESTNUMBER",
-				LastName:       "OK",
-				AccessToken:    "aaa.bbb.ccc",
-				RefreshToken:   "ddd.eee.fff",
-			},
-			error: false,
-		},
-		{
-			name: "User not found",
-			params: dto.RefreshTokenParams{
-				UserId: uuid.MustParse("00000000-0000-0000-0000-000000000002"),
-				AccessToken: dto.CreateTokenParams{
-					Type:      "access_token",
-					Value:     "aaa.bbb.ccc",
-					ExpiresAt: time.Now().Add(time.Hour),
-				},
-				RefreshToken: dto.CreateTokenParams{
-					Type:      "refresh_token",
-					Value:     "ddd.eee.fff",
-					ExpiresAt: time.Now().Add(time.Hour * 24),
-				},
-			},
-			expected: nil,
-			error:    true,
-		},
-		{
-			name: "Invalid access token",
-			params: dto.RefreshTokenParams{
-				UserId: user.ID,
-				AccessToken: dto.CreateTokenParams{
-					Type:      "",
-					Value:     "",
-					ExpiresAt: time.Time{},
-				},
-				RefreshToken: dto.CreateTokenParams{
-					Type:      "refresh_token",
-					Value:     "ddd.eee.fff",
-					ExpiresAt: time.Now().Add(time.Hour * 24),
-				},
-			},
-			expected: nil,
-			error:    true,
-		},
-		{
-			name: "Invalid refresh token",
-			params: dto.RefreshTokenParams{
-				UserId: user.ID,
-				AccessToken: dto.CreateTokenParams{
-					Type:      "access_token",
-					Value:     "aaa.bbb.ccc",
-					ExpiresAt: time.Now().Add(time.Hour),
-				},
-				RefreshToken: dto.CreateTokenParams{
-					Type:      "",
-					Value:     "",
-					ExpiresAt: time.Time{},
-				},
-			},
-			expected: nil,
-			error:    true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := repo.RefreshUserTokens(ctx, tt.params)
+			result, err := repo.CreateUserTokens(ctx, tt.params)
 
 			if tt.error {
 				assert.Error(t, err)
@@ -415,8 +289,6 @@ func Test_Database_RefreshUserTokens(t *testing.T) {
 				assert.Equal(t, tt.expected.PersonalCode, result.PersonalCode)
 				assert.Equal(t, tt.expected.FirstName, result.FirstName)
 				assert.Equal(t, tt.expected.LastName, result.LastName)
-				assert.Equal(t, tt.expected.AccessToken, result.AccessToken)
-				assert.Equal(t, tt.expected.RefreshToken, result.RefreshToken)
 			}
 
 			t.Cleanup(func() {
@@ -436,7 +308,10 @@ func Test_Database_FindUserById(t *testing.T) {
 	repo, err := NewDatabase(cfg)
 	assert.NoError(t, err)
 
-	user, err := repo.CreateUser(ctx, db.CreateUserParams{
+	err = spec.DbSeed(ctx, cfg.DatabaseDSN)
+	assert.NoError(t, err)
+
+	user, err := repo.CreateUser(ctx, db.CreateUserTokensParams{
 		IdentityNumber: "PNOEE-30303039914",
 		PersonalCode:   "30303039914",
 		FirstName:      "TESTNUMBER",
@@ -503,7 +378,10 @@ func Test_Database_FindUserByIdentityNumber(t *testing.T) {
 	repo, err := NewDatabase(cfg)
 	assert.NoError(t, err)
 
-	user, err := repo.CreateUser(ctx, db.CreateUserParams{
+	err = spec.DbSeed(ctx, cfg.DatabaseDSN)
+	assert.NoError(t, err)
+
+	user, err := repo.CreateUser(ctx, db.CreateUserTokensParams{
 		IdentityNumber: "PNOEE-30303039914",
 		PersonalCode:   "30303039914",
 		FirstName:      "TESTNUMBER",

@@ -23,7 +23,7 @@ func Test_Sessions_FindById(t *testing.T) {
 	log := logger.NewLogger()
 	service := NewSessions(redis, log)
 
-	id, _ := uuid.Parse("5eab0e6a-c3e7-4526-a47e-398f0d31f514")
+	id := uuid.MustParse("5eab0e6a-c3e7-4526-a47e-398f0d31f514")
 	sessionId := id.String()
 
 	tests := []struct {
@@ -39,12 +39,6 @@ func Test_Sessions_FindById(t *testing.T) {
 				redis.EXPECT().FindSessionById(ctx, id).Return(&models.Session{
 					ID:     id,
 					Status: "COMPLETE",
-					Payload: models.SessionPayload{
-						State:     "COMPLETE",
-						Result:    "OK",
-						Signature: "signature",
-						Cert:      "certificate",
-					},
 				}, nil)
 			},
 			sessionId: sessionId,
@@ -90,7 +84,7 @@ func Test_Authentication_Update(t *testing.T) {
 	log := logger.NewLogger()
 	service := NewSessions(redis, log)
 
-	id, _ := uuid.Parse("5eab0e6a-c3e7-4526-a47e-398f0d31f514")
+	id := uuid.MustParse("5eab0e6a-c3e7-4526-a47e-398f0d31f514")
 
 	tests := []struct {
 		name     string
@@ -105,23 +99,11 @@ func Test_Authentication_Update(t *testing.T) {
 				redis.EXPECT().UpdateSession(ctx, &models.Session{
 					ID:     id,
 					Status: "COMPLETE",
-					Payload: models.SessionPayload{
-						State:     "COMPLETE",
-						Result:    "OK",
-						Signature: "signature",
-						Cert:      "certificate",
-					},
 				}).Return(nil)
 			},
 			params: models.Session{
 				ID:     id,
 				Status: "COMPLETE",
-				Payload: models.SessionPayload{
-					State:     "COMPLETE",
-					Result:    "OK",
-					Signature: "signature",
-					Cert:      "certificate",
-				},
 			},
 			expected: &serializers.SessionSerializer{
 				ID:     id,
@@ -134,23 +116,11 @@ func Test_Authentication_Update(t *testing.T) {
 				redis.EXPECT().UpdateSession(ctx, &models.Session{
 					ID:     id,
 					Status: "COMPLETE",
-					Payload: models.SessionPayload{
-						State:     "COMPLETE",
-						Result:    "OK",
-						Signature: "signature",
-						Cert:      "certificate",
-					},
 				}).Return(assert.AnError)
 			},
 			params: models.Session{
 				ID:     id,
 				Status: "COMPLETE",
-				Payload: models.SessionPayload{
-					State:     "COMPLETE",
-					Result:    "OK",
-					Signature: "signature",
-					Cert:      "certificate",
-				},
 			},
 			expected: nil,
 			error:    assert.AnError,

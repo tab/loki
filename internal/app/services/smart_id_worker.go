@@ -19,6 +19,7 @@ type smartIdWorker struct {
 	cfg            *config.Config
 	authentication Authentication
 	sessions       Sessions
+	users          Users
 	queue          <-chan *SmartIdQueue
 	wg             sync.WaitGroup
 	log            *logger.Logger
@@ -28,6 +29,7 @@ func NewSmartIdWorker(
 	cfg *config.Config,
 	authentication Authentication,
 	sessions Sessions,
+	users Users,
 	queue chan *SmartIdQueue,
 	log *logger.Logger,
 ) SmartIdWorker {
@@ -35,6 +37,7 @@ func NewSmartIdWorker(
 		cfg:            cfg,
 		authentication: authentication,
 		sessions:       sessions,
+		users:          users,
 		queue:          queue,
 		log:            log,
 	}
@@ -78,68 +81,70 @@ func (w *smartIdWorker) perform(ctx context.Context, req *SmartIdQueue) {
 			w.log.Error().Err(err).Msg("SmartId::Worker failed to get session status")
 			return
 		}
-
-		switch response.State {
-		case models.SESSION_COMPLETE:
-			w.handleUpdateSession(ctx, req, response)
-			return
-		case models.SESSION_RUNNING:
-			w.log.Warn().Msg("Session is still running")
-			continue
-		default:
-			w.log.Error().Msgf("Unknown session state: %s", response.State)
+		if w.processSessionState(ctx, req, response) {
 			return
 		}
 	}
 }
 
-func (w *smartIdWorker) handleUpdateSession(ctx context.Context, req *SmartIdQueue, response *dto.SmartIdProviderSessionStatusResponse) {
-	status, message := buildSmartIdStatusAndMessage(response.Result.EndResult)
-	payload := models.SessionPayload{
-		State:  response.State,
-		Result: response.Result.EndResult,
-	}
-
-	if response.Result.EndResult == models.SESSION_RESULT_OK {
-		w.log.Info().Msg("SmartId::Worker session result is OK")
-		payload.Signature = response.Signature.Value
-		payload.Cert = response.Cert.Value
-	} else if status == models.SESSION_ERROR {
-		w.log.Info().Msgf("SmartId::Worker session error is %s", message)
-	}
-
-	if _, err := w.sessions.Update(ctx, models.Session{
-		ID:      req.ID,
-		Status:  status,
-		Error:   message,
-		Payload: payload,
-	}); err != nil {
-		w.log.Error().Err(err).Msg("SmartId::Worker failed to update session")
-		return
+func (w *smartIdWorker) processSessionState(ctx context.Context, req *SmartIdQueue, response *dto.SmartIdProviderSessionStatusResponse) bool {
+	switch response.State {
+	case models.SessionComplete:
+		return w.handleSessionComplete(ctx, req, response)
+	case models.SessionRunning:
+		w.log.Warn().Msg("Session is still running")
+		return false
+	default:
+		w.log.Error().Msgf("Unknown session state: %s", response.State)
+		return true
 	}
 }
 
-func buildSmartIdStatusAndMessage(endResult string) (status string, message string) {
-	switch endResult {
-	case models.SESSION_RESULT_OK:
-		return models.SESSION_COMPLETE, ""
-	case models.SESSION_RESULT_USER_REFUSED:
-		return models.SESSION_ERROR, models.SESSION_RESULT_USER_REFUSED
-	case models.SESSION_RESULT_USER_REFUSED_DISPLAYTEXTANDPIN:
-		return models.SESSION_ERROR, models.SESSION_RESULT_USER_REFUSED_DISPLAYTEXTANDPIN
-	case models.SESSION_RESULT_USER_REFUSED_VC_CHOICE:
-		return models.SESSION_ERROR, models.SESSION_RESULT_USER_REFUSED_VC_CHOICE
-	case models.SESSION_RESULT_USER_REFUSED_CONFIRMATIONMESSAGE:
-		return models.SESSION_ERROR, models.SESSION_RESULT_USER_REFUSED_CONFIRMATIONMESSAGE
-	case models.SESSION_RESULT_USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE:
-		return models.SESSION_ERROR, models.SESSION_RESULT_USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE
-	case models.SESSION_RESULT_USER_REFUSED_CERT_CHOICE:
-		return models.SESSION_ERROR, models.SESSION_RESULT_USER_REFUSED_CERT_CHOICE
-	case models.SESSION_RESULT_WRONG_VC:
-		return models.SESSION_ERROR, models.SESSION_RESULT_WRONG_VC
-	case models.SESSION_RESULT_TIMEOUT:
-		return models.SESSION_ERROR, models.SESSION_RESULT_TIMEOUT
-	default:
-		return models.SESSION_ERROR, models.SESSION_RESULT_UNKNOWN
+func (w *smartIdWorker) handleSessionComplete(ctx context.Context, req *SmartIdQueue, response *dto.SmartIdProviderSessionStatusResponse) bool {
+	if response.Result.EndResult == models.SessionResultOK {
+		w.log.Info().Msg("SmartId::Worker session is completed with OK result")
+
+		user, err := w.handleCreateUser(ctx, response)
+		if err != nil {
+			w.log.Error().Err(err).Msg("SmartId::Worker failed to create user")
+			return true
+		}
+
+		_, err = w.sessions.Update(ctx, models.Session{
+			ID:     req.ID,
+			UserId: user.ID,
+			Status: AuthenticationSuccess,
+		})
+		if err != nil {
+			w.log.Error().Err(err).Msg("SmartId::Worker failed to update session")
+			return true
+		}
+	} else {
+		w.log.Info().Msg("SmartId::Worker session is completed with error")
+
+		if _, err := w.sessions.Update(ctx, models.Session{
+			ID:     req.ID,
+			Status: AuthenticationError,
+			Error:  response.Result.EndResult,
+		}); err != nil {
+			w.log.Error().Err(err).Msg("SmartId::Worker failed to update session")
+		}
 	}
+
+	return true
+}
+
+func (w *smartIdWorker) handleCreateUser(ctx context.Context, response *dto.SmartIdProviderSessionStatusResponse) (*models.User, error) {
+	cert, err := extractUserFromCertificate(response.Cert.Value)
+	if err != nil {
+		w.log.Error().Err(err).Msg("SmartId::Worker failed to extract user from certificate")
+		return nil, err
+	}
+
+	return w.users.Create(ctx, &models.User{
+		IdentityNumber: cert.IdentityNumber,
+		PersonalCode:   cert.PersonalCode,
+		FirstName:      cert.FirstName,
+		LastName:       cert.LastName,
+	})
 }

@@ -44,23 +44,8 @@ func (m *MockDatabase) EXPECT() *MockDatabaseMockRecorder {
 	return m.recorder
 }
 
-// CreateOrUpdateUserWithTokens mocks base method.
-func (m *MockDatabase) CreateOrUpdateUserWithTokens(ctx context.Context, params dto.CreateUserParams) (*models.User, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOrUpdateUserWithTokens", ctx, params)
-	ret0, _ := ret[0].(*models.User)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateOrUpdateUserWithTokens indicates an expected call of CreateOrUpdateUserWithTokens.
-func (mr *MockDatabaseMockRecorder) CreateOrUpdateUserWithTokens(ctx, params any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateUserWithTokens", reflect.TypeOf((*MockDatabase)(nil).CreateOrUpdateUserWithTokens), ctx, params)
-}
-
 // CreateUser mocks base method.
-func (m *MockDatabase) CreateUser(ctx context.Context, params db.CreateUserParams) (*models.User, error) {
+func (m *MockDatabase) CreateUser(ctx context.Context, params db.CreateUserTokensParams) (*models.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateUser", ctx, params)
 	ret0, _ := ret[0].(*models.User)
@@ -72,6 +57,21 @@ func (m *MockDatabase) CreateUser(ctx context.Context, params db.CreateUserParam
 func (mr *MockDatabaseMockRecorder) CreateUser(ctx, params any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockDatabase)(nil).CreateUser), ctx, params)
+}
+
+// CreateUserTokens mocks base method.
+func (m *MockDatabase) CreateUserTokens(ctx context.Context, params dto.CreateUserTokensParams) (*models.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateUserTokens", ctx, params)
+	ret0, _ := ret[0].(*models.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateUserTokens indicates an expected call of CreateUserTokens.
+func (mr *MockDatabaseMockRecorder) CreateUserTokens(ctx, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserTokens", reflect.TypeOf((*MockDatabase)(nil).CreateUserTokens), ctx, params)
 }
 
 // FindUserById mocks base method.
@@ -102,19 +102,4 @@ func (m *MockDatabase) FindUserByIdentityNumber(ctx context.Context, identityNum
 func (mr *MockDatabaseMockRecorder) FindUserByIdentityNumber(ctx, identityNumber any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByIdentityNumber", reflect.TypeOf((*MockDatabase)(nil).FindUserByIdentityNumber), ctx, identityNumber)
-}
-
-// RefreshUserTokens mocks base method.
-func (m *MockDatabase) RefreshUserTokens(ctx context.Context, params dto.RefreshTokenParams) (*models.User, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RefreshUserTokens", ctx, params)
-	ret0, _ := ret[0].(*models.User)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// RefreshUserTokens indicates an expected call of RefreshUserTokens.
-func (mr *MockDatabaseMockRecorder) RefreshUserTokens(ctx, params any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshUserTokens", reflect.TypeOf((*MockDatabase)(nil).RefreshUserTokens), ctx, params)
 }

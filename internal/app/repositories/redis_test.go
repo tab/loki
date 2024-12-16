@@ -29,16 +29,8 @@ func Test_Redis_CreateSession(t *testing.T) {
 		{
 			name: "Success",
 			params: &models.Session{
-				ID:           uuid.New(),
-				PersonalCode: "30303039914",
-				Code:         "1234",
-				Status:       "COMPLETED",
-				Payload: models.SessionPayload{
-					State:     "COMPLETED",
-					Result:    "OK",
-					Signature: "Signature content",
-					Cert:      "Certificate content",
-				},
+				ID:     uuid.New(),
+				Status: "COMPLETED",
 			},
 			expected: nil,
 		},
@@ -61,7 +53,7 @@ func Test_Redis_UpdateSession(t *testing.T) {
 	repo, err := NewRedis(cfg)
 	assert.NoError(t, err)
 
-	id, _ := uuid.Parse("bf57e208-e6e7-4692-9de7-e75c1f8e5d52")
+	id := uuid.MustParse("bf57e208-e6e7-4692-9de7-e75c1f8e5d52")
 
 	tests := []struct {
 		name     string
@@ -73,25 +65,15 @@ func Test_Redis_UpdateSession(t *testing.T) {
 			name: "Success",
 			before: func() {
 				session := &models.Session{
-					ID:           id,
-					PersonalCode: "30303039914",
-					Code:         "1234",
-					Status:       "RUNNING",
+					ID:     id,
+					Status: "RUNNING",
 				}
 				err := repo.CreateSession(ctx, session)
 				assert.NoError(t, err)
 			},
 			params: &models.Session{
-				ID:           id,
-				PersonalCode: "30303039914",
-				Code:         "1234",
-				Status:       "COMPLETED",
-				Payload: models.SessionPayload{
-					State:     "COMPLETED",
-					Result:    "OK",
-					Signature: "Signature content",
-					Cert:      "Certificate content",
-				},
+				ID:     id,
+				Status: "COMPLETED",
 			},
 			expected: nil,
 		},
@@ -114,7 +96,7 @@ func Test_Redis_FindSessionById(t *testing.T) {
 	repo, err := NewRedis(cfg)
 	assert.NoError(t, err)
 
-	id, _ := uuid.Parse("8fdb516d-1a82-43ba-b82d-be63df569b86")
+	id := uuid.MustParse("8fdb516d-1a82-43ba-b82d-be63df569b86")
 
 	tests := []struct {
 		name      string
@@ -127,20 +109,16 @@ func Test_Redis_FindSessionById(t *testing.T) {
 			name: "Success",
 			before: func() {
 				session := &models.Session{
-					ID:           id,
-					PersonalCode: "30303039914",
-					Code:         "1234",
-					Status:       "RUNNING",
+					ID:     id,
+					Status: "RUNNING",
 				}
 				err := repo.CreateSession(ctx, session)
 				assert.NoError(t, err)
 			},
 			sessionId: id,
 			expected: &models.Session{
-				ID:           id,
-				PersonalCode: "30303039914",
-				Code:         "1234",
-				Status:       "RUNNING",
+				ID:     id,
+				Status: "RUNNING",
 			},
 			error: false,
 		},
@@ -165,8 +143,6 @@ func Test_Redis_FindSessionById(t *testing.T) {
 				assert.NoError(t, err)
 
 				assert.Equal(t, tt.expected.ID, session.ID)
-				assert.Equal(t, tt.expected.PersonalCode, session.PersonalCode)
-				assert.Equal(t, tt.expected.Code, session.Code)
 				assert.Equal(t, tt.expected.Status, session.Status)
 			}
 		})
@@ -182,7 +158,7 @@ func Test_Redis_DeleteSessionByID(t *testing.T) {
 	repo, err := NewRedis(cfg)
 	assert.NoError(t, err)
 
-	id, _ := uuid.Parse("a29bfdbd-02d2-4f65-9601-d7309a0da16e")
+	id := uuid.MustParse("a29bfdbd-02d2-4f65-9601-d7309a0da16e")
 
 	tests := []struct {
 		name      string
@@ -194,20 +170,16 @@ func Test_Redis_DeleteSessionByID(t *testing.T) {
 			name: "Success",
 			before: func() {
 				session := &models.Session{
-					ID:           id,
-					PersonalCode: "30303039914",
-					Code:         "1234",
-					Status:       "RUNNING",
+					ID:     id,
+					Status: "RUNNING",
 				}
 				err := repo.CreateSession(ctx, session)
 				assert.NoError(t, err)
 			},
 			sessionId: id,
 			expected: &models.Session{
-				ID:           id,
-				PersonalCode: "30303039914",
-				Code:         "1234",
-				Status:       "RUNNING",
+				ID:     id,
+				Status: "RUNNING",
 			},
 		},
 		{

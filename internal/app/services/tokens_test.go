@@ -2,13 +2,13 @@ package services
 
 import (
 	"context"
-	"loki/internal/app/errors"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
+	"loki/internal/app/errors"
 	"loki/internal/app/models"
 	"loki/internal/app/repositories"
 	"loki/internal/app/serializers"
@@ -59,7 +59,7 @@ func Test_Tokens_Refresh(t *testing.T) {
 					ID: "PNOEE-123456789",
 				}, models.RefreshTokenExp).Return("refresh-token", nil)
 
-				database.EXPECT().RefreshUserTokens(ctx, gomock.Any()).Return(&models.User{
+				database.EXPECT().CreateUserTokens(ctx, gomock.Any()).Return(&models.User{
 					ID:             id,
 					IdentityNumber: "PNOEE-123456789",
 					PersonalCode:   "123456789",
@@ -175,7 +175,7 @@ func Test_Tokens_Refresh(t *testing.T) {
 					ID: "PNOEE-123456789",
 				}, models.RefreshTokenExp).Return("refresh-token", nil)
 
-				database.EXPECT().RefreshUserTokens(ctx, gomock.Any()).Return(nil, assert.AnError)
+				database.EXPECT().CreateUserTokens(ctx, gomock.Any()).Return(nil, assert.AnError)
 			},
 			expected: nil,
 			error:    assert.AnError,

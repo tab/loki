@@ -21,6 +21,11 @@ import (
 	"loki/pkg/logger"
 )
 
+const (
+	AuthenticationSuccess = "SUCCESS"
+	AuthenticationError   = "ERROR"
+)
+
 type Authentication interface {
 	CreateSmartIdSession(ctx context.Context, params dto.CreateSmartIdSessionRequest) (*serializers.SessionSerializer, error)
 	GetSmartIdSessionStatus(ctx context.Context, id uuid.UUID) (*dto.SmartIdProviderSessionStatusResponse, error)
@@ -73,9 +78,8 @@ func (a *authentication) CreateSmartIdSession(ctx context.Context, params dto.Cr
 	}
 
 	id, err := a.createSession(ctx, models.CreateSessionParams{
-		SessionId:    result.ID,
-		PersonalCode: params.PersonalCode,
-		Code:         result.Code,
+		SessionId: result.ID,
+		Code:      result.Code,
 	})
 	if err != nil {
 		return nil, err
@@ -109,9 +113,8 @@ func (a *authentication) CreateMobileIdSession(ctx context.Context, params dto.C
 	}
 
 	id, err := a.createSession(ctx, models.CreateSessionParams{
-		SessionId:    result.ID,
-		PersonalCode: params.PersonalCode,
-		Code:         result.Code,
+		SessionId: result.ID,
+		Code:      result.Code,
 	})
 	if err != nil {
 		return nil, err
@@ -150,7 +153,7 @@ func (a *authentication) Complete(ctx context.Context, sessionId string) (respon
 		return nil, err
 	}
 
-	user, err := a.createUser(ctx, result.Payload)
+	user, err := a.createTokens(ctx, result.UserId)
 	if err != nil {
 		a.log.Error().Err(err).Msg("Failed to create user")
 		return nil, err
@@ -181,10 +184,8 @@ func (a *authentication) createSession(ctx context.Context, params models.Create
 	}
 
 	err = a.redis.CreateSession(ctx, &models.Session{
-		ID:           id,
-		PersonalCode: params.PersonalCode,
-		Code:         params.Code,
-		Status:       models.SESSION_RUNNING,
+		ID:     id,
+		Status: models.SessionRunning,
 	})
 	if err != nil {
 		a.log.Error().Err(err).Msg("Failed to create session in redis")
@@ -194,15 +195,15 @@ func (a *authentication) createSession(ctx context.Context, params models.Create
 	return id, nil
 }
 
-func (a *authentication) createUser(ctx context.Context, payload models.SessionPayload) (*models.User, error) {
-	certificate, err := extractUserFromCertificate(payload.Cert)
+func (a *authentication) createTokens(ctx context.Context, id uuid.UUID) (*models.User, error) {
+	user, err := a.database.FindUserById(ctx, id)
 	if err != nil {
-		a.log.Error().Err(err).Msg("Failed to extract user from certificate")
+		a.log.Error().Err(err).Msg("Failed to find user")
 		return nil, err
 	}
 
 	accessToken, err := a.jwt.Generate(jwt.Payload{
-		ID: certificate.IdentityNumber,
+		ID: user.IdentityNumber,
 	}, models.AccessTokenExp)
 	if err != nil {
 		a.log.Error().Err(err).Msg("Failed to create access token")
@@ -210,18 +211,15 @@ func (a *authentication) createUser(ctx context.Context, payload models.SessionP
 	}
 
 	refreshToken, err := a.jwt.Generate(jwt.Payload{
-		ID: certificate.IdentityNumber,
+		ID: user.IdentityNumber,
 	}, models.RefreshTokenExp)
 	if err != nil {
 		a.log.Error().Err(err).Msg("Failed to create refresh token")
 		return nil, err
 	}
 
-	user, err := a.database.CreateOrUpdateUserWithTokens(ctx, dto.CreateUserParams{
-		IdentityNumber: certificate.IdentityNumber,
-		PersonalCode:   certificate.PersonalCode,
-		FirstName:      certificate.FirstName,
-		LastName:       certificate.LastName,
+	result, err := a.database.CreateUserTokens(ctx, dto.CreateUserTokensParams{
+		IdentityNumber: user.IdentityNumber,
 		AccessToken: dto.CreateTokenParams{
 			Type:      models.AccessTokenType,
 			Value:     accessToken,
@@ -238,7 +236,7 @@ func (a *authentication) createUser(ctx context.Context, payload models.SessionP
 		return nil, err
 	}
 
-	return user, nil
+	return result, nil
 }
 
 func extractUserFromCertificate(certValue string) (*dto.ProviderCertificateExtract, error) {

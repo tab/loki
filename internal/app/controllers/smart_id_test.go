@@ -26,7 +26,7 @@ func Test_SmartIdController_CreateSession(t *testing.T) {
 	provider := services.NewMockSmartIdProvider(ctrl)
 	controller := NewSmartIdController(authentication, provider)
 
-	sessionId, _ := uuid.Parse("8fdb516d-1a82-43ba-b82d-be63df569b86")
+	sessionId := uuid.MustParse("8fdb516d-1a82-43ba-b82d-be63df569b86")
 
 	type result struct {
 		response serializers.SessionSerializer

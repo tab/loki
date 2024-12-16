@@ -114,7 +114,7 @@ func Test_MobileIdProvider_CreateSession(t *testing.T) {
 }
 
 func Test_MobileIdProvider_GetSessionStatus(t *testing.T) {
-	id, _ := uuid.Parse("5eab0e6a-c3e7-4526-a47e-398f0d31f514")
+	id := uuid.MustParse("5eab0e6a-c3e7-4526-a47e-398f0d31f514")
 
 	tests := []struct {
 		name      string

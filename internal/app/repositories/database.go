@@ -14,9 +14,8 @@ import (
 )
 
 type Database interface {
-	CreateUser(ctx context.Context, params db.CreateUserParams) (*models.User, error)
-	CreateOrUpdateUserWithTokens(ctx context.Context, params dto.CreateUserParams) (*models.User, error)
-	RefreshUserTokens(ctx context.Context, params dto.RefreshTokenParams) (*models.User, error)
+	CreateUser(ctx context.Context, params db.CreateUserTokensParams) (*models.User, error)
+	CreateUserTokens(ctx context.Context, params dto.CreateUserTokensParams) (*models.User, error)
 	FindUserById(ctx context.Context, id uuid.UUID) (*models.User, error)
 	FindUserByIdentityNumber(ctx context.Context, identityNumber string) (*models.User, error)
 }
@@ -40,24 +39,7 @@ func NewDatabase(cfg *config.Config) (Database, error) {
 	}, nil
 }
 
-func (d *database) CreateUser(ctx context.Context, params db.CreateUserParams) (*models.User, error) {
-	record, err := d.queries.CreateUser(ctx, db.CreateUserParams{
-		IdentityNumber: params.IdentityNumber,
-		PersonalCode:   params.PersonalCode,
-		FirstName:      params.FirstName,
-		LastName:       params.LastName,
-	})
-
-	return &models.User{
-		ID:             record.ID,
-		IdentityNumber: record.IdentityNumber,
-		PersonalCode:   record.PersonalCode,
-		FirstName:      record.FirstName,
-		LastName:       record.LastName,
-	}, err
-}
-
-func (d *database) CreateOrUpdateUserWithTokens(ctx context.Context, params dto.CreateUserParams) (*models.User, error) {
+func (d *database) CreateUser(ctx context.Context, params db.CreateUserTokensParams) (*models.User, error) {
 	tx, err := d.db.Begin(ctx)
 	if err != nil {
 		return nil, err
@@ -66,7 +48,7 @@ func (d *database) CreateOrUpdateUserWithTokens(ctx context.Context, params dto.
 
 	q := d.queries.WithTx(tx)
 
-	user, err := q.CreateUser(ctx, db.CreateUserParams{
+	user, err := q.CreateUser(ctx, db.CreateUserTokensParams{
 		IdentityNumber: params.IdentityNumber,
 		PersonalCode:   params.PersonalCode,
 		FirstName:      params.FirstName,
@@ -76,27 +58,27 @@ func (d *database) CreateOrUpdateUserWithTokens(ctx context.Context, params dto.
 		return nil, err
 	}
 
-	accessToken, err := q.CreateToken(ctx, db.CreateTokenParams{
+	role, err := q.FindRoleByName(ctx, models.UserRoleType)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = q.CreateUserRole(ctx, db.CreateUserRoleParams{
 		UserID: user.ID,
-		Type:   db.TokenType(params.AccessToken.Type),
-		Value:  params.AccessToken.Value,
-		ExpiresAt: pgtype.Timestamp{
-			Time:  params.AccessToken.ExpiresAt,
-			Valid: true,
-		},
+		RoleID: role.ID,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := q.CreateToken(ctx, db.CreateTokenParams{
-		UserID: user.ID,
-		Type:   db.TokenType(params.RefreshToken.Type),
-		Value:  params.RefreshToken.Value,
-		ExpiresAt: pgtype.Timestamp{
-			Time:  params.RefreshToken.ExpiresAt,
-			Valid: true,
-		},
+	scope, err := q.FindScopeByName(ctx, models.SelfServiceType)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = q.CreateUserScope(ctx, db.CreateUserScopeParams{
+		UserID:  user.ID,
+		ScopeID: scope.ID,
 	})
 	if err != nil {
 		return nil, err
@@ -108,12 +90,10 @@ func (d *database) CreateOrUpdateUserWithTokens(ctx context.Context, params dto.
 		PersonalCode:   user.PersonalCode,
 		FirstName:      user.FirstName,
 		LastName:       user.LastName,
-		AccessToken:    accessToken.Value,
-		RefreshToken:   refreshToken.Value,
 	}, tx.Commit(ctx)
 }
 
-func (d *database) RefreshUserTokens(ctx context.Context, params dto.RefreshTokenParams) (*models.User, error) {
+func (d *database) CreateUserTokens(ctx context.Context, params dto.CreateUserTokensParams) (*models.User, error) {
 	tx, err := d.db.Begin(ctx)
 	if err != nil {
 		return nil, err
@@ -122,7 +102,7 @@ func (d *database) RefreshUserTokens(ctx context.Context, params dto.RefreshToke
 
 	q := d.queries.WithTx(tx)
 
-	user, err := q.FindUserById(ctx, params.UserId)
+	user, err := q.FindUserByIdentityNumber(ctx, params.IdentityNumber)
 	if err != nil {
 		return nil, err
 	}

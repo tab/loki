@@ -52,14 +52,9 @@ func (s *sessions) FindById(ctx context.Context, sessionId string) (*serializers
 func (s *sessions) Update(ctx context.Context, params models.Session) (*serializers.SessionSerializer, error) {
 	err := s.redis.UpdateSession(ctx, &models.Session{
 		ID:     params.ID,
+		UserId: params.UserId,
 		Status: params.Status,
 		Error:  params.Error,
-		Payload: models.SessionPayload{
-			State:     params.Payload.State,
-			Result:    params.Payload.Result,
-			Signature: params.Payload.Signature,
-			Cert:      params.Payload.Cert,
-		},
 	})
 	if err != nil {
 		s.log.Error().Err(err).Msg("Failed to update session")

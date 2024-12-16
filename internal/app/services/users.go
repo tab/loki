@@ -2,13 +2,16 @@ package services
 
 import (
 	"context"
-	"loki/pkg/logger"
 
+	"loki/internal/app/models"
 	"loki/internal/app/repositories"
+	"loki/internal/app/repositories/db"
 	"loki/internal/app/serializers"
+	"loki/pkg/logger"
 )
 
 type Users interface {
+	Create(ctx context.Context, params *models.User) (*models.User, error)
 	FindByIdentityNumber(ctx context.Context, identityNumber string) (*serializers.UserSerializer, error)
 }
 
@@ -22,6 +25,21 @@ func NewUsers(database repositories.Database, log *logger.Logger) Users {
 		database: database,
 		log:      log,
 	}
+}
+
+func (u *users) Create(ctx context.Context, params *models.User) (*models.User, error) {
+	user, err := u.database.CreateUser(ctx, db.CreateUserTokensParams{
+		IdentityNumber: params.IdentityNumber,
+		PersonalCode:   params.PersonalCode,
+		FirstName:      params.FirstName,
+		LastName:       params.LastName,
+	})
+	if err != nil {
+		u.log.Error().Err(err).Msg("Failed to create user")
+		return nil, err
+	}
+
+	return user, nil
 }
 
 func (u *users) FindByIdentityNumber(ctx context.Context, identityNumber string) (*serializers.UserSerializer, error) {

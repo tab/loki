@@ -27,7 +27,7 @@ func Test_SessionsController_GetStatus(t *testing.T) {
 	controller := NewSessionsController(authentication, sessions)
 
 	sessionId := "8fdb516d-1a82-43ba-b82d-be63df569b86"
-	id, _ := uuid.Parse(sessionId)
+	id := uuid.MustParse(sessionId)
 
 	type result struct {
 		response serializers.SessionSerializer
@@ -126,7 +126,7 @@ func Test_SessionsController_Authenticate(t *testing.T) {
 	controller := NewSessionsController(authentication, sessions)
 
 	sessionId := "8fdb516d-1a82-43ba-b82d-be63df569b86"
-	id, _ := uuid.Parse(sessionId)
+	id := uuid.MustParse(sessionId)
 
 	type result struct {
 		response serializers.UserSerializer
