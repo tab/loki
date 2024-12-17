@@ -18,6 +18,7 @@ type MobileIdWorker interface {
 type mobileIdWorker struct {
 	cfg            *config.Config
 	authentication Authentication
+	certificate    Certificate
 	sessions       Sessions
 	users          Users
 	queue          <-chan *MobileIdQueue
@@ -28,6 +29,7 @@ type mobileIdWorker struct {
 func NewMobileIdWorker(
 	cfg *config.Config,
 	authentication Authentication,
+	certificate Certificate,
 	sessions Sessions,
 	users Users,
 	queue chan *MobileIdQueue,
@@ -36,6 +38,7 @@ func NewMobileIdWorker(
 	return &mobileIdWorker{
 		cfg:            cfg,
 		authentication: authentication,
+		certificate:    certificate,
 		sessions:       sessions,
 		users:          users,
 		queue:          queue,
@@ -135,7 +138,7 @@ func (w *mobileIdWorker) handleSessionComplete(ctx context.Context, req *MobileI
 }
 
 func (w *mobileIdWorker) handleCreateUser(ctx context.Context, response *dto.MobileIdProviderSessionStatusResponse) (user *models.User, err error) {
-	cert, err := extractUserFromCertificate(response.Cert)
+	cert, err := w.certificate.Extract(response.Cert)
 	if err != nil {
 		w.log.Error().Err(err).Msg("MobileId::Worker failed to extract user from certificate")
 		return nil, err

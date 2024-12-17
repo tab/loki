@@ -31,18 +31,20 @@ func Test_MobileIdWorker_Perform(t *testing.T) {
 
 	mobileIdQueue := make(chan *MobileIdQueue, 1)
 	authenticationService := NewMockAuthentication(ctrl)
+	certificateService := NewMockCertificate(ctrl)
 	sessionService := NewMockSessions(ctrl)
 	usersService := NewMockUsers(ctrl)
 	log := logger.NewLogger()
 	worker := NewMobileIdWorker(
 		cfg,
 		authenticationService,
+		certificateService,
 		sessionService,
 		usersService,
 		mobileIdQueue,
 		log)
 
-	certificate := "MIIFXzCCA0egAwIBAgIQbZGUgkUm/YdiVSIaf13G+zANBgkqhkiG9w0BAQsFADBoMQswCQYDVQQGEwJFRTEiMCAGA1UECgwZQVMgU2VydGlmaXRzZWVyaW1pc2tlc2t1czEXMBUGA1UEYQwOTlRSRUUtMTA3NDcwMTMxHDAaBgNVBAMME1RFU1Qgb2YgRUlELVNLIDIwMTYwHhcNMjIwNDEyMDY1NDE4WhcNMjcwNDEyMjA1OTU5WjBtMQswCQYDVQQGEwJFRTEbMBkGA1UEAwwSRUlEMjAxNixURVNUTlVNQkVSMRMwEQYDVQQEDApURVNUTlVNQkVSMRAwDgYDVQQqDAdFSUQyMDE2MRowGAYDVQQFExFQTk9FRS02MDAwMTAxNzg2OTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABN5THR+i6stpLG0lq12yggjyLvyvu+0tUW2BF33CTrC019eG5oeeBYMVEm+ZBpdZlfwJUtlWXEuGw3XDdBgf14KjggHJMIIBxTAJBgNVHRMEAjAAMA4GA1UdDwEB/wQEAwIHgDB7BgNVHSAEdDByMGYGCSsGAQQBzh8SATBZMDcGCCsGAQUFBwIBFitodHRwczovL3NraWRzb2x1dGlvbnMuZXUvZW4vcmVwb3NpdG9yeS9DUFMvMB4GCCsGAQUFBwICMBIaEE9ubHkgZm9yIFRFU1RJTkcwCAYGBACPegECMB0GA1UdDgQWBBTTbr/pqvMoWlqZULY3pwCzp998ijAfBgNVHSMEGDAWgBSusOrhNvgmq6XMC2ZV/jodAr8StDB9BggrBgEFBQcBAQRxMG8wKQYIKwYBBQUHMAGGHWh0dHA6Ly9haWEuZGVtby5zay5lZS9laWQyMDE2MEIGCCsGAQUFBzAChjZodHRwczovL3NrLmVlL3VwbG9hZC9maWxlcy9URVNUX29mX0VJRC1TS18yMDE2LmRlci5jcnQwbAYIKwYBBQUHAQMEYDBeMFwGBgQAjkYBBTBSMFAWSmh0dHBzOi8vc2tpZHNvbHV0aW9ucy5ldS9lbi9yZXBvc2l0b3J5L2NvbmRpdGlvbnMtZm9yLXVzZS1vZi1jZXJ0aWZpY2F0ZXMvEwJFTjANBgkqhkiG9w0BAQsFAAOCAgEACfHa53mBsmnnnNlTa5DwXmI3R9tTjcNrjMa8alUdmvi50pipPpjvkYaCsiSJpUNNZ4EvfdRI1kKWbuCLc66MqQbZ2KNaOMZ8TODkx5uOhbOqGqWr0mBTJZJu7JboN3UB9/5lrpZlUuuhjAivpQRO1OqmQXMVfIRi/gy8sFc2l10gICZiBt2JBLmC7KiafEXK8WQJpEs8iKMHYLWubURcCrMvZXz2XdbSLfnjqS40P3uFhEJfeo6+aAsnD2M2AwBwmiF0P2/k8Vk/wc6miL8SZROJMMHqcvO9vQYlUihDSNn3Jz4fz0nzTZ4DtTSI6jGU0zy2SS2j7Srgdt+jDnIaANUEIHjsKGWqBWY77D3iNiSmN7OXLXhmsv10yjLxJSwBunFs+RvYQh1SiyvoM+/yq0SPrS/xzg0unRWAjmpGFMJ4Gw7Vn8+faJeTounOmrnZhG9LYrkLPsWxRUcxc+GfM11xUcwMExQvh7oRZ6iBibhKgLdYiP31Q4QEZpNZbjNIPVJtKEj4Z/zJlbySgb4TrXy+SgcmUilUPGowwo7wkSrw5wiG/lX9QxnQHbyUugY693BRH/twRk1jnYXie+p4wRUS4tNX9fb3hKSkIaWIMpryuHxl/WoG5/FmhDN6YpGqEaaf8/rQhUEAYae2dy5A4RgxkdtzQ2Q9uOz1qsw3T3g="
+	cert := "MIIFXzCCA0egAwIBAgIQbZGUgkUm/YdiVSIaf13G+zANBgkqhkiG9w0BAQsFADBoMQswCQYDVQQGEwJFRTEiMCAGA1UECgwZQVMgU2VydGlmaXRzZWVyaW1pc2tlc2t1czEXMBUGA1UEYQwOTlRSRUUtMTA3NDcwMTMxHDAaBgNVBAMME1RFU1Qgb2YgRUlELVNLIDIwMTYwHhcNMjIwNDEyMDY1NDE4WhcNMjcwNDEyMjA1OTU5WjBtMQswCQYDVQQGEwJFRTEbMBkGA1UEAwwSRUlEMjAxNixURVNUTlVNQkVSMRMwEQYDVQQEDApURVNUTlVNQkVSMRAwDgYDVQQqDAdFSUQyMDE2MRowGAYDVQQFExFQTk9FRS02MDAwMTAxNzg2OTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABN5THR+i6stpLG0lq12yggjyLvyvu+0tUW2BF33CTrC019eG5oeeBYMVEm+ZBpdZlfwJUtlWXEuGw3XDdBgf14KjggHJMIIBxTAJBgNVHRMEAjAAMA4GA1UdDwEB/wQEAwIHgDB7BgNVHSAEdDByMGYGCSsGAQQBzh8SATBZMDcGCCsGAQUFBwIBFitodHRwczovL3NraWRzb2x1dGlvbnMuZXUvZW4vcmVwb3NpdG9yeS9DUFMvMB4GCCsGAQUFBwICMBIaEE9ubHkgZm9yIFRFU1RJTkcwCAYGBACPegECMB0GA1UdDgQWBBTTbr/pqvMoWlqZULY3pwCzp998ijAfBgNVHSMEGDAWgBSusOrhNvgmq6XMC2ZV/jodAr8StDB9BggrBgEFBQcBAQRxMG8wKQYIKwYBBQUHMAGGHWh0dHA6Ly9haWEuZGVtby5zay5lZS9laWQyMDE2MEIGCCsGAQUFBzAChjZodHRwczovL3NrLmVlL3VwbG9hZC9maWxlcy9URVNUX29mX0VJRC1TS18yMDE2LmRlci5jcnQwbAYIKwYBBQUHAQMEYDBeMFwGBgQAjkYBBTBSMFAWSmh0dHBzOi8vc2tpZHNvbHV0aW9ucy5ldS9lbi9yZXBvc2l0b3J5L2NvbmRpdGlvbnMtZm9yLXVzZS1vZi1jZXJ0aWZpY2F0ZXMvEwJFTjANBgkqhkiG9w0BAQsFAAOCAgEACfHa53mBsmnnnNlTa5DwXmI3R9tTjcNrjMa8alUdmvi50pipPpjvkYaCsiSJpUNNZ4EvfdRI1kKWbuCLc66MqQbZ2KNaOMZ8TODkx5uOhbOqGqWr0mBTJZJu7JboN3UB9/5lrpZlUuuhjAivpQRO1OqmQXMVfIRi/gy8sFc2l10gICZiBt2JBLmC7KiafEXK8WQJpEs8iKMHYLWubURcCrMvZXz2XdbSLfnjqS40P3uFhEJfeo6+aAsnD2M2AwBwmiF0P2/k8Vk/wc6miL8SZROJMMHqcvO9vQYlUihDSNn3Jz4fz0nzTZ4DtTSI6jGU0zy2SS2j7Srgdt+jDnIaANUEIHjsKGWqBWY77D3iNiSmN7OXLXhmsv10yjLxJSwBunFs+RvYQh1SiyvoM+/yq0SPrS/xzg0unRWAjmpGFMJ4Gw7Vn8+faJeTounOmrnZhG9LYrkLPsWxRUcxc+GfM11xUcwMExQvh7oRZ6iBibhKgLdYiP31Q4QEZpNZbjNIPVJtKEj4Z/zJlbySgb4TrXy+SgcmUilUPGowwo7wkSrw5wiG/lX9QxnQHbyUugY693BRH/twRk1jnYXie+p4wRUS4tNX9fb3hKSkIaWIMpryuHxl/WoG5/FmhDN6YpGqEaaf8/rQhUEAYae2dy5A4RgxkdtzQ2Q9uOz1qsw3T3g="
 
 	userId, err := uuid.NewRandom()
 	assert.NoError(t, err)
@@ -63,8 +65,15 @@ func Test_MobileIdWorker_Perform(t *testing.T) {
 							Value:     "signature",
 							Algorithm: "algorithm",
 						},
-						Cert: certificate,
+						Cert: cert,
 					}, nil)
+
+				certificateService.EXPECT().Extract(cert).Return(&CertificatePayload{
+					IdentityNumber: "PNOEE-1234567890",
+					PersonalCode:   "1234567890",
+					FirstName:      "John",
+					LastName:       "Doe",
+				}, nil)
 
 				usersService.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&models.User{
 					ID:             userId,
@@ -96,8 +105,15 @@ func Test_MobileIdWorker_Perform(t *testing.T) {
 							Value:     "signature",
 							Algorithm: "algorithm",
 						},
-						Cert: certificate,
+						Cert: cert,
 					}, nil)
+
+				certificateService.EXPECT().Extract(cert).Return(&CertificatePayload{
+					IdentityNumber: "PNOEE-1234567890",
+					PersonalCode:   "1234567890",
+					FirstName:      "John",
+					LastName:       "Doe",
+				}, nil)
 
 				usersService.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, assert.AnError)
 			},
@@ -114,8 +130,15 @@ func Test_MobileIdWorker_Perform(t *testing.T) {
 							Value:     "signature",
 							Algorithm: "algorithm",
 						},
-						Cert: certificate,
+						Cert: cert,
 					}, nil)
+
+				certificateService.EXPECT().Extract(cert).Return(&CertificatePayload{
+					IdentityNumber: "PNOEE-1234567890",
+					PersonalCode:   "1234567890",
+					FirstName:      "John",
+					LastName:       "Doe",
+				}, nil)
 
 				usersService.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&models.User{
 					ID:             userId,

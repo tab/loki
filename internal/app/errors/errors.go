@@ -13,6 +13,8 @@ var (
 
 	ErrInvalidIdentityNumber = errors.New("invalid identity number")
 
+	ErrInvalidCertificate = errors.New("invalid certificate")
+
 	ErrSessionNotFound = errors.New("session not found")
 	ErrUserNotFound    = errors.New("user not found")
 

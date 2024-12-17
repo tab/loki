@@ -18,6 +18,7 @@ type SmartIdWorker interface {
 type smartIdWorker struct {
 	cfg            *config.Config
 	authentication Authentication
+	certificate    Certificate
 	sessions       Sessions
 	users          Users
 	queue          <-chan *SmartIdQueue
@@ -28,6 +29,7 @@ type smartIdWorker struct {
 func NewSmartIdWorker(
 	cfg *config.Config,
 	authentication Authentication,
+	certificate Certificate,
 	sessions Sessions,
 	users Users,
 	queue chan *SmartIdQueue,
@@ -36,6 +38,7 @@ func NewSmartIdWorker(
 	return &smartIdWorker{
 		cfg:            cfg,
 		authentication: authentication,
+		certificate:    certificate,
 		sessions:       sessions,
 		users:          users,
 		queue:          queue,
@@ -135,7 +138,7 @@ func (w *smartIdWorker) handleSessionComplete(ctx context.Context, req *SmartIdQ
 }
 
 func (w *smartIdWorker) handleCreateUser(ctx context.Context, response *dto.SmartIdProviderSessionStatusResponse) (*models.User, error) {
-	cert, err := extractUserFromCertificate(response.Cert.Value)
+	cert, err := w.certificate.Extract(response.Cert.Value)
 	if err != nil {
 		w.log.Error().Err(err).Msg("SmartId::Worker failed to extract user from certificate")
 		return nil, err

@@ -2,16 +2,10 @@ package services
 
 import (
 	"context"
-	"crypto/x509"
-	"encoding/base64"
-	"fmt"
-	"regexp"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
 
-	"loki/internal/app/errors"
 	"loki/internal/app/models"
 	"loki/internal/app/models/dto"
 	"loki/internal/app/repositories"
@@ -270,52 +264,4 @@ func (a *authentication) createTokens(ctx context.Context, id uuid.UUID) (*model
 	}
 
 	return result, nil
-}
-
-func extractUserFromCertificate(certValue string) (*dto.ProviderCertificateExtract, error) {
-	certBytes, err := base64.StdEncoding.DecodeString(certValue)
-	if err != nil {
-		return nil, err
-	}
-
-	cert, err := x509.ParseCertificate(certBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	subject := cert.Subject
-
-	commonName := subject.CommonName
-	parts := strings.Split(commonName, ",")
-	if len(parts) < 2 {
-		return nil, fmt.Errorf("invalid CommonName format: %s", commonName)
-	}
-
-	personalCode, _ := extractPersonalCode(subject.SerialNumber)
-	firstName := strings.TrimSpace(parts[0])
-	lastName := strings.TrimSpace(parts[1])
-
-	return &dto.ProviderCertificateExtract{
-		IdentityNumber: subject.SerialNumber,
-		PersonalCode:   personalCode,
-		FirstName:      firstName,
-		LastName:       lastName,
-	}, nil
-}
-
-func extractPersonalCode(identityNumber string) (string, error) {
-	const prefix = "PNO"
-
-	if !strings.HasPrefix(identityNumber, prefix) {
-		return "", errors.ErrInvalidIdentityNumber
-	}
-
-	re := regexp.MustCompile(`PNO[A-Z]{2}-(\d+)`)
-	matches := re.FindStringSubmatch(identityNumber)
-
-	if len(matches) != 2 {
-		return "", errors.ErrInvalidIdentityNumber
-	}
-
-	return matches[1], nil
 }
