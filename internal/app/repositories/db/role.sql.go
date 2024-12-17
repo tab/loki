@@ -50,3 +50,32 @@ func (q *Queries) FindRoleByName(ctx context.Context, name string) (FindRoleByNa
 	err := row.Scan(&i.ID, &i.Name)
 	return i, err
 }
+
+const findUserRoles = `-- name: FindUserRoles :many
+SELECT id, name FROM roles WHERE id IN (SELECT role_id FROM user_roles WHERE user_id = $1)
+`
+
+type FindUserRolesRow struct {
+	ID   uuid.UUID
+	Name string
+}
+
+func (q *Queries) FindUserRoles(ctx context.Context, userID uuid.UUID) ([]FindUserRolesRow, error) {
+	rows, err := q.db.Query(ctx, findUserRoles, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FindUserRolesRow
+	for rows.Next() {
+		var i FindUserRolesRow
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

@@ -28,7 +28,7 @@ func NewUsers(database repositories.Database, log *logger.Logger) Users {
 }
 
 func (u *users) Create(ctx context.Context, params *models.User) (*models.User, error) {
-	user, err := u.database.CreateUser(ctx, db.CreateUserTokensParams{
+	user, err := u.database.CreateUser(ctx, db.CreateUserParams{
 		IdentityNumber: params.IdentityNumber,
 		PersonalCode:   params.PersonalCode,
 		FirstName:      params.FirstName,

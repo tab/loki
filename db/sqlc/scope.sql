@@ -6,3 +6,6 @@ RETURNING user_id, scope_id;
 
 -- name: FindScopeByName :one
 SELECT id, name FROM scopes WHERE name = $1;
+
+-- name: FindUserScopes :many
+SELECT id, name FROM scopes WHERE id IN (SELECT scope_id FROM user_scopes WHERE user_id = $1);

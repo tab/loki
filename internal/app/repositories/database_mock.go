@@ -45,7 +45,7 @@ func (m *MockDatabase) EXPECT() *MockDatabaseMockRecorder {
 }
 
 // CreateUser mocks base method.
-func (m *MockDatabase) CreateUser(ctx context.Context, params db.CreateUserTokensParams) (*models.User, error) {
+func (m *MockDatabase) CreateUser(ctx context.Context, params db.CreateUserParams) (*models.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateUser", ctx, params)
 	ret0, _ := ret[0].(*models.User)
@@ -59,8 +59,36 @@ func (mr *MockDatabaseMockRecorder) CreateUser(ctx, params any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockDatabase)(nil).CreateUser), ctx, params)
 }
 
+// CreateUserRole mocks base method.
+func (m *MockDatabase) CreateUserRole(ctx context.Context, params db.CreateUserRoleParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateUserRole", ctx, params)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateUserRole indicates an expected call of CreateUserRole.
+func (mr *MockDatabaseMockRecorder) CreateUserRole(ctx, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserRole", reflect.TypeOf((*MockDatabase)(nil).CreateUserRole), ctx, params)
+}
+
+// CreateUserScope mocks base method.
+func (m *MockDatabase) CreateUserScope(ctx context.Context, params db.CreateUserScopeParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateUserScope", ctx, params)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateUserScope indicates an expected call of CreateUserScope.
+func (mr *MockDatabaseMockRecorder) CreateUserScope(ctx, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserScope", reflect.TypeOf((*MockDatabase)(nil).CreateUserScope), ctx, params)
+}
+
 // CreateUserTokens mocks base method.
-func (m *MockDatabase) CreateUserTokens(ctx context.Context, params dto.CreateUserTokensParams) (*models.User, error) {
+func (m *MockDatabase) CreateUserTokens(ctx context.Context, params dto.CreateUserParams) (*models.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateUserTokens", ctx, params)
 	ret0, _ := ret[0].(*models.User)
@@ -72,6 +100,36 @@ func (m *MockDatabase) CreateUserTokens(ctx context.Context, params dto.CreateUs
 func (mr *MockDatabaseMockRecorder) CreateUserTokens(ctx, params any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserTokens", reflect.TypeOf((*MockDatabase)(nil).CreateUserTokens), ctx, params)
+}
+
+// FindRoleByName mocks base method.
+func (m *MockDatabase) FindRoleByName(ctx context.Context, name string) (*models.Role, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindRoleByName", ctx, name)
+	ret0, _ := ret[0].(*models.Role)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindRoleByName indicates an expected call of FindRoleByName.
+func (mr *MockDatabaseMockRecorder) FindRoleByName(ctx, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindRoleByName", reflect.TypeOf((*MockDatabase)(nil).FindRoleByName), ctx, name)
+}
+
+// FindScopeByName mocks base method.
+func (m *MockDatabase) FindScopeByName(ctx context.Context, name string) (*models.Scope, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindScopeByName", ctx, name)
+	ret0, _ := ret[0].(*models.Scope)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindScopeByName indicates an expected call of FindScopeByName.
+func (mr *MockDatabaseMockRecorder) FindScopeByName(ctx, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindScopeByName", reflect.TypeOf((*MockDatabase)(nil).FindScopeByName), ctx, name)
 }
 
 // FindUserById mocks base method.
@@ -102,4 +160,49 @@ func (m *MockDatabase) FindUserByIdentityNumber(ctx context.Context, identityNum
 func (mr *MockDatabaseMockRecorder) FindUserByIdentityNumber(ctx, identityNumber any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByIdentityNumber", reflect.TypeOf((*MockDatabase)(nil).FindUserByIdentityNumber), ctx, identityNumber)
+}
+
+// FindUserPermissions mocks base method.
+func (m *MockDatabase) FindUserPermissions(ctx context.Context, id uuid.UUID) ([]models.Permission, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindUserPermissions", ctx, id)
+	ret0, _ := ret[0].([]models.Permission)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindUserPermissions indicates an expected call of FindUserPermissions.
+func (mr *MockDatabaseMockRecorder) FindUserPermissions(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserPermissions", reflect.TypeOf((*MockDatabase)(nil).FindUserPermissions), ctx, id)
+}
+
+// FindUserRoles mocks base method.
+func (m *MockDatabase) FindUserRoles(ctx context.Context, id uuid.UUID) ([]models.Role, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindUserRoles", ctx, id)
+	ret0, _ := ret[0].([]models.Role)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindUserRoles indicates an expected call of FindUserRoles.
+func (mr *MockDatabaseMockRecorder) FindUserRoles(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserRoles", reflect.TypeOf((*MockDatabase)(nil).FindUserRoles), ctx, id)
+}
+
+// FindUserScopes mocks base method.
+func (m *MockDatabase) FindUserScopes(ctx context.Context, id uuid.UUID) ([]models.Scope, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindUserScopes", ctx, id)
+	ret0, _ := ret[0].([]models.Scope)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindUserScopes indicates an expected call of FindUserScopes.
+func (mr *MockDatabaseMockRecorder) FindUserScopes(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserScopes", reflect.TypeOf((*MockDatabase)(nil).FindUserScopes), ctx, id)
 }

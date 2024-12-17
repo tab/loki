@@ -14,10 +14,21 @@ import (
 )
 
 type Database interface {
-	CreateUser(ctx context.Context, params db.CreateUserTokensParams) (*models.User, error)
-	CreateUserTokens(ctx context.Context, params dto.CreateUserTokensParams) (*models.User, error)
+	CreateUser(ctx context.Context, params db.CreateUserParams) (*models.User, error)
+	CreateUserTokens(ctx context.Context, params dto.CreateUserParams) (*models.User, error)
+	CreateUserRole(ctx context.Context, params db.CreateUserRoleParams) error
+	CreateUserScope(ctx context.Context, params db.CreateUserScopeParams) error
+
 	FindUserById(ctx context.Context, id uuid.UUID) (*models.User, error)
 	FindUserByIdentityNumber(ctx context.Context, identityNumber string) (*models.User, error)
+
+	FindRoleByName(ctx context.Context, name string) (*models.Role, error)
+
+	FindScopeByName(ctx context.Context, name string) (*models.Scope, error)
+
+	FindUserRoles(ctx context.Context, id uuid.UUID) ([]models.Role, error)
+	FindUserPermissions(ctx context.Context, id uuid.UUID) ([]models.Permission, error)
+	FindUserScopes(ctx context.Context, id uuid.UUID) ([]models.Scope, error)
 }
 
 type database struct {
@@ -39,7 +50,7 @@ func NewDatabase(cfg *config.Config) (Database, error) {
 	}, nil
 }
 
-func (d *database) CreateUser(ctx context.Context, params db.CreateUserTokensParams) (*models.User, error) {
+func (d *database) CreateUser(ctx context.Context, params db.CreateUserParams) (*models.User, error) {
 	tx, err := d.db.Begin(ctx)
 	if err != nil {
 		return nil, err
@@ -48,7 +59,7 @@ func (d *database) CreateUser(ctx context.Context, params db.CreateUserTokensPar
 
 	q := d.queries.WithTx(tx)
 
-	user, err := q.CreateUser(ctx, db.CreateUserTokensParams{
+	user, err := q.CreateUser(ctx, db.CreateUserParams{
 		IdentityNumber: params.IdentityNumber,
 		PersonalCode:   params.PersonalCode,
 		FirstName:      params.FirstName,
@@ -93,7 +104,7 @@ func (d *database) CreateUser(ctx context.Context, params db.CreateUserTokensPar
 	}, tx.Commit(ctx)
 }
 
-func (d *database) CreateUserTokens(ctx context.Context, params dto.CreateUserTokensParams) (*models.User, error) {
+func (d *database) CreateUserTokens(ctx context.Context, params dto.CreateUserParams) (*models.User, error) {
 	tx, err := d.db.Begin(ctx)
 	if err != nil {
 		return nil, err
@@ -144,6 +155,16 @@ func (d *database) CreateUserTokens(ctx context.Context, params dto.CreateUserTo
 	}, tx.Commit(ctx)
 }
 
+func (d *database) CreateUserRole(ctx context.Context, params db.CreateUserRoleParams) error {
+	_, err := d.queries.CreateUserRole(ctx, params)
+	return err
+}
+
+func (d *database) CreateUserScope(ctx context.Context, params db.CreateUserScopeParams) error {
+	_, err := d.queries.CreateUserScope(ctx, params)
+	return err
+}
+
 func (d *database) FindUserById(ctx context.Context, id uuid.UUID) (*models.User, error) {
 	record, err := d.queries.FindUserById(ctx, id)
 	if err != nil {
@@ -172,4 +193,79 @@ func (d *database) FindUserByIdentityNumber(ctx context.Context, identityNumber 
 		FirstName:      record.FirstName,
 		LastName:       record.LastName,
 	}, nil
+}
+
+func (d *database) FindRoleByName(ctx context.Context, name string) (*models.Role, error) {
+	record, err := d.queries.FindRoleByName(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.Role{
+		ID:   record.ID,
+		Name: record.Name,
+	}, nil
+}
+
+func (d *database) FindScopeByName(ctx context.Context, name string) (*models.Scope, error) {
+	record, err := d.queries.FindScopeByName(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.Scope{
+		ID:   record.ID,
+		Name: record.Name,
+	}, nil
+}
+
+func (d *database) FindUserRoles(ctx context.Context, id uuid.UUID) ([]models.Role, error) {
+	records, err := d.queries.FindUserRoles(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	roles := make([]models.Role, 0, len(records))
+	for _, record := range records {
+		roles = append(roles, models.Role{
+			ID:   record.ID,
+			Name: record.Name,
+		})
+	}
+
+	return roles, nil
+}
+
+func (d *database) FindUserPermissions(ctx context.Context, id uuid.UUID) ([]models.Permission, error) {
+	records, err := d.queries.FindUserPermissions(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	permissions := make([]models.Permission, 0, len(records))
+	for _, record := range records {
+		permissions = append(permissions, models.Permission{
+			ID:   record.ID,
+			Name: record.Name,
+		})
+	}
+
+	return permissions, nil
+}
+
+func (d *database) FindUserScopes(ctx context.Context, id uuid.UUID) ([]models.Scope, error) {
+	records, err := d.queries.FindUserScopes(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	scopes := make([]models.Scope, 0, len(records))
+	for _, record := range records {
+		scopes = append(scopes, models.Scope{
+			ID:   record.ID,
+			Name: record.Name,
+		})
+	}
+
+	return scopes, nil
 }

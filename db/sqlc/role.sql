@@ -6,3 +6,6 @@ RETURNING user_id, role_id;
 
 -- name: FindRoleByName :one
 SELECT id, name FROM roles WHERE name = $1;
+
+-- name: FindUserRoles :many
+SELECT id, name FROM roles WHERE id IN (SELECT role_id FROM user_roles WHERE user_id = $1);

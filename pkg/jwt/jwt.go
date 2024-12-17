@@ -10,7 +10,10 @@ import (
 )
 
 type Payload struct {
-	ID string `json:"id"`
+	ID          string   `json:"id"`
+	Roles       []string `json:"roles,omitempty"`
+	Permissions []string `json:"permissions,omitempty"`
+	Scope       []string `json:"scope,omitempty"`
 }
 
 type Jwt interface {
@@ -25,6 +28,9 @@ type jwtService struct {
 
 type Claims struct {
 	jwt.RegisteredClaims
+	Roles       []string `json:"roles,omitempty"`
+	Permissions []string `json:"permissions,omitempty"`
+	Scope       []string `json:"scope,omitempty"`
 }
 
 func NewJWT(cfg *config.Config) Jwt {
@@ -37,6 +43,9 @@ func (j *jwtService) Generate(payload Payload, duration time.Duration) (string, 
 			ID:        payload.ID,
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)),
 		},
+		Roles:       payload.Roles,
+		Permissions: payload.Permissions,
+		Scope:       payload.Scope,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

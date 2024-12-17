@@ -36,7 +36,7 @@ func Test_Users_Create(t *testing.T) {
 		{
 			name: "Success",
 			before: func() {
-				database.EXPECT().CreateUser(ctx, db.CreateUserTokensParams{
+				database.EXPECT().CreateUser(ctx, db.CreateUserParams{
 					IdentityNumber: "PNOEE-123456789",
 					PersonalCode:   "123456789",
 					FirstName:      "John",
@@ -64,7 +64,7 @@ func Test_Users_Create(t *testing.T) {
 		{
 			name: "Error",
 			before: func() {
-				database.EXPECT().CreateUser(ctx, db.CreateUserTokensParams{
+				database.EXPECT().CreateUser(ctx, db.CreateUserParams{
 					IdentityNumber: "PNOEE-123456789",
 					PersonalCode:   "123456789",
 					FirstName:      "John",

@@ -50,3 +50,32 @@ func (q *Queries) FindScopeByName(ctx context.Context, name string) (FindScopeBy
 	err := row.Scan(&i.ID, &i.Name)
 	return i, err
 }
+
+const findUserScopes = `-- name: FindUserScopes :many
+SELECT id, name FROM scopes WHERE id IN (SELECT scope_id FROM user_scopes WHERE user_id = $1)
+`
+
+type FindUserScopesRow struct {
+	ID   uuid.UUID
+	Name string
+}
+
+func (q *Queries) FindUserScopes(ctx context.Context, userID uuid.UUID) ([]FindUserScopesRow, error) {
+	rows, err := q.db.Query(ctx, findUserScopes, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FindUserScopesRow
+	for rows.Next() {
+		var i FindUserScopesRow
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

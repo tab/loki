@@ -555,7 +555,17 @@ func Test_Authentication_Complete(t *testing.T) {
 					LastName:       "OK",
 				}, nil)
 
-				jwtMock.EXPECT().Generate(jwt.Payload{ID: "PNOEE-30303039914"}, gomock.Any()).Return("access-token", nil)
+				database.EXPECT().FindUserRoles(ctx, userId).Return([]models.Role{}, nil)
+				database.EXPECT().FindUserPermissions(ctx, userId).Return([]models.Permission{}, nil)
+				database.EXPECT().FindUserScopes(ctx, userId).Return([]models.Scope{}, nil)
+
+				jwtMock.EXPECT().Generate(jwt.Payload{
+					ID:          "PNOEE-30303039914",
+					Roles:       make([]string, 0),
+					Permissions: make([]string, 0),
+					Scope:       make([]string, 0),
+				}, gomock.Any()).Return("access-token", nil)
+
 				jwtMock.EXPECT().Generate(jwt.Payload{ID: "PNOEE-30303039914"}, gomock.Any()).Return("refresh-token", nil)
 
 				database.EXPECT().CreateUserTokens(gomock.Any(), gomock.Any()).
@@ -599,7 +609,17 @@ func Test_Authentication_Complete(t *testing.T) {
 					LastName:       "TESTNUMBER",
 				}, nil)
 
-				jwtMock.EXPECT().Generate(jwt.Payload{ID: "PNOEE-60001017869"}, gomock.Any()).Return("access-token", nil)
+				database.EXPECT().FindUserRoles(ctx, userId).Return([]models.Role{}, nil)
+				database.EXPECT().FindUserPermissions(ctx, userId).Return([]models.Permission{}, nil)
+				database.EXPECT().FindUserScopes(ctx, userId).Return([]models.Scope{}, nil)
+
+				jwtMock.EXPECT().Generate(jwt.Payload{
+					ID:          "PNOEE-60001017869",
+					Roles:       make([]string, 0),
+					Permissions: make([]string, 0),
+					Scope:       make([]string, 0),
+				}, gomock.Any()).Return("access-token", nil)
+
 				jwtMock.EXPECT().Generate(jwt.Payload{ID: "PNOEE-60001017869"}, gomock.Any()).Return("refresh-token", nil)
 
 				database.EXPECT().CreateUserTokens(ctx, gomock.Any()).
@@ -651,7 +671,17 @@ func Test_Authentication_Complete(t *testing.T) {
 					LastName:       "OK",
 				}, nil)
 
-				jwtMock.EXPECT().Generate(jwt.Payload{ID: "PNOEE-30303039914"}, gomock.Any()).Return("access-token", nil)
+				database.EXPECT().FindUserRoles(ctx, userId).Return([]models.Role{}, nil)
+				database.EXPECT().FindUserPermissions(ctx, userId).Return([]models.Permission{}, nil)
+				database.EXPECT().FindUserScopes(ctx, userId).Return([]models.Scope{}, nil)
+
+				jwtMock.EXPECT().Generate(jwt.Payload{
+					ID:          "PNOEE-30303039914",
+					Roles:       make([]string, 0),
+					Permissions: make([]string, 0),
+					Scope:       make([]string, 0),
+				}, gomock.Any()).Return("access-token", nil)
+
 				jwtMock.EXPECT().Generate(jwt.Payload{ID: "PNOEE-30303039914"}, gomock.Any()).Return("refresh-token", nil)
 
 				database.EXPECT().CreateUserTokens(ctx, gomock.Any()).
