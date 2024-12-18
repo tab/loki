@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel/trace"
 
 	"loki/internal/app/models"
 	"loki/internal/app/models/dto"
@@ -18,6 +19,8 @@ import (
 const (
 	AuthenticationSuccess = "SUCCESS"
 	AuthenticationError   = "ERROR"
+
+	AuthenticationTraceName = "authentication"
 )
 
 type Authentication interface {
@@ -65,6 +68,8 @@ func NewAuthentication(
 }
 
 func (a *authentication) CreateSmartIdSession(ctx context.Context, params dto.CreateSmartIdSessionRequest) (response *serializers.SessionSerializer, error error) {
+	traceId := trace.SpanContextFromContext(ctx).TraceID().String()
+
 	result, err := a.smartIdProvider.CreateSession(ctx, params)
 	if err != nil {
 		a.log.Error().Err(err).Msg("Failed to initiate SmartId authentication")
@@ -80,7 +85,8 @@ func (a *authentication) CreateSmartIdSession(ctx context.Context, params dto.Cr
 	}
 
 	a.smartIdQueue <- &SmartIdQueue{
-		ID: id,
+		ID:      id,
+		TraceId: traceId,
 	}
 
 	return &serializers.SessionSerializer{
@@ -100,6 +106,8 @@ func (a *authentication) GetSmartIdSessionStatus(_ context.Context, id uuid.UUID
 }
 
 func (a *authentication) CreateMobileIdSession(ctx context.Context, params dto.CreateMobileIdSessionRequest) (response *serializers.SessionSerializer, error error) {
+	traceId := trace.SpanContextFromContext(ctx).TraceID().String()
+
 	result, err := a.mobileIdProvider.CreateSession(ctx, params)
 	if err != nil {
 		a.log.Error().Err(err).Msg("Failed to initiate SmartId authentication")
@@ -115,7 +123,8 @@ func (a *authentication) CreateMobileIdSession(ctx context.Context, params dto.C
 	}
 
 	a.mobileIdQueue <- &MobileIdQueue{
-		ID: id,
+		ID:      id,
+		TraceId: traceId,
 	}
 
 	return &serializers.SessionSerializer{

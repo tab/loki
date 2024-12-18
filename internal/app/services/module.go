@@ -8,11 +8,13 @@ import (
 const QueueSize = 50
 
 type SmartIdQueue struct {
-	ID uuid.UUID
+	ID      uuid.UUID
+	TraceId string
 }
 
 type MobileIdQueue struct {
-	ID uuid.UUID
+	ID      uuid.UUID
+	TraceId string
 }
 
 var Module = fx.Options(

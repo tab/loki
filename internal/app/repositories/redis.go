@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
+	"github.com/redis/go-redis/extra/redisotel/v9"
 
 	"loki/internal/app/errors"
 	"loki/internal/app/models"
@@ -33,6 +34,13 @@ func NewRedis(cfg *config.Config) (Redis, error) {
 	}
 
 	client := redis.NewClient(options)
+
+	if err = redisotel.InstrumentTracing(client); err != nil {
+		return nil, err
+	}
+	if err = redisotel.InstrumentMetrics(client); err != nil {
+		return nil, err
+	}
 
 	return &store{client: client}, nil
 }

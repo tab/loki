@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 
+	"github.com/exaring/otelpgx"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -37,7 +38,14 @@ type database struct {
 }
 
 func NewDatabase(cfg *config.Config) (Database, error) {
-	pool, err := pgxpool.New(context.Background(), cfg.DatabaseDSN)
+	poolConfig, err := pgxpool.ParseConfig(cfg.DatabaseDSN)
+	if err != nil {
+		return nil, err
+	}
+
+	poolConfig.ConnConfig.Tracer = otelpgx.NewTracer()
+
+	pool, err := pgxpool.NewWithConfig(context.Background(), poolConfig)
 	if err != nil {
 		return nil, err
 	}

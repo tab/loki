@@ -23,6 +23,7 @@ func Test_HealthCheck(t *testing.T) {
 	}
 
 	mockAuthMiddleware := middlewares.NewMockAuthMiddleware(ctrl)
+	mockTelemetryMiddleware := middlewares.NewMockTelemetryMiddleware(ctrl)
 	mockSmartIdController := controllers.NewMockSmartIdController(ctrl)
 	mockMobileIdController := controllers.NewMockMobileIdController(ctrl)
 	mockSessionsController := controllers.NewMockSessionsController(ctrl)
@@ -35,10 +36,17 @@ func Test_HealthCheck(t *testing.T) {
 		DoAndReturn(func(next http.Handler) http.Handler {
 			return next
 		})
+	mockTelemetryMiddleware.EXPECT().
+		Trace(gomock.Any()).
+		AnyTimes().
+		DoAndReturn(func(next http.Handler) http.Handler {
+			return next
+		})
 
 	router := NewRouter(
 		cfg,
 		mockAuthMiddleware,
+		mockTelemetryMiddleware,
 		mockSmartIdController,
 		mockMobileIdController,
 		mockSessionsController,

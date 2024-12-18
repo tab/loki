@@ -12,6 +12,11 @@ paths:
       description: "Initiates a Smart-ID authentication session using personal code and country"
       tags:
         - smart_id
+      parameters:
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
       requestBody:
         required: true
         content:
@@ -98,6 +103,11 @@ paths:
       description: "Initiates a Mobile-ID authentication session using personal code and phone number"
       tags:
         - mobile_id
+      parameters:
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
       requestBody:
         required: true
         content:
@@ -193,6 +203,10 @@ paths:
           schema:
             type: string
           description: "Session ID"
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
       responses:
         "200":
           description: "OK"
@@ -224,6 +238,10 @@ paths:
           schema:
             type: string
           description: "Session ID"
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
       responses:
         "200":
           description: "OK"
@@ -242,7 +260,12 @@ paths:
       summary: "Refresh tokens by providing a refresh token"
       description: "Refreshes the access token by providing a refresh token"
       tags:
-          - tokens
+        - tokens
+      parameters:
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
       requestBody:
         required: true
         content:
@@ -276,6 +299,11 @@ paths:
       description: "Retrieves the current user information"
       tags:
         - user
+      parameters:
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
       security:
         - Authentication: []
       responses:
@@ -297,6 +325,12 @@ components:
       type: http
       scheme: Bearer
   schemas:
+    TraceId:
+      type: string
+      format: uuid
+      example: "123e4567-e89b-12d3-a456-426614174000"
+      description: "Unique trace identifier"
+
     CreateSmartIdSessionRequest:
       type: object
       properties:

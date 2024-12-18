@@ -3,8 +3,9 @@ package config
 import (
 	"flag"
 	"fmt"
-	"github.com/joho/godotenv"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 const (
@@ -32,15 +33,17 @@ type MobileId struct {
 }
 
 type Config struct {
-	AppEnv      string
-	AppAddr     string
-	ClientURL   string
-	SecretKey   string
-	DatabaseDSN string
-	RedisURI    string
-	SmartId     SmartId
-	MobileId    MobileId
-	LogLevel    string
+	AppEnv       string
+	AppName      string
+	AppAddr      string
+	ClientURL    string
+	SecretKey    string
+	DatabaseDSN  string
+	RedisURI     string
+	TelemetryURI string
+	SmartId      SmartId
+	MobileId     MobileId
+	LogLevel     string
 }
 
 func LoadConfig() *Config {
@@ -63,16 +66,19 @@ func LoadConfig() *Config {
 	flagSecretKey := flag.String("s", "", "JWT secret key")
 	flagDatabaseDSN := flag.String("d", "", "database DSN")
 	flagRedisURI := flag.String("r", "", "Redis URI")
+	flagTelemetryURI := flag.String("t", "", "OpenTelemetry collector URI")
 	flag.Parse()
 
 	return &Config{
 		AppEnv:    env,
+		AppName:   getEnvString("APP_NAME"),
 		AppAddr:   getFlagOrEnvString(*flagAppAddr, "APP_ADDRESS", AppAddr),
 		ClientURL: getFlagOrEnvString(*flagClientURL, "CLIENT_URL", ClientURL),
 
-		SecretKey:   getFlagOrEnvString(*flagSecretKey, "SECRET_KEY", ""),
-		DatabaseDSN: getFlagOrEnvString(*flagDatabaseDSN, "DATABASE_DSN", ""),
-		RedisURI:    getFlagOrEnvString(*flagRedisURI, "REDIS_URI", ""),
+		SecretKey:    getFlagOrEnvString(*flagSecretKey, "SECRET_KEY", ""),
+		DatabaseDSN:  getFlagOrEnvString(*flagDatabaseDSN, "DATABASE_DSN", ""),
+		RedisURI:     getFlagOrEnvString(*flagRedisURI, "REDIS_URI", ""),
+		TelemetryURI: getFlagOrEnvString(*flagTelemetryURI, "TELEMETRY_URI", ""),
 
 		SmartId: SmartId{
 			BaseURL:          getEnvString("SMART_ID_API_URL"),

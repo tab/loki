@@ -15,7 +15,8 @@ import (
 func NewRouter(
 	cfg *config.Config,
 
-	authMiddleware middlewares.AuthMiddleware,
+	authentication middlewares.AuthMiddleware,
+	telemetry middlewares.TelemetryMiddleware,
 
 	smartId controllers.SmartIdController,
 	mobileID controllers.MobileIdController,
@@ -25,6 +26,7 @@ func NewRouter(
 ) http.Handler {
 	r := chi.NewRouter()
 
+	r.Use(telemetry.Trace)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Compress(5))
 	r.Use(middleware.Heartbeat("/health"))
@@ -43,7 +45,7 @@ func NewRouter(
 	r.Post("/api/auth/sessions/{id}/authenticate", sessions.Authenticate)
 
 	r.Group(func(r chi.Router) {
-		r.Use(authMiddleware.Authenticate)
+		r.Use(authentication.Authenticate)
 		r.Post("/api/tokens/refresh", tokens.Refresh)
 		r.Get("/api/me", users.Me)
 	})

@@ -23,7 +23,9 @@ func Test_NewServer(t *testing.T) {
 		AppEnv:  "test",
 		AppAddr: "localhost:8080",
 	}
+
 	mockAuthMiddleware := middlewares.NewMockAuthMiddleware(ctrl)
+	mockTelemetryMiddleware := middlewares.NewMockTelemetryMiddleware(ctrl)
 	mockSmartIdController := controllers.NewMockSmartIdController(ctrl)
 	mockMobileIdController := controllers.NewMockMobileIdController(ctrl)
 	mockSessionsController := controllers.NewMockSessionsController(ctrl)
@@ -36,10 +38,17 @@ func Test_NewServer(t *testing.T) {
 		DoAndReturn(func(next http.Handler) http.Handler {
 			return next
 		})
+	mockTelemetryMiddleware.EXPECT().
+		Trace(gomock.Any()).
+		AnyTimes().
+		DoAndReturn(func(next http.Handler) http.Handler {
+			return next
+		})
 
 	appRouter := router.NewRouter(
 		cfg,
 		mockAuthMiddleware,
+		mockTelemetryMiddleware,
 		mockSmartIdController,
 		mockMobileIdController,
 		mockSessionsController,

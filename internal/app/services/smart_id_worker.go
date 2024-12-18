@@ -2,13 +2,19 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"sync"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 
 	"loki/internal/app/models"
 	"loki/internal/app/models/dto"
 	"loki/internal/config"
 	"loki/pkg/logger"
 )
+
+const SmartIdWorkerName = "SmartId::Worker"
 
 type SmartIdWorker interface {
 	Start(ctx context.Context)
@@ -47,14 +53,11 @@ func NewSmartIdWorker(
 }
 
 func (w *smartIdWorker) Start(ctx context.Context) {
-	w.log.Info().Msgf("SmartId::Worker starting in %s environment", w.cfg.AppEnv)
-
 	w.wg.Add(1)
 	go w.run(ctx)
 }
 
 func (w *smartIdWorker) Stop() {
-	w.log.Info().Msg("Stopping SmartId::Worker")
 	w.wg.Wait()
 }
 
@@ -63,25 +66,44 @@ func (w *smartIdWorker) run(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			w.log.Info().Msg("SmartId::Worker context cancelled, exiting")
+			w.log.Info().Msgf("%s context cancelled, exiting", SmartIdWorkerName)
 			return
 		case req, ok := <-w.queue:
 			if !ok {
-				w.log.Info().Msg("SmartId::Worker queue channel closed, exiting")
+				w.log.Info().Msgf("%s queue channel closed, exiting", SmartIdWorkerName)
 				return
 			}
+			w.trace(ctx, req)
 			w.perform(ctx, req)
 		}
 	}
 }
 
+func (w *smartIdWorker) trace(ctx context.Context, req *SmartIdQueue) {
+	tracer := otel.Tracer(AuthenticationTraceName)
+	traceId, _ := trace.TraceIDFromHex(req.TraceId)
+
+	spanCtx := trace.NewSpanContext(trace.SpanContextConfig{
+		TraceID:    traceId,
+		Remote:     true,
+		TraceFlags: trace.FlagsSampled,
+	})
+
+	operationName := fmt.Sprintf("%s perform %s", SmartIdWorkerName, req.ID)
+
+	_, span := tracer.Start(
+		trace.ContextWithSpanContext(ctx, spanCtx),
+		operationName)
+	defer span.End()
+}
+
 func (w *smartIdWorker) perform(ctx context.Context, req *SmartIdQueue) {
-	w.log.Info().Msgf("SmartId::Worker perform %s", req.ID)
+	w.log.Info().Msgf("%s perform %s", SmartIdWorkerName, req.ID)
 
 	for {
 		response, err := w.authentication.GetSmartIdSessionStatus(ctx, req.ID)
 		if err != nil {
-			w.log.Error().Err(err).Msg("SmartId::Worker failed to get session status")
+			w.log.Error().Err(err).Msgf("%s failed to get session status", SmartIdWorkerName)
 			return
 		}
 		if w.processSessionState(ctx, req, response) {
@@ -95,21 +117,21 @@ func (w *smartIdWorker) processSessionState(ctx context.Context, req *SmartIdQue
 	case models.SessionComplete:
 		return w.handleSessionComplete(ctx, req, response)
 	case models.SessionRunning:
-		w.log.Warn().Msg("Session is still running")
+		w.log.Warn().Msgf("%s session is still running", SmartIdWorkerName)
 		return false
 	default:
-		w.log.Error().Msgf("Unknown session state: %s", response.State)
+		w.log.Error().Msgf("%s unknown session state: %s", SmartIdWorkerName, response.State)
 		return true
 	}
 }
 
 func (w *smartIdWorker) handleSessionComplete(ctx context.Context, req *SmartIdQueue, response *dto.SmartIdProviderSessionStatusResponse) bool {
 	if response.Result.EndResult == models.SessionResultOK {
-		w.log.Info().Msg("SmartId::Worker session is completed with OK result")
+		w.log.Info().Msgf("%s session is completed with OK result", SmartIdWorkerName)
 
 		user, err := w.handleCreateUser(ctx, response)
 		if err != nil {
-			w.log.Error().Err(err).Msg("SmartId::Worker failed to create user")
+			w.log.Error().Err(err).Msgf("%s failed to create user", SmartIdWorkerName)
 			return true
 		}
 
@@ -119,18 +141,18 @@ func (w *smartIdWorker) handleSessionComplete(ctx context.Context, req *SmartIdQ
 			Status: AuthenticationSuccess,
 		})
 		if err != nil {
-			w.log.Error().Err(err).Msg("SmartId::Worker failed to update session")
+			w.log.Error().Err(err).Msgf("%s failed to update session", SmartIdWorkerName)
 			return true
 		}
 	} else {
-		w.log.Info().Msg("SmartId::Worker session is completed with error")
+		w.log.Info().Msgf("%s session is completed with error", SmartIdWorkerName)
 
 		if _, err := w.sessions.Update(ctx, models.Session{
 			ID:     req.ID,
 			Status: AuthenticationError,
 			Error:  response.Result.EndResult,
 		}); err != nil {
-			w.log.Error().Err(err).Msg("SmartId::Worker failed to update session")
+			w.log.Error().Err(err).Msgf("%s failed to update session", SmartIdWorkerName)
 		}
 	}
 
@@ -140,7 +162,7 @@ func (w *smartIdWorker) handleSessionComplete(ctx context.Context, req *SmartIdQ
 func (w *smartIdWorker) handleCreateUser(ctx context.Context, response *dto.SmartIdProviderSessionStatusResponse) (*models.User, error) {
 	cert, err := w.certificate.Extract(response.Cert.Value)
 	if err != nil {
-		w.log.Error().Err(err).Msg("SmartId::Worker failed to extract user from certificate")
+		w.log.Error().Err(err).Msgf("%s failed to extract user from certificate", SmartIdWorkerName)
 		return nil, err
 	}
 
