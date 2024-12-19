@@ -79,3 +79,27 @@ func (q *Queries) FindUserScopes(ctx context.Context, userID uuid.UUID) ([]FindU
 	}
 	return items, nil
 }
+
+const upsertUserScopeByName = `-- name: UpsertUserScopeByName :one
+INSERT INTO user_scopes (user_id, scope_id)
+VALUES ($1, (SELECT id FROM scopes WHERE name = $2))
+  ON CONFLICT (user_id, scope_id) DO UPDATE SET scope_id = EXCLUDED.scope_id, user_id = EXCLUDED.user_id
+RETURNING user_id, scope_id
+`
+
+type UpsertUserScopeByNameParams struct {
+	UserID uuid.UUID
+	Name   string
+}
+
+type UpsertUserScopeByNameRow struct {
+	UserID  uuid.UUID
+	ScopeID uuid.UUID
+}
+
+func (q *Queries) UpsertUserScopeByName(ctx context.Context, arg UpsertUserScopeByNameParams) (UpsertUserScopeByNameRow, error) {
+	row := q.db.QueryRow(ctx, upsertUserScopeByName, arg.UserID, arg.Name)
+	var i UpsertUserScopeByNameRow
+	err := row.Scan(&i.UserID, &i.ScopeID)
+	return i, err
+}

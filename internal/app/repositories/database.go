@@ -77,27 +77,17 @@ func (d *database) CreateUser(ctx context.Context, params db.CreateUserParams) (
 		return nil, err
 	}
 
-	role, err := q.FindRoleByName(ctx, models.UserRoleType)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = q.CreateUserRole(ctx, db.CreateUserRoleParams{
+	_, err = q.UpsertUserRoleByName(ctx, db.UpsertUserRoleByNameParams{
 		UserID: user.ID,
-		RoleID: role.ID,
+		Name:   models.UserRoleType,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	scope, err := q.FindScopeByName(ctx, models.SelfServiceType)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = q.CreateUserScope(ctx, db.CreateUserScopeParams{
-		UserID:  user.ID,
-		ScopeID: scope.ID,
+	_, err = q.UpsertUserScopeByName(ctx, db.UpsertUserScopeByNameParams{
+		UserID: user.ID,
+		Name:   models.SelfServiceType,
 	})
 	if err != nil {
 		return nil, err

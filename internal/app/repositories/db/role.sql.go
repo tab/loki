@@ -79,3 +79,27 @@ func (q *Queries) FindUserRoles(ctx context.Context, userID uuid.UUID) ([]FindUs
 	}
 	return items, nil
 }
+
+const upsertUserRoleByName = `-- name: UpsertUserRoleByName :one
+INSERT INTO user_roles (user_id, role_id)
+VALUES ($1, (SELECT id FROM roles WHERE name = $2))
+  ON CONFLICT (user_id, role_id) DO UPDATE SET role_id = EXCLUDED.role_id, user_id = EXCLUDED.user_id
+RETURNING user_id, role_id
+`
+
+type UpsertUserRoleByNameParams struct {
+	UserID uuid.UUID
+	Name   string
+}
+
+type UpsertUserRoleByNameRow struct {
+	UserID uuid.UUID
+	RoleID uuid.UUID
+}
+
+func (q *Queries) UpsertUserRoleByName(ctx context.Context, arg UpsertUserRoleByNameParams) (UpsertUserRoleByNameRow, error) {
+	row := q.db.QueryRow(ctx, upsertUserRoleByName, arg.UserID, arg.Name)
+	var i UpsertUserRoleByNameRow
+	err := row.Scan(&i.UserID, &i.RoleID)
+	return i, err
+}
