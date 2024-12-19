@@ -13,7 +13,6 @@ import (
 	"loki/internal/app/repositories"
 	"loki/internal/app/serializers"
 	"loki/internal/config"
-	"loki/pkg/jwt"
 	"loki/pkg/logger"
 )
 
@@ -39,7 +38,7 @@ func Test_Authentication_CreateSmartIdSession(t *testing.T) {
 	database := repositories.NewMockDatabase(ctrl)
 	redis := repositories.NewMockRedis(ctrl)
 
-	jwtMock := jwt.NewMockJwt(ctrl)
+	tokensService := NewMockTokens(ctrl)
 	log := logger.NewLogger()
 
 	service := NewAuthentication(
@@ -50,7 +49,7 @@ func Test_Authentication_CreateSmartIdSession(t *testing.T) {
 		mobileIdQueue,
 		database,
 		redis,
-		jwtMock,
+		tokensService,
 		log)
 
 	id := uuid.MustParse("8fdb516d-1a82-43ba-b82d-be63df569b86")
@@ -168,7 +167,7 @@ func Test_Authentication_GetSmartIdSessionStatus(t *testing.T) {
 	database := repositories.NewMockDatabase(ctrl)
 	redis := repositories.NewMockRedis(ctrl)
 
-	jwtMock := jwt.NewMockJwt(ctrl)
+	tokensService := NewMockTokens(ctrl)
 	log := logger.NewLogger()
 
 	service := NewAuthentication(
@@ -179,7 +178,7 @@ func Test_Authentication_GetSmartIdSessionStatus(t *testing.T) {
 		mobileIdQueue,
 		database,
 		redis,
-		jwtMock,
+		tokensService,
 		log)
 
 	id := uuid.MustParse("8fdb516d-1a82-43ba-b82d-be63df569b86")
@@ -277,7 +276,7 @@ func Test_Authentication_CreateMobileIdSession(t *testing.T) {
 	database := repositories.NewMockDatabase(ctrl)
 	redis := repositories.NewMockRedis(ctrl)
 
-	jwtMock := jwt.NewMockJwt(ctrl)
+	tokensService := NewMockTokens(ctrl)
 	log := logger.NewLogger()
 
 	service := NewAuthentication(
@@ -288,7 +287,7 @@ func Test_Authentication_CreateMobileIdSession(t *testing.T) {
 		mobileIdQueue,
 		database,
 		redis,
-		jwtMock,
+		tokensService,
 		log)
 
 	id := uuid.MustParse("5eab0e6a-c3e7-4526-a47e-398f0d31f514")
@@ -412,7 +411,7 @@ func Test_Authentication_GetMobileIdSessionStatus(t *testing.T) {
 	database := repositories.NewMockDatabase(ctrl)
 	redis := repositories.NewMockRedis(ctrl)
 
-	jwtMock := jwt.NewMockJwt(ctrl)
+	tokensService := NewMockTokens(ctrl)
 	log := logger.NewLogger()
 
 	service := NewAuthentication(
@@ -423,7 +422,7 @@ func Test_Authentication_GetMobileIdSessionStatus(t *testing.T) {
 		mobileIdQueue,
 		database,
 		redis,
-		jwtMock,
+		tokensService,
 		log)
 
 	id := uuid.MustParse("5eab0e6a-c3e7-4526-a47e-398f0d31f514")
@@ -515,7 +514,7 @@ func Test_Authentication_Complete(t *testing.T) {
 	database := repositories.NewMockDatabase(ctrl)
 	redis := repositories.NewMockRedis(ctrl)
 
-	jwtMock := jwt.NewMockJwt(ctrl)
+	tokensService := NewMockTokens(ctrl)
 	log := logger.NewLogger()
 
 	sessionId := uuid.MustParse("5eab0e6a-c3e7-4526-a47e-398f0d31f514")
@@ -529,7 +528,7 @@ func Test_Authentication_Complete(t *testing.T) {
 		mobileIdQueue,
 		database,
 		redis,
-		jwtMock,
+		tokensService,
 		log)
 
 	tests := []struct {
@@ -555,20 +554,7 @@ func Test_Authentication_Complete(t *testing.T) {
 					LastName:       "OK",
 				}, nil)
 
-				database.EXPECT().FindUserRoles(ctx, userId).Return([]models.Role{}, nil)
-				database.EXPECT().FindUserPermissions(ctx, userId).Return([]models.Permission{}, nil)
-				database.EXPECT().FindUserScopes(ctx, userId).Return([]models.Scope{}, nil)
-
-				jwtMock.EXPECT().Generate(jwt.Payload{
-					ID:          "PNOEE-30303039914",
-					Roles:       make([]string, 0),
-					Permissions: make([]string, 0),
-					Scope:       make([]string, 0),
-				}, gomock.Any()).Return("access-token", nil)
-
-				jwtMock.EXPECT().Generate(jwt.Payload{ID: "PNOEE-30303039914"}, gomock.Any()).Return("refresh-token", nil)
-
-				database.EXPECT().CreateUserTokens(ctx, gomock.Any()).Return([]models.Token{}, nil)
+				tokensService.EXPECT().Generate(ctx, gomock.Any()).Return("access-token", "refresh-token", nil)
 
 				redis.EXPECT().DeleteSessionByID(ctx, sessionId).Return(nil)
 			},
@@ -600,20 +586,7 @@ func Test_Authentication_Complete(t *testing.T) {
 					LastName:       "TESTNUMBER",
 				}, nil)
 
-				database.EXPECT().FindUserRoles(ctx, userId).Return([]models.Role{}, nil)
-				database.EXPECT().FindUserPermissions(ctx, userId).Return([]models.Permission{}, nil)
-				database.EXPECT().FindUserScopes(ctx, userId).Return([]models.Scope{}, nil)
-
-				jwtMock.EXPECT().Generate(jwt.Payload{
-					ID:          "PNOEE-60001017869",
-					Roles:       make([]string, 0),
-					Permissions: make([]string, 0),
-					Scope:       make([]string, 0),
-				}, gomock.Any()).Return("access-token", nil)
-
-				jwtMock.EXPECT().Generate(jwt.Payload{ID: "PNOEE-60001017869"}, gomock.Any()).Return("refresh-token", nil)
-
-				database.EXPECT().CreateUserTokens(ctx, gomock.Any()).Return([]models.Token{}, nil)
+				tokensService.EXPECT().Generate(ctx, gomock.Any()).Return("access-token", "refresh-token", nil)
 
 				redis.EXPECT().DeleteSessionByID(ctx, sessionId).Return(nil)
 			},
@@ -653,20 +626,7 @@ func Test_Authentication_Complete(t *testing.T) {
 					LastName:       "OK",
 				}, nil)
 
-				database.EXPECT().FindUserRoles(ctx, userId).Return([]models.Role{}, nil)
-				database.EXPECT().FindUserPermissions(ctx, userId).Return([]models.Permission{}, nil)
-				database.EXPECT().FindUserScopes(ctx, userId).Return([]models.Scope{}, nil)
-
-				jwtMock.EXPECT().Generate(jwt.Payload{
-					ID:          "PNOEE-30303039914",
-					Roles:       make([]string, 0),
-					Permissions: make([]string, 0),
-					Scope:       make([]string, 0),
-				}, gomock.Any()).Return("access-token", nil)
-
-				jwtMock.EXPECT().Generate(jwt.Payload{ID: "PNOEE-30303039914"}, gomock.Any()).Return("refresh-token", nil)
-
-				database.EXPECT().CreateUserTokens(ctx, gomock.Any()).Return([]models.Token{}, nil)
+				tokensService.EXPECT().Generate(ctx, gomock.Any()).Return("access-token", "refresh-token", nil)
 
 				redis.EXPECT().DeleteSessionByID(ctx, sessionId).Return(assert.AnError)
 			},

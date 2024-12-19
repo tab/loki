@@ -44,9 +44,10 @@ func NewRouter(
 	r.Get("/api/auth/sessions/{id}", sessions.GetStatus)
 	r.Post("/api/auth/sessions/{id}/authenticate", sessions.Authenticate)
 
+	r.Post("/api/tokens/refresh", tokens.Refresh)
+
 	r.Group(func(r chi.Router) {
 		r.Use(authentication.Authenticate)
-		r.Post("/api/tokens/refresh", tokens.Refresh)
 		r.Get("/api/me", users.Me)
 	})
 

@@ -11,10 +11,10 @@ package services
 
 import (
 	context "context"
+	models "loki/internal/app/models"
 	serializers "loki/internal/app/serializers"
 	reflect "reflect"
 
-	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -42,17 +42,33 @@ func (m *MockTokens) EXPECT() *MockTokensMockRecorder {
 	return m.recorder
 }
 
-// Refresh mocks base method.
-func (m *MockTokens) Refresh(ctx context.Context, userId uuid.UUID, refreshToken string) (*serializers.UserSerializer, error) {
+// Generate mocks base method.
+func (m *MockTokens) Generate(ctx context.Context, user *models.User) (string, string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Refresh", ctx, userId, refreshToken)
+	ret := m.ctrl.Call(m, "Generate", ctx, user)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// Generate indicates an expected call of Generate.
+func (mr *MockTokensMockRecorder) Generate(ctx, user any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Generate", reflect.TypeOf((*MockTokens)(nil).Generate), ctx, user)
+}
+
+// Refresh mocks base method.
+func (m *MockTokens) Refresh(ctx context.Context, refreshToken string) (*serializers.UserSerializer, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Refresh", ctx, refreshToken)
 	ret0, _ := ret[0].(*serializers.UserSerializer)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Refresh indicates an expected call of Refresh.
-func (mr *MockTokensMockRecorder) Refresh(ctx, userId, refreshToken any) *gomock.Call {
+func (mr *MockTokensMockRecorder) Refresh(ctx, refreshToken any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Refresh", reflect.TypeOf((*MockTokens)(nil).Refresh), ctx, userId, refreshToken)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Refresh", reflect.TypeOf((*MockTokens)(nil).Refresh), ctx, refreshToken)
 }

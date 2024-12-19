@@ -4,11 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"loki/internal/app/errors"
 	"loki/internal/app/models/dto"
 	"loki/internal/app/serializers"
 	"loki/internal/app/services"
-	"loki/internal/config/middlewares"
 )
 
 type TokensController interface {
@@ -26,13 +24,6 @@ func NewTokensController(tokens services.Tokens) TokensController {
 func (c *tokensController) Refresh(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	currentUser, ok := middlewares.CurrentUserFromContext(r.Context())
-	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: errors.ErrUnauthorized.Error()})
-		return
-	}
-
 	var params dto.RefreshAccessTokenRequest
 	if err := params.Validate(r.Body); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -40,7 +31,7 @@ func (c *tokensController) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := c.tokens.Refresh(r.Context(), currentUser.ID, params.RefreshToken)
+	response, err := c.tokens.Refresh(r.Context(), params.RefreshToken)
 	if err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})

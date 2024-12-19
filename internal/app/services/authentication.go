@@ -9,10 +9,8 @@ import (
 	"loki/internal/app/models"
 	"loki/internal/app/models/dto"
 	"loki/internal/app/repositories"
-	"loki/internal/app/repositories/db"
 	"loki/internal/app/serializers"
 	"loki/internal/config"
-	"loki/pkg/jwt"
 	"loki/pkg/logger"
 )
 
@@ -39,7 +37,7 @@ type authentication struct {
 	mobileIdQueue    chan<- *MobileIdQueue
 	database         repositories.Database
 	redis            repositories.Redis
-	jwt              jwt.Jwt
+	tokens           Tokens
 	log              *logger.Logger
 }
 
@@ -51,7 +49,7 @@ func NewAuthentication(
 	mobileIdQueue chan *MobileIdQueue,
 	database repositories.Database,
 	redis repositories.Redis,
-	jwt jwt.Jwt,
+	tokens Tokens,
 	log *logger.Logger,
 ) Authentication {
 	return &authentication{
@@ -62,7 +60,7 @@ func NewAuthentication(
 		mobileIdQueue:    mobileIdQueue,
 		database:         database,
 		redis:            redis,
-		jwt:              jwt,
+		tokens:           tokens,
 		log:              log,
 	}
 }
@@ -205,62 +203,9 @@ func (a *authentication) handleCreateUserTokens(ctx context.Context, id uuid.UUI
 		return nil, err
 	}
 
-	userRoles, err := a.database.FindUserRoles(ctx, id)
+	accessToken, refreshToken, err := a.tokens.Generate(ctx, user)
 	if err != nil {
-		a.log.Error().Err(err).Msg("Failed to find user roles")
-		return nil, err
-	}
-	roles := make([]string, 0, len(userRoles))
-	for _, role := range userRoles {
-		roles = append(roles, role.Name)
-	}
-
-	userPermissions, err := a.database.FindUserPermissions(ctx, id)
-	if err != nil {
-		a.log.Error().Err(err).Msg("Failed to find user permissions")
-		return nil, err
-	}
-	permissions := make([]string, 0, len(userPermissions))
-	for _, permission := range userPermissions {
-		permissions = append(permissions, permission.Name)
-	}
-
-	userScopes, err := a.database.FindUserScopes(ctx, id)
-	if err != nil {
-		a.log.Error().Err(err).Msg("Failed to find user scopes")
-		return nil, err
-	}
-	scopes := make([]string, 0, len(userScopes))
-	for _, scope := range userScopes {
-		scopes = append(scopes, scope.Name)
-	}
-
-	accessToken, err := a.jwt.Generate(jwt.Payload{
-		ID:          user.IdentityNumber,
-		Roles:       roles,
-		Permissions: permissions,
-		Scope:       scopes,
-	}, models.AccessTokenExp)
-	if err != nil {
-		a.log.Error().Err(err).Msg("Failed to create access token")
-		return nil, err
-	}
-
-	refreshToken, err := a.jwt.Generate(jwt.Payload{
-		ID: user.IdentityNumber,
-	}, models.RefreshTokenExp)
-	if err != nil {
-		a.log.Error().Err(err).Msg("Failed to create refresh token")
-		return nil, err
-	}
-
-	_, err = a.database.CreateUserTokens(ctx, db.CreateTokensParams{
-		UserID:            user.ID,
-		AccessTokenValue:  accessToken,
-		RefreshTokenValue: refreshToken,
-	})
-	if err != nil {
-		a.log.Error().Err(err).Msg("Failed to create user tokens in database")
+		a.log.Error().Err(err).Msg("Failed to generate tokens")
 		return nil, err
 	}
 

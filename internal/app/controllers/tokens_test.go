@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -17,7 +16,6 @@ import (
 	"loki/internal/app/errors"
 	"loki/internal/app/serializers"
 	"loki/internal/app/services"
-	"loki/internal/config/middlewares"
 )
 
 func Test_TokensController_Refresh(t *testing.T) {
@@ -40,29 +38,22 @@ func Test_TokensController_Refresh(t *testing.T) {
 	}
 
 	tests := []struct {
-		name        string
-		before      func()
-		currentUser *serializers.UserSerializer
-		body        io.Reader
-		expected    result
+		name     string
+		before   func()
+		body     io.Reader
+		expected result
+		error    bool
 	}{
 		{
 			name: "Success",
 			before: func() {
-				tokens.EXPECT().Refresh(gomock.Any(), id, "refresh-token").Return(&serializers.UserSerializer{
+				tokens.EXPECT().Refresh(gomock.Any(), "refresh-token").Return(&serializers.UserSerializer{
 					ID:             id,
 					IdentityNumber: identityNumber,
 					PersonalCode:   "123456789",
 					AccessToken:    "new-access-token",
 					RefreshToken:   "new-refresh-token",
 				}, nil)
-			},
-			currentUser: &serializers.UserSerializer{
-				ID:             id,
-				IdentityNumber: identityNumber,
-				PersonalCode:   "123456789",
-				FirstName:      "John",
-				LastName:       "Doe",
 			},
 			body: strings.NewReader(`{"refresh_token": "refresh-token"}`),
 			expected: result{
@@ -76,28 +67,11 @@ func Test_TokensController_Refresh(t *testing.T) {
 				status: "200 OK",
 				code:   http.StatusOK,
 			},
-		},
-		{
-			name:        "Unauthorized",
-			before:      func() {},
-			currentUser: nil,
-			body:        strings.NewReader(`{"refresh_token": "refresh-token"}`),
-			expected: result{
-				error:  serializers.ErrorSerializer{Error: errors.ErrUnauthorized.Error()},
-				status: "401 Unauthorized",
-				code:   http.StatusUnauthorized,
-			},
+			error: false,
 		},
 		{
 			name: "Empty refresh token",
 			before: func() {
-			},
-			currentUser: &serializers.UserSerializer{
-				ID:             id,
-				IdentityNumber: identityNumber,
-				PersonalCode:   "123456789",
-				FirstName:      "John",
-				LastName:       "Doe",
 			},
 			body: strings.NewReader(`{"refresh_token": ""}`),
 			expected: result{
@@ -105,18 +79,12 @@ func Test_TokensController_Refresh(t *testing.T) {
 				status: "400 Bad Request",
 				code:   http.StatusBadRequest,
 			},
+			error: true,
 		},
 		{
 			name: "Invalid refresh token",
 			before: func() {
-				tokens.EXPECT().Refresh(gomock.Any(), id, "invalid-token").Return(nil, errors.ErrInvalidToken)
-			},
-			currentUser: &serializers.UserSerializer{
-				ID:             id,
-				IdentityNumber: identityNumber,
-				PersonalCode:   "123456789",
-				FirstName:      "John",
-				LastName:       "Doe",
+				tokens.EXPECT().Refresh(gomock.Any(), "invalid-token").Return(nil, errors.ErrInvalidToken)
 			},
 			body: strings.NewReader(`{"refresh_token": "invalid-token"}`),
 			expected: result{
@@ -124,18 +92,12 @@ func Test_TokensController_Refresh(t *testing.T) {
 				status: "422 Unprocessable Entity",
 				code:   http.StatusUnprocessableEntity,
 			},
+			error: true,
 		},
 		{
 			name: "Error",
 			before: func() {
-				tokens.EXPECT().Refresh(gomock.Any(), id, "refresh-token").Return(nil, assert.AnError)
-			},
-			currentUser: &serializers.UserSerializer{
-				ID:             id,
-				IdentityNumber: identityNumber,
-				PersonalCode:   "123456789",
-				FirstName:      "John",
-				LastName:       "Doe",
+				tokens.EXPECT().Refresh(gomock.Any(), "refresh-token").Return(nil, assert.AnError)
 			},
 			body: strings.NewReader(`{"refresh_token": "refresh-token"}`),
 			expected: result{
@@ -143,6 +105,7 @@ func Test_TokensController_Refresh(t *testing.T) {
 				status: "422 Unprocessable Entity",
 				code:   http.StatusUnprocessableEntity,
 			},
+			error: true,
 		},
 	}
 
@@ -153,10 +116,6 @@ func Test_TokensController_Refresh(t *testing.T) {
 			}
 
 			req := httptest.NewRequest(http.MethodPost, "/api/tokens/refresh", tt.body)
-			if tt.currentUser != nil {
-				ctx := context.WithValue(req.Context(), middlewares.CurrentUser{}, tt.currentUser)
-				req = req.WithContext(ctx)
-			}
 			w := httptest.NewRecorder()
 
 			r := chi.NewRouter()
@@ -166,16 +125,16 @@ func Test_TokensController_Refresh(t *testing.T) {
 			resp := w.Result()
 			defer resp.Body.Close()
 
-			if tt.currentUser != nil {
-				var response serializers.UserSerializer
-				err = json.NewDecoder(resp.Body).Decode(&response)
-				assert.NoError(t, err)
-				assert.Equal(t, tt.expected.response, response)
-			} else {
+			if tt.error {
 				var response serializers.ErrorSerializer
 				err = json.NewDecoder(resp.Body).Decode(&response)
 				assert.NoError(t, err)
 				assert.Equal(t, tt.expected.error, response)
+			} else {
+				var response serializers.UserSerializer
+				err = json.NewDecoder(resp.Body).Decode(&response)
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected.response, response)
 			}
 
 			assert.Equal(t, tt.expected.code, resp.StatusCode)
