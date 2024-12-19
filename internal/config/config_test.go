@@ -37,7 +37,7 @@ func Test_LoadConfig(t *testing.T) {
 			env:  map[string]string{},
 			expected: &Config{
 				AppEnv:      "test",
-				AppAddr:     "localhost:8080",
+				AppAddr:     "0.0.0.0:8080",
 				ClientURL:   "http://localhost:3000",
 				SecretKey:   "jwt-secret-key",
 				DatabaseDSN: "postgres://postgres:postgres@localhost:5432/loki-test?sslmode=disable",

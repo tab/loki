@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	AppAddr    = "localhost:8080"
+	AppAddr    = "0.0.0.0:8080"
 	ClientURL  = "http://localhost:3000"
 	DebugLevel = "debug"
 )

@@ -8,6 +8,7 @@
 /.editorconfig
 /.gitattributes
 /.gitignore
+.env*
 /Dockerfile
 /codecov.yaml
 /compose.yaml
