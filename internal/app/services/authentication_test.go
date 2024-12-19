@@ -568,16 +568,7 @@ func Test_Authentication_Complete(t *testing.T) {
 
 				jwtMock.EXPECT().Generate(jwt.Payload{ID: "PNOEE-30303039914"}, gomock.Any()).Return("refresh-token", nil)
 
-				database.EXPECT().CreateUserTokens(gomock.Any(), gomock.Any()).
-					Return(&models.User{
-						ID:             userId,
-						IdentityNumber: "PNOEE-30303039914",
-						PersonalCode:   "303039914",
-						FirstName:      "TESTNUMBER",
-						LastName:       "OK",
-						AccessToken:    "access-token",
-						RefreshToken:   "refresh-token",
-					}, nil)
+				database.EXPECT().CreateUserTokens(ctx, gomock.Any()).Return([]models.Token{}, nil)
 
 				redis.EXPECT().DeleteSessionByID(ctx, sessionId).Return(nil)
 			},
@@ -622,16 +613,7 @@ func Test_Authentication_Complete(t *testing.T) {
 
 				jwtMock.EXPECT().Generate(jwt.Payload{ID: "PNOEE-60001017869"}, gomock.Any()).Return("refresh-token", nil)
 
-				database.EXPECT().CreateUserTokens(ctx, gomock.Any()).
-					Return(&models.User{
-						ID:             userId,
-						IdentityNumber: "PNOEE-60001017869",
-						PersonalCode:   "60001017869",
-						FirstName:      "EID2016",
-						LastName:       "TESTNUMBER",
-						AccessToken:    "access-token",
-						RefreshToken:   "refresh-token",
-					}, nil)
+				database.EXPECT().CreateUserTokens(ctx, gomock.Any()).Return([]models.Token{}, nil)
 
 				redis.EXPECT().DeleteSessionByID(ctx, sessionId).Return(nil)
 			},
@@ -684,16 +666,7 @@ func Test_Authentication_Complete(t *testing.T) {
 
 				jwtMock.EXPECT().Generate(jwt.Payload{ID: "PNOEE-30303039914"}, gomock.Any()).Return("refresh-token", nil)
 
-				database.EXPECT().CreateUserTokens(ctx, gomock.Any()).
-					Return(&models.User{
-						ID:             userId,
-						IdentityNumber: "PNOEE-30303039914",
-						PersonalCode:   "303039914",
-						FirstName:      "TESTNUMBER",
-						LastName:       "OK",
-						AccessToken:    "access-token",
-						RefreshToken:   "refresh-token",
-					}, nil)
+				database.EXPECT().CreateUserTokens(ctx, gomock.Any()).Return([]models.Token{}, nil)
 
 				redis.EXPECT().DeleteSessionByID(ctx, sessionId).Return(assert.AnError)
 			},

@@ -2,16 +2,13 @@ package repositories
 
 import (
 	"context"
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 	"log"
 	"os"
 	"testing"
-	"time"
-
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
 
 	"loki/internal/app/models"
-	"loki/internal/app/models/dto"
 	"loki/internal/app/repositories/db"
 	"loki/internal/config"
 	"loki/pkg/spec"
@@ -148,114 +145,43 @@ func Test_Database_CreateUserTokens(t *testing.T) {
 	repo, err := NewDatabase(cfg)
 	assert.NoError(t, err)
 
+	user, err := repo.CreateUser(ctx, db.CreateUserParams{
+		IdentityNumber: "PNOEE-30303039914",
+		PersonalCode:   "30303039914",
+		FirstName:      "TESTNUMBER",
+		LastName:       "OK",
+	})
+	assert.NoError(t, err)
+
 	tests := []struct {
 		name     string
-		before   func()
-		params   dto.CreateUserParams
-		expected *models.User
+		params   db.CreateTokensParams
+		expected []models.Token
 		error    bool
 	}{
 		{
 			name: "Success",
-			before: func() {
-				_, err = repo.CreateUser(ctx, db.CreateUserParams{
-					IdentityNumber: "PNOEE-30303039914",
-					PersonalCode:   "30303039914",
-					FirstName:      "TESTNUMBER",
-					LastName:       "OK",
-				})
-				assert.NoError(t, err)
+			params: db.CreateTokensParams{
+				UserID:            user.ID,
+				AccessTokenValue:  "aaa.bbb.ccc",
+				RefreshTokenValue: "ddd.eee.fff",
 			},
-			params: dto.CreateUserParams{
-				IdentityNumber: "PNOEE-30303039914",
-				AccessToken: dto.CreateTokenParams{
-					Type:      "access_token",
-					Value:     "aaa.bbb.ccc",
-					ExpiresAt: time.Now().Add(time.Hour),
+			expected: []models.Token{
+				{
+					UserId: user.ID,
 				},
-				RefreshToken: dto.CreateTokenParams{
-					Type:      "refresh_token",
-					Value:     "ddd.eee.fff",
-					ExpiresAt: time.Now().Add(time.Hour * 24),
+				{
+					UserId: user.ID,
 				},
-			},
-			expected: &models.User{
-				IdentityNumber: "PNOEE-30303039914",
-				PersonalCode:   "30303039914",
-				FirstName:      "TESTNUMBER",
-				LastName:       "OK",
-				AccessToken:    "aaa.bbb.ccc",
-				RefreshToken:   "ddd.eee.fff",
 			},
 			error: false,
 		},
 		{
-			name: "Invalid identity number",
-			before: func() {
-				_, err = repo.CreateUser(ctx, db.CreateUserParams{
-					IdentityNumber: "PNOEE-30303039914",
-					PersonalCode:   "30303039914",
-					FirstName:      "TESTNUMBER",
-					LastName:       "OK",
-				})
-				assert.NoError(t, err)
-			},
-			params: dto.CreateUserParams{
-				IdentityNumber: "",
-			},
-			expected: nil,
-			error:    true,
-		},
-		{
-			name: "Invalid access token",
-			before: func() {
-				_, err = repo.CreateUser(ctx, db.CreateUserParams{
-					IdentityNumber: "PNOEE-30303039914",
-					PersonalCode:   "30303039914",
-					FirstName:      "TESTNUMBER",
-					LastName:       "OK",
-				})
-				assert.NoError(t, err)
-			},
-			params: dto.CreateUserParams{
-				IdentityNumber: "PNOEE-30303039914",
-				AccessToken: dto.CreateTokenParams{
-					Type:      "",
-					Value:     "",
-					ExpiresAt: time.Time{},
-				},
-				RefreshToken: dto.CreateTokenParams{
-					Type:      "refresh_token",
-					Value:     "ddd.eee.fff",
-					ExpiresAt: time.Now().Add(time.Hour * 24),
-				},
-			},
-			expected: nil,
-			error:    true,
-		},
-		{
-			name: "Invalid refresh token",
-			before: func() {
-				_, err = repo.CreateUser(ctx, db.CreateUserParams{
-					IdentityNumber: "PNOEE-30303039914",
-					PersonalCode:   "30303039914",
-					FirstName:      "TESTNUMBER",
-					LastName:       "OK",
-				})
-				assert.NoError(t, err)
-			},
-			params: dto.CreateUserParams{
-				IdentityNumber: "PNOEE-30303039914",
-				AccessToken: dto.CreateTokenParams{
-					Type:      "access_token",
-					Value:     "aaa.bbb.ccc",
-					ExpiresAt: time.Now().Add(time.Hour),
-				},
-				RefreshToken: dto.CreateTokenParams{
-					Type:      "",
-					Value:     "",
-					ExpiresAt: time.Time{},
-				},
+			name: "Error",
+			params: db.CreateTokensParams{
+				UserID:            uuid.Nil,
+				AccessTokenValue:  "",
+				RefreshTokenValue: "",
 			},
 			expected: nil,
 			error:    true,
@@ -264,20 +190,13 @@ func Test_Database_CreateUserTokens(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.before()
-
-			result, err := repo.CreateUserTokens(ctx, tt.params)
+			results, err := repo.CreateUserTokens(ctx, tt.params)
 
 			if tt.error {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-
-				assert.NotEqual(t, uuid.Nil, result.ID)
-				assert.Equal(t, tt.expected.IdentityNumber, result.IdentityNumber)
-				assert.Equal(t, tt.expected.PersonalCode, result.PersonalCode)
-				assert.Equal(t, tt.expected.FirstName, result.FirstName)
-				assert.Equal(t, tt.expected.LastName, result.LastName)
+				assert.Equal(t, len(tt.expected), len(results))
 			}
 		})
 	}

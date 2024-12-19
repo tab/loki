@@ -2,14 +2,13 @@ package services
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 
 	"loki/internal/app/errors"
 	"loki/internal/app/models"
-	"loki/internal/app/models/dto"
 	"loki/internal/app/repositories"
+	"loki/internal/app/repositories/db"
 	"loki/internal/app/serializers"
 	"loki/pkg/jwt"
 	"loki/pkg/logger"
@@ -66,20 +65,13 @@ func (t *tokens) Refresh(ctx context.Context, userId uuid.UUID, token string) (*
 		return nil, err
 	}
 
-	_, err = t.database.CreateUserTokens(ctx, dto.CreateUserParams{
-		IdentityNumber: user.IdentityNumber,
-		AccessToken: dto.CreateTokenParams{
-			Type:      models.AccessTokenType,
-			Value:     accessToken,
-			ExpiresAt: time.Now().Add(models.AccessTokenExp),
-		},
-		RefreshToken: dto.CreateTokenParams{
-			Type:      models.RefreshTokenType,
-			Value:     refreshToken,
-			ExpiresAt: time.Now().Add(models.RefreshTokenExp),
-		},
+	_, err = t.database.CreateUserTokens(ctx, db.CreateTokensParams{
+		UserID:            user.ID,
+		AccessTokenValue:  accessToken,
+		RefreshTokenValue: refreshToken,
 	})
 	if err != nil {
+		t.log.Error().Err(err).Msg("Failed to create user tokens in database")
 		return nil, err
 	}
 

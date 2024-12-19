@@ -12,7 +12,6 @@ package repositories
 import (
 	context "context"
 	models "loki/internal/app/models"
-	dto "loki/internal/app/models/dto"
 	db "loki/internal/app/repositories/db"
 	reflect "reflect"
 
@@ -88,10 +87,10 @@ func (mr *MockDatabaseMockRecorder) CreateUserScope(ctx, params any) *gomock.Cal
 }
 
 // CreateUserTokens mocks base method.
-func (m *MockDatabase) CreateUserTokens(ctx context.Context, params dto.CreateUserParams) (*models.User, error) {
+func (m *MockDatabase) CreateUserTokens(ctx context.Context, params db.CreateTokensParams) ([]models.Token, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateUserTokens", ctx, params)
-	ret0, _ := ret[0].(*models.User)
+	ret0, _ := ret[0].([]models.Token)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

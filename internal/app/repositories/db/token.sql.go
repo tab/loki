@@ -48,3 +48,57 @@ func (q *Queries) CreateToken(ctx context.Context, arg CreateTokenParams) (Creat
 	)
 	return i, err
 }
+
+const createTokens = `-- name: CreateTokens :many
+INSERT INTO tokens (user_id, type, value, expires_at)
+VALUES
+  ($1::uuid, 'access_token'::token_type, $2::text, $3::timestamp),
+  ($1::uuid, 'refresh_token'::token_type, $4::text, $5::timestamp)
+  RETURNING id, type, value, expires_at
+`
+
+type CreateTokensParams struct {
+	UserID                uuid.UUID
+	AccessTokenValue      string
+	AccessTokenExpiresAt  pgtype.Timestamp
+	RefreshTokenValue     string
+	RefreshTokenExpiresAt pgtype.Timestamp
+}
+
+type CreateTokensRow struct {
+	ID        uuid.UUID
+	Type      TokenType
+	Value     string
+	ExpiresAt pgtype.Timestamp
+}
+
+func (q *Queries) CreateTokens(ctx context.Context, arg CreateTokensParams) ([]CreateTokensRow, error) {
+	rows, err := q.db.Query(ctx, createTokens,
+		arg.UserID,
+		arg.AccessTokenValue,
+		arg.AccessTokenExpiresAt,
+		arg.RefreshTokenValue,
+		arg.RefreshTokenExpiresAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CreateTokensRow
+	for rows.Next() {
+		var i CreateTokensRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Type,
+			&i.Value,
+			&i.ExpiresAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

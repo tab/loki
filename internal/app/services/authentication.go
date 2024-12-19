@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel/trace"
@@ -10,6 +9,7 @@ import (
 	"loki/internal/app/models"
 	"loki/internal/app/models/dto"
 	"loki/internal/app/repositories"
+	"loki/internal/app/repositories/db"
 	"loki/internal/app/serializers"
 	"loki/internal/config"
 	"loki/pkg/jwt"
@@ -76,7 +76,7 @@ func (a *authentication) CreateSmartIdSession(ctx context.Context, params dto.Cr
 		return nil, err
 	}
 
-	id, err := a.createSession(ctx, models.CreateSessionParams{
+	id, err := a.handleCreateSession(ctx, models.CreateSessionParams{
 		SessionId: result.ID,
 		Code:      result.Code,
 	})
@@ -114,7 +114,7 @@ func (a *authentication) CreateMobileIdSession(ctx context.Context, params dto.C
 		return nil, err
 	}
 
-	id, err := a.createSession(ctx, models.CreateSessionParams{
+	id, err := a.handleCreateSession(ctx, models.CreateSessionParams{
 		SessionId: result.ID,
 		Code:      result.Code,
 	})
@@ -156,7 +156,7 @@ func (a *authentication) Complete(ctx context.Context, sessionId string) (respon
 		return nil, err
 	}
 
-	user, err := a.createTokens(ctx, result.UserId)
+	user, err := a.handleCreateUserTokens(ctx, result.UserId)
 	if err != nil {
 		a.log.Error().Err(err).Msg("Failed to create user")
 		return nil, err
@@ -179,7 +179,7 @@ func (a *authentication) Complete(ctx context.Context, sessionId string) (respon
 	}, nil
 }
 
-func (a *authentication) createSession(ctx context.Context, params models.CreateSessionParams) (uuid.UUID, error) {
+func (a *authentication) handleCreateSession(ctx context.Context, params models.CreateSessionParams) (uuid.UUID, error) {
 	id, err := uuid.Parse(params.SessionId)
 	if err != nil {
 		a.log.Error().Err(err).Msg("Invalid session ID format")
@@ -198,7 +198,7 @@ func (a *authentication) createSession(ctx context.Context, params models.Create
 	return id, nil
 }
 
-func (a *authentication) createTokens(ctx context.Context, id uuid.UUID) (*models.User, error) {
+func (a *authentication) handleCreateUserTokens(ctx context.Context, id uuid.UUID) (*models.User, error) {
 	user, err := a.database.FindUserById(ctx, id)
 	if err != nil {
 		a.log.Error().Err(err).Msg("Failed to find user")
@@ -254,23 +254,23 @@ func (a *authentication) createTokens(ctx context.Context, id uuid.UUID) (*model
 		return nil, err
 	}
 
-	result, err := a.database.CreateUserTokens(ctx, dto.CreateUserParams{
-		IdentityNumber: user.IdentityNumber,
-		AccessToken: dto.CreateTokenParams{
-			Type:      models.AccessTokenType,
-			Value:     accessToken,
-			ExpiresAt: time.Now().Add(models.AccessTokenExp),
-		},
-		RefreshToken: dto.CreateTokenParams{
-			Type:      models.RefreshTokenType,
-			Value:     refreshToken,
-			ExpiresAt: time.Now().Add(models.RefreshTokenExp),
-		},
+	_, err = a.database.CreateUserTokens(ctx, db.CreateTokensParams{
+		UserID:            user.ID,
+		AccessTokenValue:  accessToken,
+		RefreshTokenValue: refreshToken,
 	})
 	if err != nil {
-		a.log.Error().Err(err).Msg("Failed to create user")
+		a.log.Error().Err(err).Msg("Failed to create user tokens in database")
 		return nil, err
 	}
 
-	return result, nil
+	return &models.User{
+		ID:             user.ID,
+		IdentityNumber: user.IdentityNumber,
+		PersonalCode:   user.PersonalCode,
+		FirstName:      user.FirstName,
+		LastName:       user.LastName,
+		AccessToken:    accessToken,
+		RefreshToken:   refreshToken,
+	}, nil
 }

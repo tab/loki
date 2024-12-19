@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"time"
 
 	"github.com/exaring/otelpgx"
 	"github.com/google/uuid"
@@ -9,14 +10,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"loki/internal/app/models"
-	"loki/internal/app/models/dto"
 	"loki/internal/app/repositories/db"
 	"loki/internal/config"
 )
 
 type Database interface {
 	CreateUser(ctx context.Context, params db.CreateUserParams) (*models.User, error)
-	CreateUserTokens(ctx context.Context, params dto.CreateUserParams) (*models.User, error)
+	CreateUserTokens(ctx context.Context, params db.CreateTokensParams) ([]models.Token, error)
 	CreateUserRole(ctx context.Context, params db.CreateUserRoleParams) error
 	CreateUserScope(ctx context.Context, params db.CreateUserScopeParams) error
 
@@ -102,7 +102,7 @@ func (d *database) CreateUser(ctx context.Context, params db.CreateUserParams) (
 	}, tx.Commit(ctx)
 }
 
-func (d *database) CreateUserTokens(ctx context.Context, params dto.CreateUserParams) (*models.User, error) {
+func (d *database) CreateUserTokens(ctx context.Context, params db.CreateTokensParams) ([]models.Token, error) {
 	tx, err := d.db.Begin(ctx)
 	if err != nil {
 		return nil, err
@@ -111,17 +111,16 @@ func (d *database) CreateUserTokens(ctx context.Context, params dto.CreateUserPa
 
 	q := d.queries.WithTx(tx)
 
-	user, err := q.FindUserByIdentityNumber(ctx, params.IdentityNumber)
-	if err != nil {
-		return nil, err
-	}
-
-	accessToken, err := q.CreateToken(ctx, db.CreateTokenParams{
-		UserID: user.ID,
-		Type:   db.TokenType(params.AccessToken.Type),
-		Value:  params.AccessToken.Value,
-		ExpiresAt: pgtype.Timestamp{
-			Time:  params.AccessToken.ExpiresAt,
+	records, err := q.CreateTokens(ctx, db.CreateTokensParams{
+		UserID:           params.UserID,
+		AccessTokenValue: params.AccessTokenValue,
+		AccessTokenExpiresAt: pgtype.Timestamp{
+			Time:  time.Now().Add(models.AccessTokenExp),
+			Valid: true,
+		},
+		RefreshTokenValue: params.RefreshTokenValue,
+		RefreshTokenExpiresAt: pgtype.Timestamp{
+			Time:  time.Now().Add(models.RefreshTokenExp),
 			Valid: true,
 		},
 	})
@@ -129,28 +128,17 @@ func (d *database) CreateUserTokens(ctx context.Context, params dto.CreateUserPa
 		return nil, err
 	}
 
-	refreshToken, err := q.CreateToken(ctx, db.CreateTokenParams{
-		UserID: user.ID,
-		Type:   db.TokenType(params.RefreshToken.Type),
-		Value:  params.RefreshToken.Value,
-		ExpiresAt: pgtype.Timestamp{
-			Time:  params.RefreshToken.ExpiresAt,
-			Valid: true,
-		},
-	})
-	if err != nil {
-		return nil, err
+	tokens := make([]models.Token, 0, len(records))
+	for _, record := range records {
+		tokens = append(tokens, models.Token{
+			ID:        record.ID,
+			Type:      string(record.Type),
+			Value:     record.Value,
+			ExpiresAt: record.ExpiresAt.Time,
+		})
 	}
 
-	return &models.User{
-		ID:             user.ID,
-		IdentityNumber: user.IdentityNumber,
-		PersonalCode:   user.PersonalCode,
-		FirstName:      user.FirstName,
-		LastName:       user.LastName,
-		AccessToken:    accessToken.Value,
-		RefreshToken:   refreshToken.Value,
-	}, tx.Commit(ctx)
+	return tokens, tx.Commit(ctx)
 }
 
 func (d *database) CreateUserRole(ctx context.Context, params db.CreateUserRoleParams) error {

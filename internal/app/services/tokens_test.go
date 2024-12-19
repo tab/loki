@@ -31,6 +31,14 @@ func Test_Tokens_Refresh(t *testing.T) {
 
 	token := "refresh-token"
 
+	user := &models.User{
+		ID:             id,
+		IdentityNumber: "PNOEE-123456789",
+		PersonalCode:   "123456789",
+		FirstName:      "John",
+		LastName:       "Doe",
+	}
+
 	tests := []struct {
 		name     string
 		before   func()
@@ -40,17 +48,9 @@ func Test_Tokens_Refresh(t *testing.T) {
 		{
 			name: "Success",
 			before: func() {
-				jwtService.EXPECT().Verify(token).Return(true, nil)
+				database.EXPECT().FindUserById(ctx, id).Return(user, nil)
 
-				database.EXPECT().FindUserById(ctx, id).Return(&models.User{
-					ID:             id,
-					IdentityNumber: "PNOEE-123456789",
-					PersonalCode:   "123456789",
-					FirstName:      "John",
-					LastName:       "Doe",
-					AccessToken:    "access-token",
-					RefreshToken:   "refresh-token",
-				}, nil)
+				jwtService.EXPECT().Verify(token).Return(true, nil)
 
 				jwtService.EXPECT().Generate(jwt.Payload{
 					ID: "PNOEE-123456789",
@@ -59,15 +59,7 @@ func Test_Tokens_Refresh(t *testing.T) {
 					ID: "PNOEE-123456789",
 				}, models.RefreshTokenExp).Return("refresh-token", nil)
 
-				database.EXPECT().CreateUserTokens(ctx, gomock.Any()).Return(&models.User{
-					ID:             id,
-					IdentityNumber: "PNOEE-123456789",
-					PersonalCode:   "123456789",
-					FirstName:      "John",
-					LastName:       "Doe",
-					AccessToken:    "access-token",
-					RefreshToken:   "refresh-token",
-				}, nil)
+				database.EXPECT().CreateUserTokens(ctx, gomock.Any()).Return([]models.Token{}, nil)
 			},
 			expected: &serializers.UserSerializer{
 				ID:             id,
@@ -83,6 +75,8 @@ func Test_Tokens_Refresh(t *testing.T) {
 		{
 			name: "Failed to decode token",
 			before: func() {
+				database.EXPECT().FindUserById(ctx, id).Return(user, nil)
+
 				jwtService.EXPECT().Verify(token).Return(false, assert.AnError)
 			},
 			expected: nil,
@@ -91,35 +85,19 @@ func Test_Tokens_Refresh(t *testing.T) {
 		{
 			name: "Invalid token",
 			before: func() {
+				database.EXPECT().FindUserById(ctx, id).Return(user, nil)
+
 				jwtService.EXPECT().Verify(token).Return(false, nil)
 			},
 			expected: nil,
 			error:    errors.ErrInvalidToken,
 		},
 		{
-			name: "Failed to find user",
-			before: func() {
-				jwtService.EXPECT().Verify(token).Return(true, nil)
-
-				database.EXPECT().FindUserById(ctx, id).Return(nil, assert.AnError)
-			},
-			expected: nil,
-			error:    assert.AnError,
-		},
-		{
 			name: "Failed to generate access token",
 			before: func() {
-				jwtService.EXPECT().Verify(token).Return(true, nil)
+				database.EXPECT().FindUserById(ctx, id).Return(user, nil)
 
-				database.EXPECT().FindUserById(ctx, id).Return(&models.User{
-					ID:             id,
-					IdentityNumber: "PNOEE-123456789",
-					PersonalCode:   "123456789",
-					FirstName:      "John",
-					LastName:       "Doe",
-					AccessToken:    "access-token",
-					RefreshToken:   "refresh-token",
-				}, nil)
+				jwtService.EXPECT().Verify(token).Return(true, nil)
 
 				jwtService.EXPECT().Generate(jwt.Payload{
 					ID: "PNOEE-123456789",
@@ -132,16 +110,6 @@ func Test_Tokens_Refresh(t *testing.T) {
 			name: "Failed to generate refresh token",
 			before: func() {
 				jwtService.EXPECT().Verify(token).Return(true, nil)
-
-				database.EXPECT().FindUserById(ctx, id).Return(&models.User{
-					ID:             id,
-					IdentityNumber: "PNOEE-123456789",
-					PersonalCode:   "123456789",
-					FirstName:      "John",
-					LastName:       "Doe",
-					AccessToken:    "access-token",
-					RefreshToken:   "refresh-token",
-				}, nil)
 
 				jwtService.EXPECT().Generate(jwt.Payload{
 					ID: "PNOEE-123456789",
@@ -157,16 +125,6 @@ func Test_Tokens_Refresh(t *testing.T) {
 			name: "Failed to create user tokens",
 			before: func() {
 				jwtService.EXPECT().Verify(token).Return(true, nil)
-
-				database.EXPECT().FindUserById(ctx, id).Return(&models.User{
-					ID:             id,
-					IdentityNumber: "PNOEE-123456789",
-					PersonalCode:   "123456789",
-					FirstName:      "John",
-					LastName:       "Doe",
-					AccessToken:    "access-token",
-					RefreshToken:   "refresh-token",
-				}, nil)
 
 				jwtService.EXPECT().Generate(jwt.Payload{
 					ID: "PNOEE-123456789",
@@ -186,14 +144,13 @@ func Test_Tokens_Refresh(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.before()
 
-			user, err := service.Refresh(ctx, id, token)
+			result, err := service.Refresh(ctx, id, token)
 
 			if tt.error != nil {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-
-				assert.Equal(t, tt.expected, user)
+				assert.Equal(t, tt.expected, result)
 			}
 		})
 	}

@@ -4,24 +4,9 @@ import (
 	"encoding/json"
 	"io"
 	"strings"
-	"time"
-
-	"github.com/google/uuid"
 
 	"loki/internal/app/errors"
 )
-
-type CreateTokenParams struct {
-	Type      string
-	Value     string
-	ExpiresAt time.Time
-}
-
-type RefreshTokenParams struct {
-	UserId       uuid.UUID
-	AccessToken  CreateTokenParams
-	RefreshToken CreateTokenParams
-}
 
 type RefreshAccessTokenRequest struct {
 	RefreshToken string `json:"refresh_token"`
