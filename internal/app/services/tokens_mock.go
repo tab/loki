@@ -59,10 +59,10 @@ func (mr *MockTokensMockRecorder) Generate(ctx, user any) *gomock.Call {
 }
 
 // Refresh mocks base method.
-func (m *MockTokens) Refresh(ctx context.Context, refreshToken string) (*serializers.UserSerializer, error) {
+func (m *MockTokens) Refresh(ctx context.Context, refreshToken string) (*serializers.TokensSerializer, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Refresh", ctx, refreshToken)
-	ret0, _ := ret[0].(*serializers.UserSerializer)
+	ret0, _ := ret[0].(*serializers.TokensSerializer)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

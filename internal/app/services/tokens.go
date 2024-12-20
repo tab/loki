@@ -13,7 +13,7 @@ import (
 
 type Tokens interface {
 	Generate(ctx context.Context, user *models.User) (accessToken, refreshToken string, error error)
-	Refresh(ctx context.Context, refreshToken string) (*serializers.UserSerializer, error)
+	Refresh(ctx context.Context, refreshToken string) (*serializers.TokensSerializer, error)
 }
 
 type tokens struct {
@@ -34,7 +34,7 @@ func (t *tokens) Generate(ctx context.Context, user *models.User) (accessToken, 
 	return t.handleGenerateTokens(ctx, user)
 }
 
-func (t *tokens) Refresh(ctx context.Context, token string) (*serializers.UserSerializer, error) {
+func (t *tokens) Refresh(ctx context.Context, token string) (*serializers.TokensSerializer, error) {
 	payload, err := t.jwt.Decode(token)
 	if err != nil {
 		t.log.Error().Err(err).Msg("Failed to decode token")
@@ -53,14 +53,9 @@ func (t *tokens) Refresh(ctx context.Context, token string) (*serializers.UserSe
 		return nil, err
 	}
 
-	return &serializers.UserSerializer{
-		ID:             user.ID,
-		IdentityNumber: user.IdentityNumber,
-		PersonalCode:   user.PersonalCode,
-		FirstName:      user.FirstName,
-		LastName:       user.LastName,
-		AccessToken:    accessToken,
-		RefreshToken:   refreshToken,
+	return &serializers.TokensSerializer{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 	}, nil
 }
 

@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
@@ -25,13 +24,8 @@ func Test_TokensController_Refresh(t *testing.T) {
 	tokens := services.NewMockTokens(ctrl)
 	controller := NewTokensController(tokens)
 
-	identityNumber := "PNOEE-123456789"
-
-	id, err := uuid.NewRandom()
-	assert.NoError(t, err)
-
 	type result struct {
-		response serializers.UserSerializer
+		response serializers.TokensSerializer
 		error    serializers.ErrorSerializer
 		status   string
 		code     int
@@ -47,22 +41,16 @@ func Test_TokensController_Refresh(t *testing.T) {
 		{
 			name: "Success",
 			before: func() {
-				tokens.EXPECT().Refresh(gomock.Any(), "refresh-token").Return(&serializers.UserSerializer{
-					ID:             id,
-					IdentityNumber: identityNumber,
-					PersonalCode:   "123456789",
-					AccessToken:    "new-access-token",
-					RefreshToken:   "new-refresh-token",
+				tokens.EXPECT().Refresh(gomock.Any(), "refresh-token").Return(&serializers.TokensSerializer{
+					AccessToken:  "new-access-token",
+					RefreshToken: "new-refresh-token",
 				}, nil)
 			},
 			body: strings.NewReader(`{"refresh_token": "refresh-token"}`),
 			expected: result{
-				response: serializers.UserSerializer{
-					ID:             id,
-					IdentityNumber: identityNumber,
-					PersonalCode:   "123456789",
-					AccessToken:    "new-access-token",
-					RefreshToken:   "new-refresh-token",
+				response: serializers.TokensSerializer{
+					AccessToken:  "new-access-token",
+					RefreshToken: "new-refresh-token",
 				},
 				status: "200 OK",
 				code:   http.StatusOK,
@@ -127,12 +115,12 @@ func Test_TokensController_Refresh(t *testing.T) {
 
 			if tt.error {
 				var response serializers.ErrorSerializer
-				err = json.NewDecoder(resp.Body).Decode(&response)
+				err := json.NewDecoder(resp.Body).Decode(&response)
 				assert.NoError(t, err)
 				assert.Equal(t, tt.expected.error, response)
 			} else {
-				var response serializers.UserSerializer
-				err = json.NewDecoder(resp.Body).Decode(&response)
+				var response serializers.TokensSerializer
+				err := json.NewDecoder(resp.Body).Decode(&response)
 				assert.NoError(t, err)
 				assert.Equal(t, tt.expected.response, response)
 			}

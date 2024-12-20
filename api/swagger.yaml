@@ -280,7 +280,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserSerializer"
+                $ref: "#/components/schemas/TokensSerializer"
         "401":
           description: "Unauthorized"
           content:
@@ -420,6 +420,19 @@ components:
         - personal_code
         - first_name
         - last_name
+        - access_token
+        - refresh_token
+
+    TokensSerializer:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: "JWT access token"
+        refresh_token:
+          type: string
+          description: "JWT refresh token"
+      required:
         - access_token
         - refresh_token
 

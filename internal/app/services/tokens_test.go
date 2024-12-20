@@ -199,7 +199,7 @@ func Test_Tokens_Refresh(t *testing.T) {
 	tests := []struct {
 		name     string
 		before   func()
-		expected *serializers.UserSerializer
+		expected *serializers.TokensSerializer
 		error    error
 	}{
 		{
@@ -227,14 +227,9 @@ func Test_Tokens_Refresh(t *testing.T) {
 
 				database.EXPECT().CreateUserTokens(ctx, gomock.Any()).Return([]models.Token{}, nil)
 			},
-			expected: &serializers.UserSerializer{
-				ID:             id,
-				IdentityNumber: "PNOEE-123456789",
-				PersonalCode:   "123456789",
-				FirstName:      "John",
-				LastName:       "Doe",
-				AccessToken:    "access-token",
-				RefreshToken:   "refresh-token",
+			expected: &serializers.TokensSerializer{
+				AccessToken:  "access-token",
+				RefreshToken: "refresh-token",
 			},
 			error: nil,
 		},

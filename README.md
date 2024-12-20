@@ -103,8 +103,8 @@ response:
   "personal_code": "50001029996",
   "first_name": "TESTNUMBER",
   "last_name": "ADULT",
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "access_token": "ey-Access-Token...",
+  "refresh_token": "ey-Refresh-Token..."
 }
 ```
 
@@ -123,7 +123,15 @@ curl -X GET http://localhost:8080/api/me \
 body:
 ```json
 {
-  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "refresh_token": "ey-Refresh-Token..."
+}
+```
+
+response:
+```json
+{
+  "access_token": "ey-New-Access-Token...",
+  "refresh_token": "ey-New-Refresh-Token..."
 }
 ```
 
@@ -150,6 +158,14 @@ JWT access token example:
   "scope": [
     "self-service"
   ]
+}
+```
+
+JWT refresh token example:
+```
+{
+  "exp": 1734454731,
+  "jti": "PNOEE-50001029996",
 }
 ```
 
