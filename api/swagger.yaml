@@ -190,7 +190,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorSerializer"
-  /api/auth/sessions/{id}:
+  /api/sessions/{id}:
     get:
       summary: "Get the status of an authentication session"
       description: "Retrieves the current status of a session by ID"

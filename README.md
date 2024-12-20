@@ -69,11 +69,11 @@ response:
 }
 ```
 
-* `GET /api/auth/smart_id/{id}`
+* `GET /api/sessions/{id}`
 
 example:
 ```
-curl -X GET http://localhost:8080/api/auth/sessions/a658556f-f2ec-42f5-86dc-2665f011d5f7 \
+curl -X GET http://localhost:8080/api/sessions/a658556f-f2ec-42f5-86dc-2665f011d5f7 \
   -H "Content-Type: application/json" \
   -H "X-Trace-ID: f4c28fec-07fd-415f-900c-37be7fb705fa"
 ```
@@ -86,11 +86,11 @@ response:
 }
 ```
 
-* `POST /api/auth/smart_id/{id}/authenticate`
+* `POST /api/sessions/{id}/authenticate`
 
 example:
 ```
-curl -X POST http://localhost:8080/api/auth/sessions/a658556f-f2ec-42f5-86dc-2665f011d5f7/authenticate \
+curl -X POST http://localhost:8080/api/sessions/a658556f-f2ec-42f5-86dc-2665f011d5f7/authenticate \
   -H "Content-Type: application/json" \
   -H "X-Trace-ID: f4c28fec-07fd-415f-900c-37be7fb705fa"
 ```
