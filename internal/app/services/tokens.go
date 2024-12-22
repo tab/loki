@@ -62,7 +62,6 @@ func (t *tokens) Refresh(ctx context.Context, token string) (*serializers.Tokens
 func (t *tokens) handleGenerateTokens(ctx context.Context, user *models.User) (accessToken, refreshToken string, error error) {
 	userRoles, err := t.database.FindUserRoles(ctx, user.ID)
 	if err != nil {
-		t.log.Error().Err(err).Msg("Failed to find user roles")
 		return "", "", err
 	}
 	roles := make([]string, 0, len(userRoles))
@@ -72,7 +71,6 @@ func (t *tokens) handleGenerateTokens(ctx context.Context, user *models.User) (a
 
 	userPermissions, err := t.database.FindUserPermissions(ctx, user.ID)
 	if err != nil {
-		t.log.Error().Err(err).Msg("Failed to find user permissions")
 		return "", "", err
 	}
 	permissions := make([]string, 0, len(userPermissions))
@@ -82,7 +80,6 @@ func (t *tokens) handleGenerateTokens(ctx context.Context, user *models.User) (a
 
 	userScopes, err := t.database.FindUserScopes(ctx, user.ID)
 	if err != nil {
-		t.log.Error().Err(err).Msg("Failed to find user scopes")
 		return "", "", err
 	}
 	scopes := make([]string, 0, len(userScopes))
@@ -97,7 +94,6 @@ func (t *tokens) handleGenerateTokens(ctx context.Context, user *models.User) (a
 		Scope:       scopes,
 	}, models.AccessTokenExp)
 	if err != nil {
-		t.log.Error().Err(err).Msg("Failed to create access token")
 		return "", "", err
 	}
 
@@ -105,7 +101,6 @@ func (t *tokens) handleGenerateTokens(ctx context.Context, user *models.User) (a
 		ID: user.IdentityNumber,
 	}, models.RefreshTokenExp)
 	if err != nil {
-		t.log.Error().Err(err).Msg("Failed to create refresh token")
 		return "", "", err
 	}
 
@@ -115,7 +110,6 @@ func (t *tokens) handleGenerateTokens(ctx context.Context, user *models.User) (a
 		RefreshTokenValue: refreshToken,
 	})
 	if err != nil {
-		t.log.Error().Err(err).Msg("Failed to create user tokens in database")
 		return "", "", err
 	}
 

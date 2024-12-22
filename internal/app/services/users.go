@@ -35,7 +35,6 @@ func (u *users) Create(ctx context.Context, params *models.User) (*models.User, 
 		LastName:       params.LastName,
 	})
 	if err != nil {
-		u.log.Error().Err(err).Msg("Failed to create user")
 		return nil, err
 	}
 
@@ -45,7 +44,6 @@ func (u *users) Create(ctx context.Context, params *models.User) (*models.User, 
 func (u *users) FindByIdentityNumber(ctx context.Context, identityNumber string) (*serializers.UserSerializer, error) {
 	user, err := u.database.FindUserByIdentityNumber(ctx, identityNumber)
 	if err != nil {
-		u.log.Error().Err(err).Msg("Failed to find user by identity number")
 		return nil, err
 	}
 

@@ -34,13 +34,11 @@ func NewCertificate(log *logger.Logger) Certificate {
 func (c *certificate) Extract(value string) (*CertificatePayload, error) {
 	certBytes, err := base64.StdEncoding.DecodeString(value)
 	if err != nil {
-		c.log.Error().Err(err).Msg("failed to decode certificate")
 		return nil, err
 	}
 
 	cert, err := x509.ParseCertificate(certBytes)
 	if err != nil {
-		c.log.Error().Err(err).Msg("failed to parse certificate")
 		return nil, err
 	}
 
@@ -49,7 +47,6 @@ func (c *certificate) Extract(value string) (*CertificatePayload, error) {
 
 	parts := strings.Split(commonName, ",")
 	if len(parts) < 2 {
-		c.log.Error().Msgf("invalid CommonName format: %s", commonName)
 		return nil, errors.ErrInvalidCertificate
 	}
 
