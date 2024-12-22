@@ -43,7 +43,7 @@ func NewRouter(
 	r.Post("/api/auth/mobile_id", mobileID.CreateSession)
 
 	r.Get("/api/sessions/{id}", sessions.GetStatus)
-	r.Post("/api/sessions/{id}/authenticate", sessions.Authenticate)
+	r.Post("/api/sessions/{id}", sessions.Authenticate)
 
 	r.Post("/api/tokens/refresh", tokens.Refresh)
 
