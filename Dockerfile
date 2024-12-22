@@ -1,4 +1,4 @@
-FROM golang:1.23-alpine as builder
+FROM golang:1.23-alpine3.21 as builder
 
 ENV CGO_ENABLED=0
 
@@ -11,7 +11,7 @@ COPY go.mod go.sum ./
 COPY . ./
 RUN go build -o /app/loki /app/cmd/loki/main.go
 
-FROM alpine:3.18
+FROM alpine:3.21
 
 WORKDIR /app
 
