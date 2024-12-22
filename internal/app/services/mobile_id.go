@@ -38,16 +38,14 @@ type MobileIdProvider interface {
 }
 
 type mobileIdProvider struct {
-	cfg   *config.Config
-	log   *logger.Logger
-	debug bool
+	cfg *config.Config
+	log *logger.Logger
 }
 
 func NewMobileId(cfg *config.Config, log *logger.Logger) MobileIdProvider {
 	return &mobileIdProvider{
-		cfg:   cfg,
-		debug: cfg.LogLevel == config.DebugLevel,
-		log:   log,
+		cfg: cfg,
+		log: log,
 	}
 }
 
@@ -72,18 +70,11 @@ func (s *mobileIdProvider) CreateSession(_ context.Context, params dto.CreateMob
 	}
 
 	client := resty.New()
-	if s.debug {
-		client.EnableTrace()
-	}
-
 	response, err := client.R().
 		SetHeader("Accept", "application/json").
 		SetHeader("Content-Type", "application/json").
 		SetBody(body).
 		Post(endpoint)
-	if s.debug {
-		debug(response, err)
-	}
 	if err != nil {
 		return nil, err
 	}
@@ -112,18 +103,11 @@ func (s *mobileIdProvider) GetSessionStatus(id uuid.UUID) (*dto.MobileIdProvider
 	endpoint := fmt.Sprintf("%s/authentication/session/%s", s.cfg.MobileId.BaseURL, id)
 
 	client := resty.New()
-	if s.debug {
-		client.EnableTrace()
-	}
-
 	response, err := client.R().
 		SetQueryParam("timeoutMs", MobileIdTimeout).
 		SetHeader("Accept", "application/json").
 		SetHeader("Content-Type", "application/json").
 		Get(endpoint)
-	if s.debug {
-		debug(response, err)
-	}
 	if err != nil {
 		return nil, err
 	}
