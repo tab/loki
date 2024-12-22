@@ -89,7 +89,7 @@ func (w *smartIdWorker) trace(ctx context.Context, req *SmartIdQueue) {
 		TraceFlags: trace.FlagsSampled,
 	})
 
-	operationName := fmt.Sprintf("%s perform %s", SmartIdWorkerName, req.ID)
+	operationName := fmt.Sprintf("%s perform {id}", SmartIdWorkerName)
 
 	_, span := tracer.Start(
 		trace.ContextWithSpanContext(ctx, spanCtx),
