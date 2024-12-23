@@ -36,21 +36,27 @@ func (c *sessionsController) GetStatus(w http.ResponseWriter, r *http.Request) {
 
 	id := chi.URLParam(r, "id")
 
-	response, err := c.sessions.FindById(r.Context(), id)
+	session, err := c.sessions.FindById(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, errors.ErrSessionNotFound) {
 			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
+			_ = json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
 			return
 		}
-
 		w.WriteHeader(http.StatusUnprocessableEntity)
-		json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
+		_ = json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
 		return
 	}
 
+	response := serializers.SessionSerializer{
+		ID:     session.ID,
+		Code:   session.Code,
+		Status: session.Status,
+		Error:  session.Error,
+	}
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }
 
 func (c *sessionsController) Authenticate(w http.ResponseWriter, r *http.Request) {
@@ -58,13 +64,23 @@ func (c *sessionsController) Authenticate(w http.ResponseWriter, r *http.Request
 
 	id := chi.URLParam(r, "id")
 
-	response, err := c.authentication.Complete(r.Context(), id)
+	user, err := c.authentication.Complete(r.Context(), id)
 	if err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
-		json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
+		_ = json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
 		return
 	}
 
+	response := serializers.UserSerializer{
+		ID:             user.ID,
+		IdentityNumber: user.IdentityNumber,
+		PersonalCode:   user.PersonalCode,
+		FirstName:      user.FirstName,
+		LastName:       user.LastName,
+		AccessToken:    user.AccessToken,
+		RefreshToken:   user.RefreshToken,
+	}
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }

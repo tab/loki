@@ -27,13 +27,21 @@ func NewUsersController(users services.Users) UsersController {
 func (c *usersController) Me(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	response, ok := middlewares.CurrentUserFromContext(r.Context())
+	user, ok := middlewares.CurrentUserFromContext(r.Context())
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: errors.ErrUnauthorized.Error()})
+		_ = json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: errors.ErrUnauthorized.Error()})
 		return
 	}
 
+	response := serializers.UserSerializer{
+		ID:             user.ID,
+		IdentityNumber: user.IdentityNumber,
+		PersonalCode:   user.PersonalCode,
+		FirstName:      user.FirstName,
+		LastName:       user.LastName,
+	}
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }

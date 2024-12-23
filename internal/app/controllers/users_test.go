@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
+	"loki/internal/app/models"
 	"loki/internal/app/serializers"
 	"loki/internal/app/services"
 	"loki/internal/config/middlewares"
@@ -38,21 +39,25 @@ func Test_UsersController_Me(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		currentUser *serializers.UserSerializer
+		currentUser *models.User
 		expected    result
 	}{
 		{
 			name: "Success",
-			currentUser: &serializers.UserSerializer{
+			currentUser: &models.User{
 				ID:             id,
 				IdentityNumber: identityNumber,
 				PersonalCode:   "123456789",
+				FirstName:      "John",
+				LastName:       "Doe",
 			},
 			expected: result{
 				response: serializers.UserSerializer{
 					ID:             id,
 					IdentityNumber: identityNumber,
 					PersonalCode:   "123456789",
+					FirstName:      "John",
+					LastName:       "Doe",
 				},
 				status: "200 OK",
 				code:   http.StatusOK,

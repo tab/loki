@@ -2,7 +2,6 @@ package middlewares
 
 import (
 	"encoding/json"
-	"loki/internal/app/errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,6 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
+	"loki/internal/app/errors"
+	"loki/internal/app/models"
 	"loki/internal/app/serializers"
 	"loki/internal/app/services"
 	"loki/pkg/jwt"
@@ -46,7 +47,7 @@ func Test_AuthMiddleware_Authenticate(t *testing.T) {
 			name: "Success",
 			before: func() {
 				jwtService.EXPECT().Decode("valid-token").Return(&jwt.Payload{ID: identityNumber}, nil)
-				users.EXPECT().FindByIdentityNumber(gomock.Any(), identityNumber).Return(&serializers.UserSerializer{
+				users.EXPECT().FindByIdentityNumber(gomock.Any(), identityNumber).Return(&models.User{
 					ID:             id,
 					IdentityNumber: identityNumber,
 					PersonalCode:   "123456789",

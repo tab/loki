@@ -12,9 +12,9 @@ package services
 import (
 	context "context"
 	models "loki/internal/app/models"
-	serializers "loki/internal/app/serializers"
 	reflect "reflect"
 
+	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -57,11 +57,26 @@ func (mr *MockUsersMockRecorder) Create(ctx, params any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockUsers)(nil).Create), ctx, params)
 }
 
+// FindById mocks base method.
+func (m *MockUsers) FindById(ctx context.Context, id uuid.UUID) (*models.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindById", ctx, id)
+	ret0, _ := ret[0].(*models.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindById indicates an expected call of FindById.
+func (mr *MockUsersMockRecorder) FindById(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindById", reflect.TypeOf((*MockUsers)(nil).FindById), ctx, id)
+}
+
 // FindByIdentityNumber mocks base method.
-func (m *MockUsers) FindByIdentityNumber(ctx context.Context, identityNumber string) (*serializers.UserSerializer, error) {
+func (m *MockUsers) FindByIdentityNumber(ctx context.Context, identityNumber string) (*models.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindByIdentityNumber", ctx, identityNumber)
-	ret0, _ := ret[0].(*serializers.UserSerializer)
+	ret0, _ := ret[0].(*models.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -20,3 +20,10 @@ type CreateSessionParams struct {
 	SessionId string
 	Code      string
 }
+
+type UpdateSessionParams struct {
+	ID     uuid.UUID
+	UserId uuid.UUID
+	Status string
+	Error  string
+}

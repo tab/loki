@@ -11,8 +11,8 @@ package services
 
 import (
 	context "context"
+	models "loki/internal/app/models"
 	dto "loki/internal/app/models/dto"
-	serializers "loki/internal/app/serializers"
 	reflect "reflect"
 
 	uuid "github.com/google/uuid"
@@ -44,10 +44,10 @@ func (m *MockAuthentication) EXPECT() *MockAuthenticationMockRecorder {
 }
 
 // Complete mocks base method.
-func (m *MockAuthentication) Complete(ctx context.Context, id string) (*serializers.UserSerializer, error) {
+func (m *MockAuthentication) Complete(ctx context.Context, id string) (*models.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Complete", ctx, id)
-	ret0, _ := ret[0].(*serializers.UserSerializer)
+	ret0, _ := ret[0].(*models.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -59,10 +59,10 @@ func (mr *MockAuthenticationMockRecorder) Complete(ctx, id any) *gomock.Call {
 }
 
 // CreateMobileIdSession mocks base method.
-func (m *MockAuthentication) CreateMobileIdSession(ctx context.Context, params dto.CreateMobileIdSessionRequest) (*serializers.SessionSerializer, error) {
+func (m *MockAuthentication) CreateMobileIdSession(ctx context.Context, params dto.CreateMobileIdSessionRequest) (*models.Session, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateMobileIdSession", ctx, params)
-	ret0, _ := ret[0].(*serializers.SessionSerializer)
+	ret0, _ := ret[0].(*models.Session)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -74,10 +74,10 @@ func (mr *MockAuthenticationMockRecorder) CreateMobileIdSession(ctx, params any)
 }
 
 // CreateSmartIdSession mocks base method.
-func (m *MockAuthentication) CreateSmartIdSession(ctx context.Context, params dto.CreateSmartIdSessionRequest) (*serializers.SessionSerializer, error) {
+func (m *MockAuthentication) CreateSmartIdSession(ctx context.Context, params dto.CreateSmartIdSessionRequest) (*models.Session, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateSmartIdSession", ctx, params)
-	ret0, _ := ret[0].(*serializers.SessionSerializer)
+	ret0, _ := ret[0].(*models.Session)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

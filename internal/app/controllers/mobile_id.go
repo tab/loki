@@ -34,21 +34,26 @@ func (c *mobileIdController) CreateSession(w http.ResponseWriter, r *http.Reques
 	var params dto.CreateMobileIdSessionRequest
 	if err := params.Validate(r.Body); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
+		_ = json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
 		return
 	}
 
-	response, err := c.authentication.CreateMobileIdSession(r.Context(), dto.CreateMobileIdSessionRequest{
+	session, err := c.authentication.CreateMobileIdSession(r.Context(), dto.CreateMobileIdSessionRequest{
 		Locale:       params.Locale,
 		PersonalCode: params.PersonalCode,
 		PhoneNumber:  params.PhoneNumber,
 	})
 	if err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
-		json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
+		_ = json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
 		return
 	}
 
+	response := serializers.SessionSerializer{
+		ID:   session.ID,
+		Code: session.Code,
+	}
+
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }

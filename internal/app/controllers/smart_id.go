@@ -34,20 +34,25 @@ func (c *smartIdController) CreateSession(w http.ResponseWriter, r *http.Request
 	var params dto.CreateSmartIdSessionRequest
 	if err := params.Validate(r.Body); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
+		_ = json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
 		return
 	}
 
-	response, err := c.authentication.CreateSmartIdSession(r.Context(), dto.CreateSmartIdSessionRequest{
+	session, err := c.authentication.CreateSmartIdSession(r.Context(), dto.CreateSmartIdSessionRequest{
 		Country:      params.Country,
 		PersonalCode: params.PersonalCode,
 	})
 	if err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
-		json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
+		_ = json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
 		return
 	}
 
+	response := serializers.SessionSerializer{
+		ID:   session.ID,
+		Code: session.Code,
+	}
+
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }

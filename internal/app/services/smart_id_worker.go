@@ -135,7 +135,7 @@ func (w *smartIdWorker) handleSessionComplete(ctx context.Context, req *SmartIdQ
 			return true
 		}
 
-		_, err = w.sessions.Update(ctx, models.Session{
+		_, err = w.sessions.Update(ctx, &models.UpdateSessionParams{
 			ID:     req.ID,
 			UserId: user.ID,
 			Status: AuthenticationSuccess,
@@ -147,7 +147,7 @@ func (w *smartIdWorker) handleSessionComplete(ctx context.Context, req *SmartIdQ
 	} else {
 		w.log.Info().Msgf("%s session is completed with error", SmartIdWorkerName)
 
-		if _, err := w.sessions.Update(ctx, models.Session{
+		if _, err := w.sessions.Update(ctx, &models.UpdateSessionParams{
 			ID:     req.ID,
 			Status: AuthenticationError,
 			Error:  response.Result.EndResult,

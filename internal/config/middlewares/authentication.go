@@ -6,10 +6,11 @@ import (
 	"net/http"
 	"strings"
 
+	"loki/internal/app/models"
 	"loki/internal/app/serializers"
 	"loki/internal/app/services"
-	"loki/pkg/logger"
 	"loki/pkg/jwt"
+	"loki/pkg/logger"
 )
 
 const bearerScheme = "Bearer "
@@ -47,7 +48,7 @@ func (m *authMiddleware) Authenticate(next http.Handler) http.Handler {
 		if err != nil {
 			m.log.Error().Err(err).Msg("Failed to decode token")
 			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
+			_ = json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
 			return
 		}
 
@@ -55,7 +56,7 @@ func (m *authMiddleware) Authenticate(next http.Handler) http.Handler {
 		if err != nil {
 			m.log.Error().Err(err).Msg("Failed to find user by identity number")
 			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
+			_ = json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
 			return
 		}
 
@@ -64,13 +65,13 @@ func (m *authMiddleware) Authenticate(next http.Handler) http.Handler {
 	})
 }
 
-func CurrentUserFromContext(ctx context.Context) (*serializers.UserSerializer, bool) {
+func CurrentUserFromContext(ctx context.Context) (*models.User, bool) {
 	u := ctx.Value(CurrentUser{})
 	if u == nil {
 		return nil, false
 	}
 
-	user, ok := u.(*serializers.UserSerializer)
+	user, ok := u.(*models.User)
 	return user, ok
 }
 

@@ -3,32 +3,34 @@ package services
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	"loki/internal/app/models"
 	"loki/internal/app/repositories"
 	"loki/internal/app/repositories/db"
-	"loki/internal/app/serializers"
 	"loki/pkg/logger"
 )
 
 type Users interface {
 	Create(ctx context.Context, params *models.User) (*models.User, error)
-	FindByIdentityNumber(ctx context.Context, identityNumber string) (*serializers.UserSerializer, error)
+	FindById(ctx context.Context, id uuid.UUID) (*models.User, error)
+	FindByIdentityNumber(ctx context.Context, identityNumber string) (*models.User, error)
 }
 
 type users struct {
-	database repositories.Database
-	log      *logger.Logger
+	repository repositories.UserRepository
+	log        *logger.Logger
 }
 
-func NewUsers(database repositories.Database, log *logger.Logger) Users {
+func NewUsers(repository repositories.UserRepository, log *logger.Logger) Users {
 	return &users{
-		database: database,
-		log:      log,
+		repository: repository,
+		log:        log,
 	}
 }
 
 func (u *users) Create(ctx context.Context, params *models.User) (*models.User, error) {
-	user, err := u.database.CreateUser(ctx, db.CreateUserParams{
+	user, err := u.repository.Create(ctx, db.CreateUserParams{
 		IdentityNumber: params.IdentityNumber,
 		PersonalCode:   params.PersonalCode,
 		FirstName:      params.FirstName,
@@ -41,17 +43,20 @@ func (u *users) Create(ctx context.Context, params *models.User) (*models.User, 
 	return user, nil
 }
 
-func (u *users) FindByIdentityNumber(ctx context.Context, identityNumber string) (*serializers.UserSerializer, error) {
-	user, err := u.database.FindUserByIdentityNumber(ctx, identityNumber)
+func (u *users) FindById(ctx context.Context, id uuid.UUID) (*models.User, error) {
+	user, err := u.repository.FindById(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	return &serializers.UserSerializer{
-		ID:             user.ID,
-		IdentityNumber: user.IdentityNumber,
-		PersonalCode:   user.PersonalCode,
-		FirstName:      user.FirstName,
-		LastName:       user.LastName,
-	}, nil
+	return user, nil
+}
+
+func (u *users) FindByIdentityNumber(ctx context.Context, identityNumber string) (*models.User, error) {
+	user, err := u.repository.FindByIdentityNumber(ctx, identityNumber)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }

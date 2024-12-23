@@ -27,17 +27,22 @@ func (c *tokensController) Refresh(w http.ResponseWriter, r *http.Request) {
 	var params dto.RefreshAccessTokenRequest
 	if err := params.Validate(r.Body); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
+		_ = json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
 		return
 	}
 
-	response, err := c.tokens.Refresh(r.Context(), params.RefreshToken)
+	user, err := c.tokens.Update(r.Context(), params.RefreshToken)
 	if err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
-		json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
+		_ = json.NewEncoder(w).Encode(serializers.ErrorSerializer{Error: err.Error()})
 		return
 	}
 
-	json.NewEncoder(w).Encode(response)
+	response := serializers.TokensSerializer{
+		AccessToken:  user.AccessToken,
+		RefreshToken: user.RefreshToken,
+	}
+
 	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(response)
 }

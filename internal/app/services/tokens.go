@@ -3,64 +3,103 @@ package services
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	"loki/internal/app/models"
 	"loki/internal/app/repositories"
 	"loki/internal/app/repositories/db"
-	"loki/internal/app/serializers"
 	"loki/pkg/jwt"
 	"loki/pkg/logger"
 )
 
 type Tokens interface {
-	Generate(ctx context.Context, user *models.User) (accessToken, refreshToken string, error error)
-	Refresh(ctx context.Context, refreshToken string) (*serializers.TokensSerializer, error)
+	Create(ctx context.Context, userId uuid.UUID) (*models.User, error)
+	Update(ctx context.Context, refreshToken string) (*models.User, error)
 }
 
 type tokens struct {
-	database repositories.Database
-	jwt      jwt.Jwt
-	log      *logger.Logger
+	jwt        jwt.Jwt
+	permission repositories.PermissionRepository
+	role       repositories.RoleRepository
+	scope      repositories.ScopeRepository
+	token      repositories.TokenRepository
+	user       repositories.UserRepository
+	log        *logger.Logger
 }
 
-func NewTokens(database repositories.Database, jwt jwt.Jwt, log *logger.Logger) Tokens {
+func NewTokens(
+	jwt jwt.Jwt,
+	permission repositories.PermissionRepository,
+	role repositories.RoleRepository,
+	scope repositories.ScopeRepository,
+	token repositories.TokenRepository,
+	user repositories.UserRepository,
+	log *logger.Logger,
+) Tokens {
 	return &tokens{
-		database: database,
-		jwt:      jwt,
-		log:      log,
+		jwt:        jwt,
+		permission: permission,
+		role:       role,
+		scope:      scope,
+		token:      token,
+		user:       user,
+		log:        log,
 	}
 }
 
-func (t *tokens) Generate(ctx context.Context, user *models.User) (accessToken, refreshToken string, error error) {
-	return t.handleGenerateTokens(ctx, user)
+func (t *tokens) Create(ctx context.Context, userId uuid.UUID) (*models.User, error) {
+	user, err := t.user.FindById(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	accessToken, refreshToken, err := t.generate(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.User{
+		ID:             user.ID,
+		IdentityNumber: user.IdentityNumber,
+		PersonalCode:   user.PersonalCode,
+		FirstName:      user.FirstName,
+		LastName:       user.LastName,
+		AccessToken:    accessToken,
+		RefreshToken:   refreshToken,
+	}, nil
 }
 
-func (t *tokens) Refresh(ctx context.Context, token string) (*serializers.TokensSerializer, error) {
-	payload, err := t.jwt.Decode(token)
+func (t *tokens) Update(ctx context.Context, refreshToken string) (*models.User, error) {
+	payload, err := t.jwt.Decode(refreshToken)
 	if err != nil {
 		t.log.Error().Err(err).Msg("Failed to decode token")
 		return nil, err
 	}
 
-	user, err := t.database.FindUserByIdentityNumber(ctx, payload.ID)
+	user, err := t.user.FindByIdentityNumber(ctx, payload.ID)
 	if err != nil {
 		t.log.Error().Err(err).Msg("Failed to find user")
 		return nil, err
 	}
 
-	accessToken, refreshToken, err := t.handleGenerateTokens(ctx, user)
+	accessToken, refreshToken, err := t.generate(ctx, user)
 	if err != nil {
-		t.log.Error().Err(err).Msg("Failed to generate tokens")
 		return nil, err
 	}
 
-	return &serializers.TokensSerializer{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+	return &models.User{
+		ID:             user.ID,
+		IdentityNumber: user.IdentityNumber,
+		PersonalCode:   user.PersonalCode,
+		FirstName:      user.FirstName,
+		LastName:       user.LastName,
+		AccessToken:    accessToken,
+		RefreshToken:   refreshToken,
 	}, nil
 }
 
-func (t *tokens) handleGenerateTokens(ctx context.Context, user *models.User) (accessToken, refreshToken string, error error) {
-	userRoles, err := t.database.FindUserRoles(ctx, user.ID)
+func (t *tokens) generate(ctx context.Context, user *models.User) (string, string, error) {
+	userRoles, err := t.role.FindByUserId(ctx, user.ID)
 	if err != nil {
 		return "", "", err
 	}
@@ -69,7 +108,7 @@ func (t *tokens) handleGenerateTokens(ctx context.Context, user *models.User) (a
 		roles = append(roles, role.Name)
 	}
 
-	userPermissions, err := t.database.FindUserPermissions(ctx, user.ID)
+	userPermissions, err := t.permission.FindByUserId(ctx, user.ID)
 	if err != nil {
 		return "", "", err
 	}
@@ -78,7 +117,7 @@ func (t *tokens) handleGenerateTokens(ctx context.Context, user *models.User) (a
 		permissions = append(permissions, permission.Name)
 	}
 
-	userScopes, err := t.database.FindUserScopes(ctx, user.ID)
+	userScopes, err := t.scope.FindByUserId(ctx, user.ID)
 	if err != nil {
 		return "", "", err
 	}
@@ -87,7 +126,7 @@ func (t *tokens) handleGenerateTokens(ctx context.Context, user *models.User) (a
 		scopes = append(scopes, scope.Name)
 	}
 
-	accessToken, err = t.jwt.Generate(jwt.Payload{
+	accessToken, err := t.jwt.Generate(jwt.Payload{
 		ID:          user.IdentityNumber,
 		Roles:       roles,
 		Permissions: permissions,
@@ -97,14 +136,14 @@ func (t *tokens) handleGenerateTokens(ctx context.Context, user *models.User) (a
 		return "", "", err
 	}
 
-	refreshToken, err = t.jwt.Generate(jwt.Payload{
+	refreshToken, err := t.jwt.Generate(jwt.Payload{
 		ID: user.IdentityNumber,
 	}, models.RefreshTokenExp)
 	if err != nil {
 		return "", "", err
 	}
 
-	_, err = t.database.CreateUserTokens(ctx, db.CreateTokensParams{
+	_, err = t.token.Create(ctx, db.CreateTokensParams{
 		UserID:            user.ID,
 		AccessTokenValue:  accessToken,
 		RefreshTokenValue: refreshToken,

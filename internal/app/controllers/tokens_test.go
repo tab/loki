@@ -13,6 +13,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"loki/internal/app/errors"
+	"loki/internal/app/models"
 	"loki/internal/app/serializers"
 	"loki/internal/app/services"
 )
@@ -41,7 +42,7 @@ func Test_TokensController_Refresh(t *testing.T) {
 		{
 			name: "Success",
 			before: func() {
-				tokens.EXPECT().Refresh(gomock.Any(), "refresh-token").Return(&serializers.TokensSerializer{
+				tokens.EXPECT().Update(gomock.Any(), "refresh-token").Return(&models.User{
 					AccessToken:  "new-access-token",
 					RefreshToken: "new-refresh-token",
 				}, nil)
@@ -72,7 +73,7 @@ func Test_TokensController_Refresh(t *testing.T) {
 		{
 			name: "Invalid refresh token",
 			before: func() {
-				tokens.EXPECT().Refresh(gomock.Any(), "invalid-token").Return(nil, errors.ErrInvalidToken)
+				tokens.EXPECT().Update(gomock.Any(), "invalid-token").Return(nil, errors.ErrInvalidToken)
 			},
 			body: strings.NewReader(`{"refresh_token": "invalid-token"}`),
 			expected: result{
@@ -85,7 +86,7 @@ func Test_TokensController_Refresh(t *testing.T) {
 		{
 			name: "Error",
 			before: func() {
-				tokens.EXPECT().Refresh(gomock.Any(), "refresh-token").Return(nil, assert.AnError)
+				tokens.EXPECT().Update(gomock.Any(), "refresh-token").Return(nil, assert.AnError)
 			},
 			body: strings.NewReader(`{"refresh_token": "refresh-token"}`),
 			expected: result{

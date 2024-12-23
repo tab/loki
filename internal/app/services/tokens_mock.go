@@ -12,9 +12,9 @@ package services
 import (
 	context "context"
 	models "loki/internal/app/models"
-	serializers "loki/internal/app/serializers"
 	reflect "reflect"
 
+	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -42,33 +42,32 @@ func (m *MockTokens) EXPECT() *MockTokensMockRecorder {
 	return m.recorder
 }
 
-// Generate mocks base method.
-func (m *MockTokens) Generate(ctx context.Context, user *models.User) (string, string, error) {
+// Create mocks base method.
+func (m *MockTokens) Create(ctx context.Context, userId uuid.UUID) (*models.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Generate", ctx, user)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// Generate indicates an expected call of Generate.
-func (mr *MockTokensMockRecorder) Generate(ctx, user any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Generate", reflect.TypeOf((*MockTokens)(nil).Generate), ctx, user)
-}
-
-// Refresh mocks base method.
-func (m *MockTokens) Refresh(ctx context.Context, refreshToken string) (*serializers.TokensSerializer, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Refresh", ctx, refreshToken)
-	ret0, _ := ret[0].(*serializers.TokensSerializer)
+	ret := m.ctrl.Call(m, "Create", ctx, userId)
+	ret0, _ := ret[0].(*models.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Refresh indicates an expected call of Refresh.
-func (mr *MockTokensMockRecorder) Refresh(ctx, refreshToken any) *gomock.Call {
+// Create indicates an expected call of Create.
+func (mr *MockTokensMockRecorder) Create(ctx, userId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Refresh", reflect.TypeOf((*MockTokens)(nil).Refresh), ctx, refreshToken)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockTokens)(nil).Create), ctx, userId)
+}
+
+// Update mocks base method.
+func (m *MockTokens) Update(ctx context.Context, refreshToken string) (*models.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", ctx, refreshToken)
+	ret0, _ := ret[0].(*models.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockTokensMockRecorder) Update(ctx, refreshToken any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockTokens)(nil).Update), ctx, refreshToken)
 }

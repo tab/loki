@@ -7,50 +7,54 @@ import (
 
 	"loki/internal/app/models"
 	"loki/internal/app/repositories"
-	"loki/internal/app/serializers"
 	"loki/pkg/logger"
 )
 
 type Sessions interface {
-	FindById(ctx context.Context, sessionId string) (*serializers.SessionSerializer, error)
-	Update(ctx context.Context, params models.Session) (*serializers.SessionSerializer, error)
+	Create(ctx context.Context, params *models.CreateSessionParams) (*models.Session, error)
+	Update(ctx context.Context, params *models.UpdateSessionParams) (*models.Session, error)
+	Delete(ctx context.Context, sessionId string) error
+	FindById(ctx context.Context, sessionId string) (*models.Session, error)
 }
 
 type sessions struct {
-	redis repositories.Redis
-	log   *logger.Logger
+	repository repositories.SessionRepository
+	log        *logger.Logger
 }
 
-func NewSessions(redis repositories.Redis, log *logger.Logger) Sessions {
+func NewSessions(repository repositories.SessionRepository, log *logger.Logger) Sessions {
 	return &sessions{
-		redis: redis,
-		log:   log,
+		repository: repository,
+		log:        log,
 	}
 }
 
-func (s *sessions) FindById(ctx context.Context, sessionId string) (*serializers.SessionSerializer, error) {
-	id, err := uuid.Parse(sessionId)
+func (s *sessions) Create(ctx context.Context, params *models.CreateSessionParams) (*models.Session, error) {
+	id, err := uuid.Parse(params.SessionId)
 	if err != nil {
 		s.log.Error().Err(err).Msg("Invalid session ID format")
 		return nil, err
 	}
 
-	result, err := s.redis.FindSessionById(ctx, id)
+	err = s.repository.Create(ctx, &models.Session{
+		ID:     id,
+		Code:   params.Code,
+		Status: models.SessionRunning,
+	})
 	if err != nil {
-		s.log.Error().Err(err).Msg("Failed to find session")
+		s.log.Error().Err(err).Msg("Failed to create session")
 		return nil, err
 	}
 
-	return &serializers.SessionSerializer{
-		ID:     result.ID,
-		Code:   result.Code,
-		Status: result.Status,
-		Error:  result.Error,
+	return &models.Session{
+		ID:     id,
+		Code:   params.Code,
+		Status: models.SessionRunning,
 	}, nil
 }
 
-func (s *sessions) Update(ctx context.Context, params models.Session) (*serializers.SessionSerializer, error) {
-	err := s.redis.UpdateSession(ctx, &models.Session{
+func (s *sessions) Update(ctx context.Context, params *models.UpdateSessionParams) (*models.Session, error) {
+	err := s.repository.Update(ctx, &models.Session{
 		ID:     params.ID,
 		UserId: params.UserId,
 		Status: params.Status,
@@ -61,8 +65,42 @@ func (s *sessions) Update(ctx context.Context, params models.Session) (*serializ
 		return nil, err
 	}
 
-	return &serializers.SessionSerializer{
+	return &models.Session{
 		ID:     params.ID,
+		UserId: params.UserId,
 		Status: params.Status,
+		Error:  params.Error,
 	}, nil
+}
+
+func (s *sessions) Delete(ctx context.Context, sessionId string) error {
+	id, err := uuid.Parse(sessionId)
+	if err != nil {
+		s.log.Error().Err(err).Msg("Invalid session ID format")
+		return err
+	}
+
+	err = s.repository.Delete(ctx, id)
+	if err != nil {
+		s.log.Error().Err(err).Msg("Failed to delete session")
+		return err
+	}
+
+	return nil
+}
+
+func (s *sessions) FindById(ctx context.Context, sessionId string) (*models.Session, error) {
+	id, err := uuid.Parse(sessionId)
+	if err != nil {
+		s.log.Error().Err(err).Msg("Invalid session ID format")
+		return nil, err
+	}
+
+	result, err := s.repository.FindById(ctx, id)
+	if err != nil {
+		s.log.Error().Err(err).Msg("Failed to find session")
+		return nil, err
+	}
+
+	return result, nil
 }

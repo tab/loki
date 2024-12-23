@@ -10,8 +10,6 @@ import (
 
 	"loki/internal/app/models"
 	"loki/internal/app/models/dto"
-	"loki/internal/app/repositories"
-	"loki/internal/app/serializers"
 	"loki/internal/config"
 	"loki/pkg/logger"
 )
@@ -35,9 +33,7 @@ func Test_Authentication_CreateSmartIdSession(t *testing.T) {
 	mobileIdMock := NewMockMobileIdProvider(ctrl)
 	mobileIdQueue := make(chan *MobileIdQueue, 1)
 
-	database := repositories.NewMockDatabase(ctrl)
-	redis := repositories.NewMockRedis(ctrl)
-
+	sessionsService := NewMockSessions(ctrl)
 	tokensService := NewMockTokens(ctrl)
 	log := logger.NewLogger()
 
@@ -47,8 +43,7 @@ func Test_Authentication_CreateSmartIdSession(t *testing.T) {
 		smartIdQueue,
 		mobileIdMock,
 		mobileIdQueue,
-		database,
-		redis,
+		sessionsService,
 		tokensService,
 		log)
 
@@ -59,7 +54,7 @@ func Test_Authentication_CreateSmartIdSession(t *testing.T) {
 		name     string
 		before   func()
 		params   dto.CreateSmartIdSessionRequest
-		expected *serializers.SessionSerializer
+		expected *models.Session
 		error    error
 	}{
 		{
@@ -73,16 +68,19 @@ func Test_Authentication_CreateSmartIdSession(t *testing.T) {
 					Code: "1234",
 				}, nil)
 
-				redis.EXPECT().CreateSession(ctx, &models.Session{
-					ID:     id,
-					Status: models.SessionRunning,
-				})
+				sessionsService.EXPECT().Create(ctx, &models.CreateSessionParams{
+					SessionId: sessionId,
+					Code:      "1234",
+				}).Return(&models.Session{
+					ID:   id,
+					Code: "1234",
+				}, nil)
 			},
 			params: dto.CreateSmartIdSessionRequest{
 				Country:      "EE",
 				PersonalCode: "30303039914",
 			},
-			expected: &serializers.SessionSerializer{
+			expected: &models.Session{
 				ID:   id,
 				Code: "1234",
 			},
@@ -114,10 +112,10 @@ func Test_Authentication_CreateSmartIdSession(t *testing.T) {
 					Code: "1234",
 				}, nil)
 
-				redis.EXPECT().CreateSession(ctx, &models.Session{
-					ID:     id,
-					Status: models.SessionRunning,
-				}).Return(assert.AnError)
+				sessionsService.EXPECT().Create(ctx, &models.CreateSessionParams{
+					SessionId: sessionId,
+					Code:      "1234",
+				}).Return(nil, assert.AnError)
 			},
 			params: dto.CreateSmartIdSessionRequest{
 				Country:      "EE",
@@ -164,9 +162,7 @@ func Test_Authentication_GetSmartIdSessionStatus(t *testing.T) {
 	mobileIdMock := NewMockMobileIdProvider(ctrl)
 	mobileIdQueue := make(chan *MobileIdQueue, 1)
 
-	database := repositories.NewMockDatabase(ctrl)
-	redis := repositories.NewMockRedis(ctrl)
-
+	sessionsService := NewMockSessions(ctrl)
 	tokensService := NewMockTokens(ctrl)
 	log := logger.NewLogger()
 
@@ -176,8 +172,7 @@ func Test_Authentication_GetSmartIdSessionStatus(t *testing.T) {
 		smartIdQueue,
 		mobileIdMock,
 		mobileIdQueue,
-		database,
-		redis,
+		sessionsService,
 		tokensService,
 		log)
 
@@ -273,9 +268,7 @@ func Test_Authentication_CreateMobileIdSession(t *testing.T) {
 	mobileIdMock := NewMockMobileIdProvider(ctrl)
 	mobileIdQueue := make(chan *MobileIdQueue, 1)
 
-	database := repositories.NewMockDatabase(ctrl)
-	redis := repositories.NewMockRedis(ctrl)
-
+	sessionsService := NewMockSessions(ctrl)
 	tokensService := NewMockTokens(ctrl)
 	log := logger.NewLogger()
 
@@ -285,8 +278,7 @@ func Test_Authentication_CreateMobileIdSession(t *testing.T) {
 		smartIdQueue,
 		mobileIdMock,
 		mobileIdQueue,
-		database,
-		redis,
+		sessionsService,
 		tokensService,
 		log)
 
@@ -297,7 +289,7 @@ func Test_Authentication_CreateMobileIdSession(t *testing.T) {
 		name     string
 		before   func()
 		params   dto.CreateMobileIdSessionRequest
-		expected *serializers.SessionSerializer
+		expected *models.Session
 		error    error
 	}{
 		{
@@ -312,17 +304,20 @@ func Test_Authentication_CreateMobileIdSession(t *testing.T) {
 					Code: "1234",
 				}, nil)
 
-				redis.EXPECT().CreateSession(ctx, &models.Session{
-					ID:     id,
-					Status: models.SessionRunning,
-				})
+				sessionsService.EXPECT().Create(ctx, &models.CreateSessionParams{
+					SessionId: sessionId,
+					Code:      "1234",
+				}).Return(&models.Session{
+					ID:   id,
+					Code: "1234",
+				}, nil)
 			},
 			params: dto.CreateMobileIdSessionRequest{
 				Locale:       "ENG",
 				PhoneNumber:  "+37268000769",
 				PersonalCode: "60001017869",
 			},
-			expected: &serializers.SessionSerializer{
+			expected: &models.Session{
 				ID:   id,
 				Code: "1234",
 			},
@@ -357,10 +352,10 @@ func Test_Authentication_CreateMobileIdSession(t *testing.T) {
 					Code: "1234",
 				}, nil)
 
-				redis.EXPECT().CreateSession(ctx, &models.Session{
-					ID:     id,
-					Status: models.SessionRunning,
-				}).Return(assert.AnError)
+				sessionsService.EXPECT().Create(ctx, &models.CreateSessionParams{
+					SessionId: sessionId,
+					Code:      "1234",
+				}).Return(nil, assert.AnError)
 			},
 			params: dto.CreateMobileIdSessionRequest{
 				Locale:       "ENG",
@@ -408,9 +403,7 @@ func Test_Authentication_GetMobileIdSessionStatus(t *testing.T) {
 	mobileIdMock := NewMockMobileIdProvider(ctrl)
 	mobileIdQueue := make(chan *MobileIdQueue, 1)
 
-	database := repositories.NewMockDatabase(ctrl)
-	redis := repositories.NewMockRedis(ctrl)
-
+	sessionsService := NewMockSessions(ctrl)
 	tokensService := NewMockTokens(ctrl)
 	log := logger.NewLogger()
 
@@ -420,8 +413,7 @@ func Test_Authentication_GetMobileIdSessionStatus(t *testing.T) {
 		smartIdQueue,
 		mobileIdMock,
 		mobileIdQueue,
-		database,
-		redis,
+		sessionsService,
 		tokensService,
 		log)
 
@@ -511,13 +503,12 @@ func Test_Authentication_Complete(t *testing.T) {
 	mobileIdMock := NewMockMobileIdProvider(ctrl)
 	mobileIdQueue := make(chan *MobileIdQueue, 1)
 
-	database := repositories.NewMockDatabase(ctrl)
-	redis := repositories.NewMockRedis(ctrl)
-
+	sessionsService := NewMockSessions(ctrl)
 	tokensService := NewMockTokens(ctrl)
 	log := logger.NewLogger()
 
-	sessionId := uuid.MustParse("5eab0e6a-c3e7-4526-a47e-398f0d31f514")
+	id := uuid.MustParse("5eab0e6a-c3e7-4526-a47e-398f0d31f514")
+	sessionId := id.String()
 	userId := uuid.MustParse("320284a1-8c96-4984-b492-b060310cfdac")
 
 	service := NewAuthentication(
@@ -526,39 +517,38 @@ func Test_Authentication_Complete(t *testing.T) {
 		smartIdQueue,
 		mobileIdMock,
 		mobileIdQueue,
-		database,
-		redis,
+		sessionsService,
 		tokensService,
 		log)
 
 	tests := []struct {
 		name     string
 		before   func()
-		expected *serializers.UserSerializer
+		expected *models.User
 		error    error
 	}{
 		{
 			name: "Success (smart-id)",
 			before: func() {
-				redis.EXPECT().FindSessionById(ctx, sessionId).Return(&models.Session{
-					ID:     sessionId,
+				sessionsService.EXPECT().FindById(ctx, sessionId).Return(&models.Session{
+					ID:     id,
 					UserId: userId,
 					Status: AuthenticationSuccess,
 				}, nil)
 
-				database.EXPECT().FindUserById(ctx, userId).Return(&models.User{
+				tokensService.EXPECT().Create(ctx, gomock.Any()).Return(&models.User{
 					ID:             userId,
 					IdentityNumber: "PNOEE-30303039914",
 					PersonalCode:   "303039914",
 					FirstName:      "TESTNUMBER",
 					LastName:       "OK",
+					AccessToken:    "access-token",
+					RefreshToken:   "refresh-token",
 				}, nil)
 
-				tokensService.EXPECT().Generate(ctx, gomock.Any()).Return("access-token", "refresh-token", nil)
-
-				redis.EXPECT().DeleteSessionByID(ctx, sessionId).Return(nil)
+				sessionsService.EXPECT().Delete(ctx, sessionId).Return(nil)
 			},
-			expected: &serializers.UserSerializer{
+			expected: &models.User{
 				ID:             userId,
 				IdentityNumber: "PNOEE-30303039914",
 				PersonalCode:   "303039914",
@@ -572,25 +562,25 @@ func Test_Authentication_Complete(t *testing.T) {
 		{
 			name: "Success (mobile-id)",
 			before: func() {
-				redis.EXPECT().FindSessionById(ctx, sessionId).Return(&models.Session{
-					ID:     sessionId,
+				sessionsService.EXPECT().FindById(ctx, sessionId).Return(&models.Session{
+					ID:     id,
 					UserId: userId,
 					Status: AuthenticationSuccess,
 				}, nil)
 
-				database.EXPECT().FindUserById(ctx, userId).Return(&models.User{
+				tokensService.EXPECT().Create(ctx, gomock.Any()).Return(&models.User{
 					ID:             userId,
 					IdentityNumber: "PNOEE-60001017869",
 					PersonalCode:   "60001017869",
 					FirstName:      "EID2016",
 					LastName:       "TESTNUMBER",
+					AccessToken:    "access-token",
+					RefreshToken:   "refresh-token",
 				}, nil)
 
-				tokensService.EXPECT().Generate(ctx, gomock.Any()).Return("access-token", "refresh-token", nil)
-
-				redis.EXPECT().DeleteSessionByID(ctx, sessionId).Return(nil)
+				sessionsService.EXPECT().Delete(ctx, sessionId).Return(nil)
 			},
-			expected: &serializers.UserSerializer{
+			expected: &models.User{
 				ID:             userId,
 				IdentityNumber: "PNOEE-60001017869",
 				PersonalCode:   "60001017869",
@@ -604,7 +594,7 @@ func Test_Authentication_Complete(t *testing.T) {
 		{
 			name: "Error: session not found",
 			before: func() {
-				redis.EXPECT().FindSessionById(ctx, sessionId).Return(nil, assert.AnError)
+				sessionsService.EXPECT().FindById(ctx, sessionId).Return(nil, assert.AnError)
 			},
 			expected: nil,
 			error:    assert.AnError,
@@ -612,23 +602,23 @@ func Test_Authentication_Complete(t *testing.T) {
 		{
 			name: "Error: failed to delete session",
 			before: func() {
-				redis.EXPECT().FindSessionById(ctx, sessionId).Return(&models.Session{
-					ID:     sessionId,
+				sessionsService.EXPECT().FindById(ctx, sessionId).Return(&models.Session{
+					ID:     id,
 					UserId: userId,
 					Status: AuthenticationSuccess,
 				}, nil)
 
-				database.EXPECT().FindUserById(ctx, userId).Return(&models.User{
+				tokensService.EXPECT().Create(ctx, gomock.Any()).Return(&models.User{
 					ID:             userId,
 					IdentityNumber: "PNOEE-30303039914",
 					PersonalCode:   "303039914",
 					FirstName:      "TESTNUMBER",
 					LastName:       "OK",
+					AccessToken:    "access-token",
+					RefreshToken:   "refresh-token",
 				}, nil)
 
-				tokensService.EXPECT().Generate(ctx, gomock.Any()).Return("access-token", "refresh-token", nil)
-
-				redis.EXPECT().DeleteSessionByID(ctx, sessionId).Return(assert.AnError)
+				sessionsService.EXPECT().Delete(ctx, sessionId).Return(assert.AnError)
 			},
 			expected: nil,
 			error:    assert.AnError,
@@ -639,7 +629,7 @@ func Test_Authentication_Complete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.before()
 
-			result, err := service.Complete(ctx, sessionId.String())
+			result, err := service.Complete(ctx, sessionId)
 
 			if tt.error != nil {
 				assert.Error(t, err)

@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
+	"loki/internal/app/models"
 	"loki/internal/app/models/dto"
 	"loki/internal/app/serializers"
 	"loki/internal/app/services"
@@ -49,7 +50,7 @@ func Test_MobileIdController_CreateSession(t *testing.T) {
 					Locale:       "ENG",
 					PhoneNumber:  "+37268000769",
 					PersonalCode: "60001017869",
-				}).Return(&serializers.SessionSerializer{
+				}).Return(&models.Session{
 					ID:   sessionId,
 					Code: "1234",
 				}, nil)

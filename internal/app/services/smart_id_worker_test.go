@@ -11,7 +11,6 @@ import (
 
 	"loki/internal/app/models"
 	"loki/internal/app/models/dto"
-	"loki/internal/app/serializers"
 	"loki/internal/config"
 	"loki/pkg/logger"
 )
@@ -90,11 +89,11 @@ func Test_SmartIdWorker_Perform(t *testing.T) {
 					LastName:       "Doe",
 				}, nil)
 
-				sessionService.EXPECT().Update(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), &models.UpdateSessionParams{
 					ID:     sessionId,
 					UserId: userId,
 					Status: AuthenticationSuccess,
-				}).Return(&serializers.SessionSerializer{
+				}).Return(&models.Session{
 					ID:     sessionId,
 					Status: AuthenticationSuccess,
 				}, nil)
@@ -167,7 +166,7 @@ func Test_SmartIdWorker_Perform(t *testing.T) {
 					LastName:       "Doe",
 				}, nil)
 
-				sessionService.EXPECT().Update(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), &models.UpdateSessionParams{
 					ID:     sessionId,
 					UserId: userId,
 					Status: AuthenticationSuccess,
@@ -186,11 +185,11 @@ func Test_SmartIdWorker_Perform(t *testing.T) {
 						},
 					}, nil)
 
-				sessionService.EXPECT().Update(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), &models.UpdateSessionParams{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "USER_REFUSED",
-				}).Return(&serializers.SessionSerializer{
+				}).Return(&models.Session{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "USER_REFUSED",
@@ -209,11 +208,11 @@ func Test_SmartIdWorker_Perform(t *testing.T) {
 						},
 					}, nil)
 
-				sessionService.EXPECT().Update(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), &models.UpdateSessionParams{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "USER_REFUSED_VC_CHOICE",
-				}).Return(&serializers.SessionSerializer{
+				}).Return(&models.Session{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "USER_REFUSED_VC_CHOICE",
@@ -232,11 +231,11 @@ func Test_SmartIdWorker_Perform(t *testing.T) {
 						},
 					}, nil)
 
-				sessionService.EXPECT().Update(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), &models.UpdateSessionParams{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "USER_REFUSED_DISPLAYTEXTANDPIN",
-				}).Return(&serializers.SessionSerializer{
+				}).Return(&models.Session{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "USER_REFUSED_DISPLAYTEXTANDPIN",
@@ -255,11 +254,11 @@ func Test_SmartIdWorker_Perform(t *testing.T) {
 						},
 					}, nil)
 
-				sessionService.EXPECT().Update(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), &models.UpdateSessionParams{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "USER_REFUSED_VC_CHOICE",
-				}).Return(&serializers.SessionSerializer{
+				}).Return(&models.Session{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "USER_REFUSED_VC_CHOICE",
@@ -278,11 +277,11 @@ func Test_SmartIdWorker_Perform(t *testing.T) {
 						},
 					}, nil)
 
-				sessionService.EXPECT().Update(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), &models.UpdateSessionParams{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "USER_REFUSED_CONFIRMATIONMESSAGE",
-				}).Return(&serializers.SessionSerializer{
+				}).Return(&models.Session{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "USER_REFUSED_CONFIRMATIONMESSAGE",
@@ -301,11 +300,11 @@ func Test_SmartIdWorker_Perform(t *testing.T) {
 						},
 					}, nil)
 
-				sessionService.EXPECT().Update(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), &models.UpdateSessionParams{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE",
-				}).Return(&serializers.SessionSerializer{
+				}).Return(&models.Session{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE",
@@ -324,11 +323,11 @@ func Test_SmartIdWorker_Perform(t *testing.T) {
 						},
 					}, nil)
 
-				sessionService.EXPECT().Update(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), &models.UpdateSessionParams{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "USER_REFUSED_CERT_CHOICE",
-				}).Return(&serializers.SessionSerializer{
+				}).Return(&models.Session{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "USER_REFUSED_CERT_CHOICE",
@@ -347,11 +346,11 @@ func Test_SmartIdWorker_Perform(t *testing.T) {
 						},
 					}, nil)
 
-				sessionService.EXPECT().Update(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), &models.UpdateSessionParams{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "WRONG_VC",
-				}).Return(&serializers.SessionSerializer{
+				}).Return(&models.Session{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "WRONG_VC",
@@ -370,11 +369,11 @@ func Test_SmartIdWorker_Perform(t *testing.T) {
 						},
 					}, nil)
 
-				sessionService.EXPECT().Update(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), &models.UpdateSessionParams{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "TIMEOUT",
-				}).Return(&serializers.SessionSerializer{
+				}).Return(&models.Session{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "TIMEOUT",

@@ -12,7 +12,6 @@ package services
 import (
 	context "context"
 	models "loki/internal/app/models"
-	serializers "loki/internal/app/serializers"
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"
@@ -42,11 +41,40 @@ func (m *MockSessions) EXPECT() *MockSessionsMockRecorder {
 	return m.recorder
 }
 
+// Create mocks base method.
+func (m *MockSessions) Create(ctx context.Context, params *models.CreateSessionParams) (*models.Session, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Create", ctx, params)
+	ret0, _ := ret[0].(*models.Session)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create.
+func (mr *MockSessionsMockRecorder) Create(ctx, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockSessions)(nil).Create), ctx, params)
+}
+
+// Delete mocks base method.
+func (m *MockSessions) Delete(ctx context.Context, sessionId string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", ctx, sessionId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockSessionsMockRecorder) Delete(ctx, sessionId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockSessions)(nil).Delete), ctx, sessionId)
+}
+
 // FindById mocks base method.
-func (m *MockSessions) FindById(ctx context.Context, sessionId string) (*serializers.SessionSerializer, error) {
+func (m *MockSessions) FindById(ctx context.Context, sessionId string) (*models.Session, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindById", ctx, sessionId)
-	ret0, _ := ret[0].(*serializers.SessionSerializer)
+	ret0, _ := ret[0].(*models.Session)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -58,10 +86,10 @@ func (mr *MockSessionsMockRecorder) FindById(ctx, sessionId any) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockSessions) Update(ctx context.Context, params models.Session) (*serializers.SessionSerializer, error) {
+func (m *MockSessions) Update(ctx context.Context, params *models.UpdateSessionParams) (*models.Session, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, params)
-	ret0, _ := ret[0].(*serializers.SessionSerializer)
+	ret0, _ := ret[0].(*models.Session)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

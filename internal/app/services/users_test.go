@@ -11,7 +11,6 @@ import (
 	"loki/internal/app/models"
 	"loki/internal/app/repositories"
 	"loki/internal/app/repositories/db"
-	"loki/internal/app/serializers"
 	"loki/pkg/logger"
 )
 
@@ -20,9 +19,9 @@ func Test_Users_Create(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := context.Background()
-	database := repositories.NewMockDatabase(ctrl)
+	repository := repositories.NewMockUserRepository(ctrl)
 	log := logger.NewLogger()
-	service := NewUsers(database, log)
+	service := NewUsers(repository, log)
 
 	id, err := uuid.NewRandom()
 	assert.NoError(t, err)
@@ -36,7 +35,7 @@ func Test_Users_Create(t *testing.T) {
 		{
 			name: "Success",
 			before: func() {
-				database.EXPECT().CreateUser(ctx, db.CreateUserParams{
+				repository.EXPECT().Create(ctx, db.CreateUserParams{
 					IdentityNumber: "PNOEE-123456789",
 					PersonalCode:   "123456789",
 					FirstName:      "John",
@@ -64,7 +63,7 @@ func Test_Users_Create(t *testing.T) {
 		{
 			name: "Error",
 			before: func() {
-				database.EXPECT().CreateUser(ctx, db.CreateUserParams{
+				repository.EXPECT().Create(ctx, db.CreateUserParams{
 					IdentityNumber: "PNOEE-123456789",
 					PersonalCode:   "123456789",
 					FirstName:      "John",
@@ -98,14 +97,78 @@ func Test_Users_Create(t *testing.T) {
 	}
 }
 
+func Test_Users_FindById(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	ctx := context.Background()
+	repository := repositories.NewMockUserRepository(ctrl)
+	log := logger.NewLogger()
+	service := NewUsers(repository, log)
+
+	id, err := uuid.NewRandom()
+	assert.NoError(t, err)
+
+	tests := []struct {
+		name     string
+		before   func()
+		expected *models.User
+		error    error
+	}{
+		{
+			name: "Success",
+			before: func() {
+				repository.EXPECT().FindById(ctx, id).Return(&models.User{
+					ID:             id,
+					IdentityNumber: "PNOEE-123456789",
+					PersonalCode:   "123456789",
+					FirstName:      "John",
+					LastName:       "Doe",
+				}, nil)
+			},
+			expected: &models.User{
+				ID:             id,
+				IdentityNumber: "PNOEE-123456789",
+				PersonalCode:   "123456789",
+				FirstName:      "John",
+				LastName:       "Doe",
+			},
+		},
+		{
+			name: "Error",
+			before: func() {
+				repository.EXPECT().FindById(ctx, id).Return(nil, assert.AnError)
+			},
+			expected: nil,
+			error:    assert.AnError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.before()
+
+			result, err := service.FindById(ctx, id)
+
+			if tt.error != nil {
+				assert.Error(t, err)
+				assert.Nil(t, result)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected, result)
+			}
+		})
+	}
+}
+
 func Test_Users_FindByIdentityNumber(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	ctx := context.Background()
-	database := repositories.NewMockDatabase(ctrl)
+	repository := repositories.NewMockUserRepository(ctrl)
 	log := logger.NewLogger()
-	service := NewUsers(database, log)
+	service := NewUsers(repository, log)
 
 	id, err := uuid.NewRandom()
 	assert.NoError(t, err)
@@ -115,23 +178,21 @@ func Test_Users_FindByIdentityNumber(t *testing.T) {
 	tests := []struct {
 		name     string
 		before   func()
-		expected *serializers.UserSerializer
+		expected *models.User
 		error    error
 	}{
 		{
 			name: "Success",
 			before: func() {
-				database.EXPECT().FindUserByIdentityNumber(ctx, identityNumber).Return(&models.User{
+				repository.EXPECT().FindByIdentityNumber(ctx, identityNumber).Return(&models.User{
 					ID:             id,
 					IdentityNumber: identityNumber,
 					PersonalCode:   "123456789",
 					FirstName:      "John",
 					LastName:       "Doe",
-					AccessToken:    "access-token",
-					RefreshToken:   "refresh-token",
 				}, nil)
 			},
-			expected: &serializers.UserSerializer{
+			expected: &models.User{
 				ID:             id,
 				IdentityNumber: identityNumber,
 				PersonalCode:   "123456789",
@@ -142,7 +203,7 @@ func Test_Users_FindByIdentityNumber(t *testing.T) {
 		{
 			name: "Error",
 			before: func() {
-				database.EXPECT().FindUserByIdentityNumber(ctx, identityNumber).Return(nil, assert.AnError)
+				repository.EXPECT().FindByIdentityNumber(ctx, identityNumber).Return(nil, assert.AnError)
 			},
 			expected: nil,
 			error:    assert.AnError,

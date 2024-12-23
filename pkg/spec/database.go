@@ -82,18 +82,7 @@ func DbSeed(ctx context.Context, dsn string) error {
 	return nil
 }
 
-func TruncateTables(ctx context.Context, dsn string) error {
-	tables := []string{
-		"role_permissions",
-		"user_roles",
-		"user_scopes",
-		"permissions",
-		"roles",
-		"scopes",
-		"tokens",
-		"users",
-	}
-
+func TruncateTables(ctx context.Context, dsn string, tables []string) error {
 	for _, table := range tables {
 		query := fmt.Sprintf("TRUNCATE TABLE %s RESTART IDENTITY CASCADE;", table)
 		err := run(ctx, dsn, query)

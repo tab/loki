@@ -11,20 +11,32 @@ import (
 	"loki/internal/app/errors"
 	"loki/internal/app/models"
 	"loki/internal/app/repositories"
-	"loki/internal/app/serializers"
 	"loki/pkg/jwt"
 	"loki/pkg/logger"
 )
 
-func Test_Tokens_Generate(t *testing.T) {
+func Test_Tokens_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	ctx := context.Background()
-	database := repositories.NewMockDatabase(ctrl)
+	permissionRepository := repositories.NewMockPermissionRepository(ctrl)
+	roleRepository := repositories.NewMockRoleRepository(ctrl)
+	scopeRepository := repositories.NewMockScopeRepository(ctrl)
+	tokenRepository := repositories.NewMockTokenRepository(ctrl)
+	userRepository := repositories.NewMockUserRepository(ctrl)
+
 	jwtService := jwt.NewMockJwt(ctrl)
 	log := logger.NewLogger()
-	service := NewTokens(database, jwtService, log)
+	service := NewTokens(
+		jwtService,
+		permissionRepository,
+		roleRepository,
+		scopeRepository,
+		tokenRepository,
+		userRepository,
+		log,
+	)
 
 	id, err := uuid.NewRandom()
 	assert.NoError(t, err)
@@ -37,122 +49,143 @@ func Test_Tokens_Generate(t *testing.T) {
 		LastName:       "Doe",
 	}
 
-	type result struct {
-		accessToken  string
-		refreshToken string
-		error        error
-	}
-
 	tests := []struct {
 		name     string
 		before   func()
-		expected result
+		expected *models.User
+		err      error
 	}{
 		{
 			name: "Success",
 			before: func() {
-				database.EXPECT().FindUserRoles(ctx, user.ID).Return([]models.Role{}, nil)
-				database.EXPECT().FindUserPermissions(ctx, user.ID).Return([]models.Permission{}, nil)
-				database.EXPECT().FindUserScopes(ctx, user.ID).Return([]models.Scope{}, nil)
+				userRepository.EXPECT().FindById(ctx, user.ID).Return(user, nil)
 
-				jwtService.EXPECT().Generate(jwt.Payload{
-					ID:          "PNOEE-123456789",
-					Roles:       []string{},
-					Permissions: []string{},
-					Scope:       []string{},
-				}, models.AccessTokenExp).Return("access-token", nil)
-				jwtService.EXPECT().Generate(jwt.Payload{
-					ID: "PNOEE-123456789",
-				}, models.RefreshTokenExp).Return("refresh-token", nil)
+				roleRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Role{}, nil)
+				permissionRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Permission{}, nil)
+				scopeRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Scope{}, nil)
 
-				database.EXPECT().CreateUserTokens(ctx, gomock.Any()).Return([]models.Token{}, nil)
+				jwtService.EXPECT().Generate(
+					jwt.Payload{
+						ID:          "PNOEE-123456789",
+						Roles:       []string{},
+						Permissions: []string{},
+						Scope:       []string{},
+					},
+					models.AccessTokenExp,
+				).Return("access-token", nil)
+
+				jwtService.EXPECT().Generate(
+					jwt.Payload{
+						ID: "PNOEE-123456789",
+					},
+					models.RefreshTokenExp,
+				).Return("refresh-token", nil)
+
+				tokenRepository.EXPECT().Create(ctx, gomock.Any()).Return([]models.Token{}, nil)
 			},
-			expected: result{
-				accessToken:  "access-token",
-				refreshToken: "refresh-token",
-				error:        nil,
+			expected: &models.User{
+				ID:             user.ID,
+				IdentityNumber: user.IdentityNumber,
+				PersonalCode:   user.PersonalCode,
+				FirstName:      user.FirstName,
+				LastName:       user.LastName,
+				AccessToken:    "access-token",
+				RefreshToken:   "refresh-token",
 			},
+			err: nil,
+		},
+		{
+			name: "Failed to find user",
+			before: func() {
+				userRepository.EXPECT().FindById(ctx, user.ID).Return(user, assert.AnError)
+			},
+			expected: nil,
+			err:      assert.AnError,
 		},
 		{
 			name: "Failed to find user roles",
 			before: func() {
-				database.EXPECT().FindUserRoles(ctx, user.ID).Return(nil, assert.AnError)
+				userRepository.EXPECT().FindById(ctx, user.ID).Return(user, nil)
+				roleRepository.EXPECT().FindByUserId(ctx, user.ID).Return(nil, assert.AnError)
 			},
-			expected: result{
-				accessToken:  "",
-				refreshToken: "",
-				error:        assert.AnError,
-			},
+			expected: nil,
+			err:      assert.AnError,
 		},
 		{
 			name: "Failed to find user permissions",
 			before: func() {
-				database.EXPECT().FindUserRoles(ctx, user.ID).Return([]models.Role{}, nil)
-				database.EXPECT().FindUserPermissions(ctx, user.ID).Return(nil, assert.AnError)
+				userRepository.EXPECT().FindById(ctx, user.ID).Return(user, nil)
+
+				roleRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Role{}, nil)
+				permissionRepository.EXPECT().FindByUserId(ctx, user.ID).Return(nil, assert.AnError)
 			},
-			expected: result{
-				accessToken:  "",
-				refreshToken: "",
-				error:        assert.AnError,
-			},
+			expected: nil,
+			err:      assert.AnError,
 		},
 		{
 			name: "Failed to find user scopes",
 			before: func() {
-				database.EXPECT().FindUserRoles(ctx, user.ID).Return([]models.Role{}, nil)
-				database.EXPECT().FindUserPermissions(ctx, user.ID).Return([]models.Permission{}, nil)
-				database.EXPECT().FindUserScopes(ctx, user.ID).Return(nil, assert.AnError)
+				userRepository.EXPECT().FindById(ctx, user.ID).Return(user, nil)
+
+				roleRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Role{}, nil)
+				permissionRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Permission{}, nil)
+				scopeRepository.EXPECT().FindByUserId(ctx, user.ID).Return(nil, assert.AnError)
 			},
-			expected: result{
-				accessToken:  "",
-				refreshToken: "",
-				error:        assert.AnError,
-			},
+			expected: nil,
+			err:      assert.AnError,
 		},
 		{
 			name: "Failed to generate access token",
 			before: func() {
-				database.EXPECT().FindUserRoles(ctx, user.ID).Return([]models.Role{}, nil)
-				database.EXPECT().FindUserPermissions(ctx, user.ID).Return([]models.Permission{}, nil)
-				database.EXPECT().FindUserScopes(ctx, user.ID).Return([]models.Scope{}, nil)
+				userRepository.EXPECT().FindById(ctx, user.ID).Return(user, nil)
 
-				jwtService.EXPECT().Generate(jwt.Payload{
-					ID:          "PNOEE-123456789",
-					Roles:       []string{},
-					Permissions: []string{},
-					Scope:       []string{},
-				}, models.AccessTokenExp).Return("", assert.AnError)
+				roleRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Role{}, nil)
+				permissionRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Permission{}, nil)
+				scopeRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Scope{}, nil)
+
+				jwtService.EXPECT().Generate(
+					jwt.Payload{
+						ID:          "PNOEE-123456789",
+						Roles:       []string{},
+						Permissions: []string{},
+						Scope:       []string{},
+					},
+					models.AccessTokenExp,
+				).Return("", assert.AnError)
 			},
-			expected: result{
-				accessToken:  "",
-				refreshToken: "",
-				error:        assert.AnError,
-			},
+			expected: nil,
+			err:      assert.AnError,
 		},
 		{
 			name: "Failed to save user tokens",
 			before: func() {
-				database.EXPECT().FindUserRoles(ctx, user.ID).Return([]models.Role{}, nil)
-				database.EXPECT().FindUserPermissions(ctx, user.ID).Return([]models.Permission{}, nil)
-				database.EXPECT().FindUserScopes(ctx, user.ID).Return([]models.Scope{}, nil)
+				userRepository.EXPECT().FindById(ctx, user.ID).Return(user, nil)
 
-				jwtService.EXPECT().Generate(jwt.Payload{
-					ID:          "PNOEE-123456789",
-					Roles:       []string{},
-					Permissions: []string{},
-					Scope:       []string{},
-				}, models.AccessTokenExp).Return("access-token", nil)
-				jwtService.EXPECT().Generate(jwt.Payload{
-					ID: "PNOEE-123456789",
-				}, models.RefreshTokenExp).Return("refresh-token", nil)
+				roleRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Role{}, nil)
+				permissionRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Permission{}, nil)
+				scopeRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Scope{}, nil)
 
-				database.EXPECT().CreateUserTokens(ctx, gomock.Any()).Return(nil, assert.AnError)
+				jwtService.EXPECT().Generate(
+					jwt.Payload{
+						ID:          "PNOEE-123456789",
+						Roles:       []string{},
+						Permissions: []string{},
+						Scope:       []string{},
+					},
+					models.AccessTokenExp,
+				).Return("access-token", nil)
+
+				jwtService.EXPECT().Generate(
+					jwt.Payload{
+						ID: "PNOEE-123456789",
+					},
+					models.RefreshTokenExp,
+				).Return("refresh-token", nil)
+
+				tokenRepository.EXPECT().Create(ctx, gomock.Any()).Return(nil, assert.AnError)
 			},
-			expected: result{
-				accessToken:  "",
-				refreshToken: "",
-				error:        assert.AnError,
-			},
+			expected: nil,
+			err:      assert.AnError,
 		},
 	}
 
@@ -160,33 +193,47 @@ func Test_Tokens_Generate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.before()
 
-			accessToken, refreshToken, err := service.Generate(ctx, user)
+			result, err := service.Create(ctx, user.ID)
 
-			if tt.expected.error != nil {
+			if tt.err != nil {
 				assert.Error(t, err)
+				assert.Equal(t, tt.err, err)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expected.accessToken, accessToken)
-				assert.Equal(t, tt.expected.refreshToken, refreshToken)
+				assert.Equal(t, tt.expected.AccessToken, result.AccessToken)
+				assert.Equal(t, tt.expected.RefreshToken, result.RefreshToken)
 			}
 		})
 	}
 }
 
-func Test_Tokens_Refresh(t *testing.T) {
+func Test_Tokens_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	ctx := context.Background()
-	database := repositories.NewMockDatabase(ctrl)
+	permissionRepository := repositories.NewMockPermissionRepository(ctrl)
+	roleRepository := repositories.NewMockRoleRepository(ctrl)
+	scopeRepository := repositories.NewMockScopeRepository(ctrl)
+	tokenRepository := repositories.NewMockTokenRepository(ctrl)
+	userRepository := repositories.NewMockUserRepository(ctrl)
+
 	jwtService := jwt.NewMockJwt(ctrl)
 	log := logger.NewLogger()
-	service := NewTokens(database, jwtService, log)
+	service := NewTokens(
+		jwtService,
+		permissionRepository,
+		roleRepository,
+		scopeRepository,
+		tokenRepository,
+		userRepository,
+		log,
+	)
 
 	id, err := uuid.NewRandom()
 	assert.NoError(t, err)
 
-	token := "refresh-token"
+	refreshTokenValue := "refresh-token"
 
 	user := &models.User{
 		ID:             id,
@@ -199,132 +246,154 @@ func Test_Tokens_Refresh(t *testing.T) {
 	tests := []struct {
 		name     string
 		before   func()
-		expected *serializers.TokensSerializer
-		error    error
+		expected *models.User
+		err      error
 	}{
 		{
 			name: "Success",
 			before: func() {
-				database.EXPECT().FindUserByIdentityNumber(ctx, "PNOEE-123456789").Return(user, nil)
-
-				jwtService.EXPECT().Decode(token).Return(&jwt.Payload{
+				jwtService.EXPECT().Decode(refreshTokenValue).Return(&jwt.Payload{
 					ID: "PNOEE-123456789",
 				}, nil)
+				userRepository.EXPECT().FindByIdentityNumber(ctx, "PNOEE-123456789").Return(user, nil)
 
-				database.EXPECT().FindUserRoles(ctx, user.ID).Return([]models.Role{}, nil)
-				database.EXPECT().FindUserPermissions(ctx, user.ID).Return([]models.Permission{}, nil)
-				database.EXPECT().FindUserScopes(ctx, user.ID).Return([]models.Scope{}, nil)
+				roleRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Role{}, nil)
+				permissionRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Permission{}, nil)
+				scopeRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Scope{}, nil)
 
-				jwtService.EXPECT().Generate(jwt.Payload{
-					ID:          "PNOEE-123456789",
-					Roles:       []string{},
-					Permissions: []string{},
-					Scope:       []string{},
-				}, models.AccessTokenExp).Return("access-token", nil)
-				jwtService.EXPECT().Generate(jwt.Payload{
-					ID: "PNOEE-123456789",
-				}, models.RefreshTokenExp).Return("refresh-token", nil)
+				jwtService.EXPECT().Generate(
+					jwt.Payload{
+						ID:          "PNOEE-123456789",
+						Roles:       []string{},
+						Permissions: []string{},
+						Scope:       []string{},
+					},
+					models.AccessTokenExp,
+				).Return("new-access-token", nil)
+				jwtService.EXPECT().Generate(
+					jwt.Payload{
+						ID: "PNOEE-123456789",
+					},
+					models.RefreshTokenExp,
+				).Return("new-refresh-token", nil)
 
-				database.EXPECT().CreateUserTokens(ctx, gomock.Any()).Return([]models.Token{}, nil)
+				tokenRepository.EXPECT().Create(ctx, gomock.Any()).Return([]models.Token{}, nil)
 			},
-			expected: &serializers.TokensSerializer{
-				AccessToken:  "access-token",
-				RefreshToken: "refresh-token",
+			expected: &models.User{
+				ID:             user.ID,
+				IdentityNumber: user.IdentityNumber,
+				PersonalCode:   user.PersonalCode,
+				FirstName:      user.FirstName,
+				LastName:       user.LastName,
+				AccessToken:    "new-access-token",
+				RefreshToken:   "new-refresh-token",
 			},
-			error: nil,
+			err: nil,
 		},
 		{
 			name: "Failed to decode token",
 			before: func() {
-				database.EXPECT().FindUserByIdentityNumber(ctx, "PNOEE-123456789").Return(user, nil)
-
-				jwtService.EXPECT().Decode(token).Return(nil, assert.AnError)
+				jwtService.EXPECT().Decode(refreshTokenValue).Return(nil, assert.AnError)
+				userRepository.EXPECT().FindByIdentityNumber(ctx, "PNOEE-123456789").Return(user, nil)
 			},
 			expected: nil,
-			error:    assert.AnError,
+			err:      assert.AnError,
 		},
 		{
 			name: "Invalid token",
 			before: func() {
-				jwtService.EXPECT().Decode(token).Return(nil, errors.ErrInvalidToken)
+				jwtService.EXPECT().Decode(refreshTokenValue).Return(nil, errors.ErrInvalidToken)
 			},
 			expected: nil,
-			error:    errors.ErrInvalidToken,
+			err:      errors.ErrInvalidToken,
 		},
 		{
 			name: "Failed to generate access token",
 			before: func() {
-				database.EXPECT().FindUserByIdentityNumber(ctx, "PNOEE-123456789").Return(user, nil)
-
-				jwtService.EXPECT().Decode(token).Return(&jwt.Payload{
+				jwtService.EXPECT().Decode(refreshTokenValue).Return(&jwt.Payload{
 					ID: "PNOEE-123456789",
 				}, nil)
+				userRepository.EXPECT().FindByIdentityNumber(ctx, "PNOEE-123456789").Return(user, nil)
 
-				database.EXPECT().FindUserRoles(ctx, user.ID).Return([]models.Role{}, nil)
-				database.EXPECT().FindUserPermissions(ctx, user.ID).Return([]models.Permission{}, nil)
-				database.EXPECT().FindUserScopes(ctx, user.ID).Return([]models.Scope{}, nil)
+				roleRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Role{}, nil)
+				permissionRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Permission{}, nil)
+				scopeRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Scope{}, nil)
 
-				jwtService.EXPECT().Generate(jwt.Payload{
-					ID:          "PNOEE-123456789",
-					Roles:       []string{},
-					Permissions: []string{},
-					Scope:       []string{},
-				}, models.AccessTokenExp).Return("", assert.AnError)
+				jwtService.EXPECT().Generate(
+					jwt.Payload{
+						ID:          "PNOEE-123456789",
+						Roles:       []string{},
+						Permissions: []string{},
+						Scope:       []string{},
+					},
+					models.AccessTokenExp,
+				).Return("", assert.AnError)
 			},
 			expected: nil,
-			error:    assert.AnError,
+			err:      assert.AnError,
 		},
 		{
 			name: "Failed to generate refresh token",
 			before: func() {
-				database.EXPECT().FindUserByIdentityNumber(ctx, "PNOEE-123456789").Return(user, nil)
-
-				jwtService.EXPECT().Decode(token).Return(&jwt.Payload{
+				jwtService.EXPECT().Decode(refreshTokenValue).Return(&jwt.Payload{
 					ID: "PNOEE-123456789",
 				}, nil)
+				userRepository.EXPECT().FindByIdentityNumber(ctx, "PNOEE-123456789").Return(user, nil)
 
-				database.EXPECT().FindUserRoles(ctx, user.ID).Return([]models.Role{}, nil)
-				database.EXPECT().FindUserPermissions(ctx, user.ID).Return([]models.Permission{}, nil)
-				database.EXPECT().FindUserScopes(ctx, user.ID).Return([]models.Scope{}, nil)
+				roleRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Role{}, nil)
+				permissionRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Permission{}, nil)
+				scopeRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Scope{}, nil)
 
-				jwtService.EXPECT().Generate(jwt.Payload{
-					ID:          "PNOEE-123456789",
-					Roles:       []string{},
-					Permissions: []string{},
-					Scope:       []string{},
-				}, models.AccessTokenExp).Return("access-token", nil)
-				jwtService.EXPECT().Generate(jwt.Payload{
-					ID: "PNOEE-123456789",
-				}, models.RefreshTokenExp).Return("", assert.AnError)
+				jwtService.EXPECT().Generate(
+					jwt.Payload{
+						ID:          "PNOEE-123456789",
+						Roles:       []string{},
+						Permissions: []string{},
+						Scope:       []string{},
+					},
+					models.AccessTokenExp,
+				).Return("new-access-token", nil)
+				jwtService.EXPECT().Generate(
+					jwt.Payload{
+						ID: "PNOEE-123456789",
+					},
+					models.RefreshTokenExp,
+				).Return("", assert.AnError)
 			},
 			expected: nil,
-			error:    assert.AnError,
+			err:      assert.AnError,
 		},
 		{
 			name: "Failed to create user tokens",
 			before: func() {
-				jwtService.EXPECT().Decode(token).Return(&jwt.Payload{
+				jwtService.EXPECT().Decode(refreshTokenValue).Return(&jwt.Payload{
 					ID: "PNOEE-123456789",
 				}, nil)
 
-				database.EXPECT().FindUserRoles(ctx, user.ID).Return([]models.Role{}, nil)
-				database.EXPECT().FindUserPermissions(ctx, user.ID).Return([]models.Permission{}, nil)
-				database.EXPECT().FindUserScopes(ctx, user.ID).Return([]models.Scope{}, nil)
+				roleRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Role{}, nil)
+				permissionRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Permission{}, nil)
+				scopeRepository.EXPECT().FindByUserId(ctx, user.ID).Return([]models.Scope{}, nil)
 
-				jwtService.EXPECT().Generate(jwt.Payload{
-					ID:          "PNOEE-123456789",
-					Roles:       []string{},
-					Permissions: []string{},
-					Scope:       []string{},
-				}, models.AccessTokenExp).Return("access-token", nil)
-				jwtService.EXPECT().Generate(jwt.Payload{
-					ID: "PNOEE-123456789",
-				}, models.RefreshTokenExp).Return("refresh-token", nil)
+				jwtService.EXPECT().Generate(
+					jwt.Payload{
+						ID:          "PNOEE-123456789",
+						Roles:       []string{},
+						Permissions: []string{},
+						Scope:       []string{},
+					},
+					models.AccessTokenExp,
+				).Return("new-access-token", nil)
+				jwtService.EXPECT().Generate(
+					jwt.Payload{
+						ID: "PNOEE-123456789",
+					},
+					models.RefreshTokenExp,
+				).Return("new-refresh-token", nil)
 
-				database.EXPECT().CreateUserTokens(ctx, gomock.Any()).Return(nil, assert.AnError)
+				tokenRepository.EXPECT().Create(ctx, gomock.Any()).Return(nil, assert.AnError)
 			},
 			expected: nil,
-			error:    assert.AnError,
+			err:      assert.AnError,
 		},
 	}
 
@@ -332,13 +401,15 @@ func Test_Tokens_Refresh(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.before()
 
-			result, err := service.Refresh(ctx, token)
+			result, err := service.Update(ctx, refreshTokenValue)
 
-			if tt.error != nil {
+			if tt.err != nil {
 				assert.Error(t, err)
+				assert.Equal(t, tt.err, err)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expected, result)
+				assert.Equal(t, tt.expected.AccessToken, result.AccessToken)
+				assert.Equal(t, tt.expected.RefreshToken, result.RefreshToken)
 			}
 		})
 	}

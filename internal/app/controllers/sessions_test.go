@@ -13,6 +13,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"loki/internal/app/errors"
+	"loki/internal/app/models"
 	"loki/internal/app/serializers"
 	"loki/internal/app/services"
 )
@@ -44,7 +45,7 @@ func Test_SessionsController_GetStatus(t *testing.T) {
 		{
 			name: "Success",
 			before: func() {
-				sessions.EXPECT().FindById(ctx, sessionId).Return(&serializers.SessionSerializer{
+				sessions.EXPECT().FindById(ctx, sessionId).Return(&models.Session{
 					ID:     id,
 					Status: "COMPLETED",
 				}, nil)
@@ -100,13 +101,11 @@ func Test_SessionsController_GetStatus(t *testing.T) {
 				var response serializers.ErrorSerializer
 				err := json.NewDecoder(resp.Body).Decode(&response)
 				assert.NoError(t, err)
-
 				assert.Equal(t, tt.expected.error.Error, response.Error)
 			} else {
 				var response serializers.SessionSerializer
 				err := json.NewDecoder(resp.Body).Decode(&response)
 				assert.NoError(t, err)
-
 				assert.Equal(t, tt.expected.response, response)
 			}
 
@@ -143,7 +142,7 @@ func Test_SessionsController_Authenticate(t *testing.T) {
 		{
 			name: "Success",
 			before: func() {
-				authentication.EXPECT().Complete(ctx, sessionId).Return(&serializers.UserSerializer{
+				authentication.EXPECT().Complete(ctx, sessionId).Return(&models.User{
 					ID:             id,
 					IdentityNumber: "PNOEE-30303039914",
 					PersonalCode:   "30303039914",
@@ -198,13 +197,11 @@ func Test_SessionsController_Authenticate(t *testing.T) {
 				var response serializers.ErrorSerializer
 				err := json.NewDecoder(resp.Body).Decode(&response)
 				assert.NoError(t, err)
-
 				assert.Equal(t, tt.expected.error.Error, response.Error)
 			} else {
 				var response serializers.UserSerializer
 				err := json.NewDecoder(resp.Body).Decode(&response)
 				assert.NoError(t, err)
-
 				assert.Equal(t, tt.expected.response, response)
 			}
 

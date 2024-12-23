@@ -1,7 +1,6 @@
-package telemetry
+package redis
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,9 +8,8 @@ import (
 	"loki/internal/config"
 )
 
-func Test_NewTelemetry(t *testing.T) {
+func Test_NewRedisClient(t *testing.T) {
 	type args struct {
-		ctx context.Context
 		cfg *config.Config
 	}
 
@@ -23,10 +21,8 @@ func Test_NewTelemetry(t *testing.T) {
 		{
 			name: "Success",
 			args: args{
-				ctx: context.Background(),
 				cfg: &config.Config{
-					AppName:      "loki",
-					TelemetryURI: "http://localhost:4317",
+					RedisURI: "redis://localhost:6379",
 				},
 			},
 			err: false,
@@ -35,7 +31,7 @@ func Test_NewTelemetry(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := NewTelemetry(tt.args.ctx, tt.args.cfg)
+			result, err := NewRedisClient(tt.args.cfg)
 			assert.NoError(t, err)
 			assert.NotNil(t, result)
 		})

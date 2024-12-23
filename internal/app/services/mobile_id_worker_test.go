@@ -11,7 +11,6 @@ import (
 
 	"loki/internal/app/models"
 	"loki/internal/app/models/dto"
-	"loki/internal/app/serializers"
 	"loki/internal/config"
 	"loki/pkg/logger"
 )
@@ -83,11 +82,11 @@ func Test_MobileIdWorker_Perform(t *testing.T) {
 					LastName:       "Doe",
 				}, nil)
 
-				sessionService.EXPECT().Update(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), &models.UpdateSessionParams{
 					ID:     sessionId,
 					UserId: userId,
 					Status: AuthenticationSuccess,
-				}).Return(&serializers.SessionSerializer{
+				}).Return(&models.Session{
 					ID:     sessionId,
 					Status: "COMPLETE",
 				}, nil)
@@ -148,7 +147,7 @@ func Test_MobileIdWorker_Perform(t *testing.T) {
 					LastName:       "Doe",
 				}, nil)
 
-				sessionService.EXPECT().Update(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), &models.UpdateSessionParams{
 					ID:     sessionId,
 					UserId: userId,
 					Status: AuthenticationSuccess,
@@ -165,11 +164,11 @@ func Test_MobileIdWorker_Perform(t *testing.T) {
 						Result: "NOT_MID_CLIENT",
 					}, nil)
 
-				sessionService.EXPECT().Update(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), &models.UpdateSessionParams{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "NOT_MID_CLIENT",
-				}).Return(&serializers.SessionSerializer{
+				}).Return(&models.Session{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "NOT_MID_CLIENT",
@@ -186,11 +185,11 @@ func Test_MobileIdWorker_Perform(t *testing.T) {
 						Result: "USER_CANCELLED",
 					}, nil)
 
-				sessionService.EXPECT().Update(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), &models.UpdateSessionParams{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "USER_CANCELLED",
-				}).Return(&serializers.SessionSerializer{
+				}).Return(&models.Session{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "USER_CANCELLED",
@@ -207,11 +206,11 @@ func Test_MobileIdWorker_Perform(t *testing.T) {
 						Result: "SIGNATURE_HASH_MISMATCH",
 					}, nil)
 
-				sessionService.EXPECT().Update(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), &models.UpdateSessionParams{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "SIGNATURE_HASH_MISMATCH",
-				}).Return(&serializers.SessionSerializer{
+				}).Return(&models.Session{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "SIGNATURE_HASH_MISMATCH",
@@ -228,11 +227,11 @@ func Test_MobileIdWorker_Perform(t *testing.T) {
 						Result: "PHONE_ABSENT",
 					}, nil)
 
-				sessionService.EXPECT().Update(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), &models.UpdateSessionParams{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "PHONE_ABSENT",
-				}).Return(&serializers.SessionSerializer{
+				}).Return(&models.Session{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "PHONE_ABSENT",
@@ -249,11 +248,11 @@ func Test_MobileIdWorker_Perform(t *testing.T) {
 						Result: "DELIVERY_ERROR",
 					}, nil)
 
-				sessionService.EXPECT().Update(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), &models.UpdateSessionParams{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "DELIVERY_ERROR",
-				}).Return(&serializers.SessionSerializer{
+				}).Return(&models.Session{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "DELIVERY_ERROR",
@@ -270,11 +269,11 @@ func Test_MobileIdWorker_Perform(t *testing.T) {
 						Result: "SIM_ERROR",
 					}, nil)
 
-				sessionService.EXPECT().Update(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), &models.UpdateSessionParams{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "SIM_ERROR",
-				}).Return(&serializers.SessionSerializer{
+				}).Return(&models.Session{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "SIM_ERROR",
@@ -291,11 +290,11 @@ func Test_MobileIdWorker_Perform(t *testing.T) {
 						Result: "TIMEOUT",
 					}, nil)
 
-				sessionService.EXPECT().Update(gomock.Any(), models.Session{
+				sessionService.EXPECT().Update(gomock.Any(), &models.UpdateSessionParams{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "TIMEOUT",
-				}).Return(&serializers.SessionSerializer{
+				}).Return(&models.Session{
 					ID:     sessionId,
 					Status: AuthenticationError,
 					Error:  "TIMEOUT",

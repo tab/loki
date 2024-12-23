@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
+	"loki/internal/app/models"
 	"loki/internal/app/models/dto"
 	"loki/internal/app/serializers"
 	"loki/internal/app/services"
@@ -48,7 +49,7 @@ func Test_SmartIdController_CreateSession(t *testing.T) {
 				authentication.EXPECT().CreateSmartIdSession(ctx, dto.CreateSmartIdSessionRequest{
 					Country:      "EE",
 					PersonalCode: "30303039914",
-				}).Return(&serializers.SessionSerializer{
+				}).Return(&models.Session{
 					ID:   sessionId,
 					Code: "1234",
 				}, nil)
