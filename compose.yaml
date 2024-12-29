@@ -4,21 +4,27 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: base-backend
-    tty: true
-    stdin_open: true
-    volumes:
-      - ./cmd:/app/cmd
-      - ./internal:/app/internal
-      - ./pkg:/app/pkg
-      - ./go.mod:/app/go.mod
-      - ./go.sum:/app/go.sum
+    depends_on:
+      - database
+      - redis
+      - telemetry
     ports:
       - "8080:8080"
     environment:
-      - APP_ADDRESS=localhost:8080
+      - APP_NAME=loki
+      - APP_ADDRESS=0.0.0.0:8080
       - CLIENT_URL=http://localhost:3000
-      - DATABASE_DSN=postgres://postgres:postgres@localhost:5432/loki-development?sslmode=disable
+      - SECRET_KEY=jwt-secret-key
+      - SMART_ID_API_URL=https://sid.demo.sk.ee/smart-id-rp/v2
+      - SMART_ID_DISPLAY_TEXT=Enter PIN1
+      - MOBILE_ID_API_URL=https://tsp.demo.sk.ee/mid-api
+      - MOBILE_ID_DISPLAY_TEXT=Enter PIN1
+      - RELYING_PARTY_UUID=00000000-0000-0000-0000-000000000000
+      - RELYING_PARTY_NAME=DEMO
+      - DATABASE_DSN=postgres://postgres:postgres@database:5432/loki-development?sslmode=disable
+      - REDIS_URI=redis://redis:6379/0
+      - TELEMETRY_URI=telemetry:4317
+      - LOG_LEVEL=info
     networks:
       - loki-network
 
@@ -30,8 +36,34 @@ services:
       - 5432:5432
     environment:
       POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: database
       POSTGRES_USER: postgres
       POSTGRES_PORT: 5432
+    networks:
+      - loki-network
+
+  redis:
+    image: redis:7.4-alpine
+    volumes:
+      - loki-redis:/var/lib/redis
+    ports:
+      - 6379:6379
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    networks:
+      - loki-network
+
+  telemetry:
+    image: jaegertracing/all-in-one:1.64.0
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - loki-network
 
 networks:
   loki-network:
@@ -40,3 +72,4 @@ networks:
 
 volumes:
   loki-database:
+  loki-redis:

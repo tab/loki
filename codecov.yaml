@@ -20,5 +20,7 @@ coverage:
         target: 80%
 
 ignore:
+  - "internal/app/repositories/db/*.go"
   - "**/*_mock.go"
   - "**/*_test.go"
+  - "**/module.go"

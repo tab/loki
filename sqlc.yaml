@@ -1,0 +1,19 @@
+version: 2
+sql:
+  - name: postgresql
+    engine: postgresql
+    schema: db/schema.sql
+    queries:
+      - db/sqlc/permission.sql
+      - db/sqlc/role.sql
+      - db/sqlc/scope.sql
+      - db/sqlc/token.sql
+      - db/sqlc/user.sql
+    gen:
+      go:
+        package: db
+        sql_package: pgx/v5
+        out: internal/app/repositories/db
+        overrides:
+          - db_type: uuid
+            go_type: github.com/google/uuid.UUID

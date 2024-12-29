@@ -3,7 +3,6 @@ package logger
 import (
 	"io"
 	"os"
-	"strconv"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
@@ -49,8 +48,23 @@ func (l *Logger) Error() *zerolog.Event {
 
 func getLogLevel() zerolog.Level {
 	if envValue, ok := os.LookupEnv("LOG_LEVEL"); ok {
-		if level, err := strconv.Atoi(envValue); err == nil && level >= 0 && level <= 5 {
-			return zerolog.Level(level)
+		switch envValue {
+		case "debug":
+			return zerolog.DebugLevel
+		case "info":
+			return zerolog.InfoLevel
+		case "warn":
+			return zerolog.WarnLevel
+		case "error":
+			return zerolog.ErrorLevel
+		case "fatal":
+			return zerolog.FatalLevel
+		case "panic":
+			return zerolog.PanicLevel
+		case "trace":
+			return zerolog.TraceLevel
+		default:
+			return zerolog.InfoLevel
 		}
 	}
 

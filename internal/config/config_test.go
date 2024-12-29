@@ -8,7 +8,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"loki/pkg/logger"
 	"loki/pkg/spec"
 )
 
@@ -26,8 +25,6 @@ func TestMain(m *testing.M) {
 }
 
 func Test_LoadConfig(t *testing.T) {
-	appLogger := logger.NewLogger()
-
 	tests := []struct {
 		name     string
 		args     []string
@@ -39,9 +36,24 @@ func Test_LoadConfig(t *testing.T) {
 			args: []string{},
 			env:  map[string]string{},
 			expected: &Config{
-				AppEnv:    "test",
-				AppAddr:   "localhost:8080",
-				ClientURL: "http://localhost:3000",
+				AppEnv:      "test",
+				AppAddr:     "0.0.0.0:8080",
+				ClientURL:   "http://localhost:3000",
+				SecretKey:   "jwt-secret-key",
+				DatabaseDSN: "postgres://postgres:postgres@localhost:5432/loki-test?sslmode=disable",
+				RedisURI:    "redis://localhost:6379/1",
+				SmartId: SmartId{
+					BaseURL:          "https://sid.demo.sk.ee/smart-id-rp/v2",
+					RelyingPartyName: "DEMO",
+					RelyingPartyUUID: "00000000-0000-0000-0000-000000000000",
+					Text:             "Enter PIN1",
+				},
+				MobileId: MobileId{
+					BaseURL:          "https://tsp.demo.sk.ee/mid-api",
+					RelyingPartyName: "DEMO",
+					RelyingPartyUUID: "00000000-0000-0000-0000-000000000000",
+					Text:             "Enter PIN1",
+				},
 			},
 		},
 	}
@@ -53,11 +65,16 @@ func Test_LoadConfig(t *testing.T) {
 			}
 
 			flag.CommandLine = flag.NewFlagSet(tt.name, flag.ContinueOnError)
-			result := LoadConfig(appLogger)
+			result := LoadConfig()
 
 			assert.Equal(t, tt.expected.AppEnv, result.AppEnv)
 			assert.Equal(t, tt.expected.AppAddr, result.AppAddr)
 			assert.Equal(t, tt.expected.ClientURL, result.ClientURL)
+			assert.Equal(t, tt.expected.SecretKey, result.SecretKey)
+			assert.Equal(t, tt.expected.DatabaseDSN, result.DatabaseDSN)
+			assert.Equal(t, tt.expected.RedisURI, result.RedisURI)
+			assert.Equal(t, tt.expected.SmartId, result.SmartId)
+			assert.Equal(t, tt.expected.MobileId, result.MobileId)
 
 			t.Cleanup(func() {
 				for key := range tt.env {

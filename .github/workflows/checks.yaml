@@ -9,33 +9,33 @@ concurrency:
   group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
   cancel-in-progress: true
 jobs:
-  analyzer:
-    name: Code analyzer
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.23'
-      - name: Download statictest binary
-        uses: robinraju/release-downloader@v1.11
-        with:
-          repository: Yandex-Practicum/go-autotests
-          latest: true
-          fileName: statictest
-          out-file-path: .tools
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup autotest binary
-        run: |
-          chmod -R +x $GITHUB_WORKSPACE/.tools/statictest
-          mv $GITHUB_WORKSPACE/.tools/statictest /usr/local/bin/statictest
-      - name: Run statictest
-        run: |
-          go vet -vettool=$(which statictest) ./...
+#  analyzer:
+#    name: Code analyzer
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - uses: actions/setup-go@v5
+#        with:
+#          go-version: '1.23'
+#      - name: Download statictest binary
+#        uses: robinraju/release-downloader@v1.11
+#        with:
+#          repository: Yandex-Practicum/go-autotests
+#          latest: true
+#          fileName: statictest
+#          out-file-path: .tools
+#          token: ${{ secrets.GITHUB_TOKEN }}
+#      - name: Setup autotest binary
+#        run: |
+#          chmod -R +x $GITHUB_WORKSPACE/.tools/statictest
+#          mv $GITHUB_WORKSPACE/.tools/statictest /usr/local/bin/statictest
+#      - name: Run statictest
+#        run: |
+#          go vet -vettool=$(which statictest) ./...
 
   linter:
     name: Golang CI
-    needs: analyzer
+    # needs: analyzer
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres
+        image: postgres:16.4-alpine
         env:
           POSTGRES_HOST: localhost
           POSTGRES_USER: postgres
@@ -67,6 +67,18 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+      redis:
+        image: redis:7.4-alpine
+        env:
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5

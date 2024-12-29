@@ -7,17 +7,54 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 
+	"loki/internal/app/controllers"
 	"loki/internal/config"
+	"loki/internal/config/middlewares"
 	"loki/internal/config/router"
 )
 
 func Test_NewServer(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	cfg := &config.Config{
 		AppEnv:  "test",
 		AppAddr: "localhost:8080",
 	}
-	appRouter := router.NewRouter(cfg)
+
+	mockAuthMiddleware := middlewares.NewMockAuthMiddleware(ctrl)
+	mockTelemetryMiddleware := middlewares.NewMockTelemetryMiddleware(ctrl)
+	mockSmartIdController := controllers.NewMockSmartIdController(ctrl)
+	mockMobileIdController := controllers.NewMockMobileIdController(ctrl)
+	mockSessionsController := controllers.NewMockSessionsController(ctrl)
+	mockTokensController := controllers.NewMockTokensController(ctrl)
+	mockUsersController := controllers.NewMockUsersController(ctrl)
+
+	mockAuthMiddleware.EXPECT().
+		Authenticate(gomock.Any()).
+		AnyTimes().
+		DoAndReturn(func(next http.Handler) http.Handler {
+			return next
+		})
+	mockTelemetryMiddleware.EXPECT().
+		Trace(gomock.Any()).
+		AnyTimes().
+		DoAndReturn(func(next http.Handler) http.Handler {
+			return next
+		})
+
+	appRouter := router.NewRouter(
+		cfg,
+		mockAuthMiddleware,
+		mockTelemetryMiddleware,
+		mockSmartIdController,
+		mockMobileIdController,
+		mockSessionsController,
+		mockTokensController,
+		mockUsersController,
+	)
 
 	srv := NewServer(cfg, appRouter)
 	assert.NotNil(t, srv)

@@ -1,0 +1,446 @@
+openapi: "3.0.0"
+info:
+  title: "Loki API"
+  version: "1.0.0"
+  description: "Loki API authentication via Smart-ID and Mobile-ID"
+servers:
+  - url: "http://localhost:8080"
+paths:
+  /api/auth/smart_id:
+    post:
+      summary: "Create a Smart-ID authentication session"
+      description: "Initiates a Smart-ID authentication session using personal code and country"
+      tags:
+        - smart_id
+      parameters:
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSmartIdSessionRequest"
+            examples:
+              OK:
+                summary: "Successfully create a smart-id session example"
+                description: "Example of requesting a Smart-ID session creation"
+                value:
+                  country: "EE"
+                  personal_code: "50001029996"
+              USER_REFUSED:
+                summary: "Create a smart-id session example with user refusal"
+                description: "Example of requesting a Smart-ID session creation with user refusal"
+                value:
+                  country: "EE"
+                  personal_code: "30403039917"
+              USER_REFUSED_DISPLAYTEXTANDPIN:
+                summary: "Create a smart-id session example with user refusal and display text and PIN"
+                description: "Example of requesting a Smart-ID session creation with user refusal and display text and PIN"
+                value:
+                  country: "EE"
+                  personal_code: "30403039928"
+              USER_REFUSED_VC_CHOICE:
+                summary: "Create a smart-id session example with user refusal and VC choice"
+                description: "Example of requesting a Smart-ID session creation with user refusal and VC choice"
+                value:
+                  country: "EE"
+                  personal_code: "30403039939"
+              USER_REFUSED_CONFIRMATIONMESSAGE:
+                summary: "Create a smart-id session example with user refusal and confirmation message"
+                description: "Example of requesting a Smart-ID session creation with user refusal and confirmation message"
+                value:
+                  country: "EE"
+                  personal_code: "30403039946"
+              USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE:
+                summary: "Create a smart-id session example with user refusal, confirmation message and VC choice"
+                description: "Example of requesting a Smart-ID session creation with user refusal, confirmation message and VC choice"
+                value:
+                  country: "EE"
+                  personal_code: "30403039950"
+              USER_REFUSED_CERT_CHOICE:
+                summary: "Create a smart-id session example with user refusal and cert choice"
+                description: "Example of requesting a Smart-ID session creation with user refusal and cert choice"
+                value:
+                  country: "EE"
+                  personal_code: "30403039961"
+              WRONG_VC:
+                summary: "Create a smart-id session example with wrong VC"
+                description: "Example of requesting a Smart-ID session creation with wrong VC"
+                value:
+                  country: "EE"
+                  personal_code: "30403039972"
+              TIMEOUT:
+                summary: "Create a smart-id session example with timeout"
+                description: "Example of requesting a Smart-ID session creation with timeout"
+                value:
+                  country: "EE"
+                  personal_code: "30403039983"
+      responses:
+        "201":
+          description: "Created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionSerializer"
+        "400":
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+  /api/auth/mobile_id:
+    post:
+      summary: "Create a Mobile-ID authentication session"
+      description: "Initiates a Mobile-ID authentication session using personal code and phone number"
+      tags:
+        - mobile_id
+      parameters:
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMobileIdSessionRequest"
+            examples:
+              OK:
+                summary: "Successfully create a mobile-id session example"
+                description: "Example of requesting a Mobile-ID session creation"
+                value:
+                  locale: "ENG"
+                  phone_number: "+37268000769"
+                  personal_code: "60001017869"
+              NOT_MID_CLIENT:
+                summary: "Create a mobile-id session example with user not being a MID client"
+                description: "Example of requesting a Mobile-ID session creation with user not being a MID client"
+                value:
+                  locale: "ENG"
+                  phone_number: "+37200000266"
+                  personal_code: "60001019939"
+              DELIVERY_ERROR:
+                summary: "Create a mobile-id session example with delivery error"
+                description: "Example of requesting a Mobile-ID session creation with delivery error"
+                value:
+                  locale: "ENG"
+                  phone_number: "+37207110066"
+                  personal_code: "60001019947"
+              USER_CANCELLED:
+                summary: "Create a mobile-id session example with user refusal"
+                description: "Example of requesting a Mobile-ID session creation with user refusal"
+                value:
+                  locale: "ENG"
+                  phone_number: "+37201100266"
+                  personal_code: "60001019950"
+              SIGNATURE_HASH_MISMATCH:
+                summary: "Create a mobile-id session example with signature hash mismatch"
+                description: "Example of requesting a Mobile-ID session creation with signature hash mismatch"
+                value:
+                  locale: "ENG"
+                  phone_number: "+37200000666"
+                  personal_code: "60001019961"
+              SIM_ERROR:
+                summary: "Create a mobile-id session example with SIM error"
+                description: "Example of requesting a Mobile-ID session creation with SIM error"
+                value:
+                  locale: "ENG"
+                  phone_number: "+37201200266"
+                  personal_code: "60001019972"
+              PHONE_ABSENT:
+                summary: "Create a mobile-id session example with phone absent"
+                description: "Example of requesting a Mobile-ID session creation with phone absent"
+                value:
+                  locale: "ENG"
+                  phone_number: "+37213100266"
+                  personal_code: "60001019983"
+              TIMEOUT:
+                summary: "Create a mobile-id session example with timeout"
+                description: "Example of requesting a Mobile-ID session creation with timeout"
+                value:
+                  locale: "ENG"
+                  phone_number: "+37266000266"
+                  personal_code: "50001018908"
+      responses:
+        "201":
+          description: "Created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionSerializer"
+        "400":
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+  /api/sessions/{id}:
+    get:
+      summary: "Get the status of an authentication session"
+      description: "Retrieves the current status of a session by ID"
+      tags:
+        - sessions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "Session ID"
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionSerializer"
+        "404":
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+    post:
+      summary: "Complete the authentication session"
+      description: "Completes the authentication process using the given session ID and returns user data with tokens"
+      tags:
+        - sessions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "Session ID"
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+  /api/tokens/refresh:
+    post:
+      summary: "Refresh tokens by providing a refresh token"
+      description: "Refreshes the access token by providing a refresh token"
+      tags:
+        - tokens
+      parameters:
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshAccessTokenRequest"
+      security:
+        - Authentication: []
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokensSerializer"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+  /api/me:
+    get:
+      summary: "Get current_user information"
+      description: "Retrieves the current user information"
+      tags:
+        - user
+      parameters:
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      security:
+        - Authentication: []
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserSerializer"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+components:
+  securitySchemes:
+    Authentication:
+      type: http
+      scheme: Bearer
+  schemas:
+    TraceId:
+      type: string
+      format: uuid
+      example: "123e4567-e89b-12d3-a456-426614174000"
+      description: "Unique trace identifier"
+
+    CreateSmartIdSessionRequest:
+      type: object
+      properties:
+        country:
+          type: string
+          description: "Country code (e.g., 'EE', 'LV', 'LT')"
+        personal_code:
+          type: string
+          description: "Personal code of the user"
+      required:
+        - country
+        - personal_code
+
+    CreateMobileIdSessionRequest:
+      type: object
+      properties:
+        personal_code:
+          type: string
+          description: "Personal code of the user"
+        phone_number:
+          type: string
+          description: "User's phone number"
+        locale:
+          type: string
+          description: "Locale preference (e.g., 'ENG', 'EST')."
+      required:
+        - personal_code
+        - phone_number
+        - locale
+
+    RefreshAccessTokenRequest:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+          description: "JWT refresh token"
+      required:
+        - refresh_token
+
+    SessionSerializer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: "Unique session ID"
+        code:
+          type: string
+          description: "Verification code displayed to the user"
+        status:
+          type: string
+          description: "Current status of the session"
+        error:
+          type: string
+          description: "Error message if the session is in an error state"
+      required:
+        - id
+
+    UserSerializer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: "User's unique ID"
+        identity_number:
+          type: string
+          description: "User's identity number"
+        personal_code:
+          type: string
+          description: "User's personal code"
+        first_name:
+          type: string
+          description: "User's first name"
+        last_name:
+          type: string
+          description: "User's last name"
+        access_token:
+          type: string
+          description: "JWT access token"
+        refresh_token:
+          type: string
+          description: "JWT refresh token"
+      required:
+        - id
+        - identity_number
+        - personal_code
+        - first_name
+        - last_name
+        - access_token
+        - refresh_token
+
+    TokensSerializer:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: "JWT access token"
+        refresh_token:
+          type: string
+          description: "JWT refresh token"
+      required:
+        - access_token
+        - refresh_token
+
+    ErrorSerializer:
+      type: object
+      properties:
+        error:
+          type: string
+          description: "Error message describing what went wrong"
+      required:
+        - error
