@@ -6,6 +6,10 @@ Swagger file is available at [api/swagger.yaml](https://github.com/tab/loki/blob
 
 ## Endpoints
 
+### Smart-ID
+
+#### Create smart-id session
+
 * `POST /api/auth/smart_id`
 
 body:
@@ -17,7 +21,7 @@ body:
 ```
 
 example:
-```
+```sh
 curl -X POST http://localhost:8080/api/auth/smart_id \
   -H "Content-Type: application/json" \
   -H "X-Trace-ID: f4c28fec-07fd-415f-900c-37be7fb705fa" \
@@ -32,10 +36,12 @@ response:
 }
 ```
 
+#### Fetch smart-id session status
+
 * `GET /api/sessions/{id}`
 
 example:
-```
+```sh
 curl -X GET http://localhost:8080/api/sessions/a658556f-f2ec-42f5-86dc-2665f011d5f7 \
   -H "Content-Type: application/json" \
   -H "X-Trace-ID: f4c28fec-07fd-415f-900c-37be7fb705fa"
@@ -49,10 +55,12 @@ response:
 }
 ```
 
+#### Complete smart-id session
+
 * `POST /api/sessions/{id}`
 
 example:
-```
+```sh
 curl -X POST http://localhost:8080/api/sessions/a658556f-f2ec-42f5-86dc-2665f011d5f7 \
   -H "Content-Type: application/json" \
   -H "X-Trace-ID: f4c28fec-07fd-415f-900c-37be7fb705fa"
@@ -71,15 +79,85 @@ response:
 }
 ```
 
+### Mobile-ID
+
+#### Create mobile-id session
+
+* `POST /api/auth/mobile_id`
+
+body:
+```json
+{
+  "locale": "ENG",
+  "phone_number": "+37268000769",
+  "personal_code": "60001017869"
+}
+```
+
+response:
+```json
+{
+  "id": "a658556f-f2ec-42f5-86dc-2665f011d5f7",
+  "code": "8317"
+}
+```
+
+#### Fetch mobile-id session status
+
+* `GET /api/sessions/{id}`
+
+response:
+```json
+{
+  "id": "a658556f-f2ec-42f5-86dc-2665f011d5f7",
+  "status": "SUCCESS"
+}
+```
+
+#### Complete mobile-id session
+
+* `POST /api/sessions/{id}`
+
+response:
+```json
+{
+  "id": "f4c28fec-07fd-415f-900c-37be7fb705fe",
+  "identity_number": "PNOEE-60001017869",
+  "personal_code": "60001017869",
+  "first_name": "EID2016",
+  "last_name": "TESTNUMBER",
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+### User
+
+#### Fetch user information
+
 * `GET /api/me`
 
 example:
-```
+```sh
 curl -X GET http://localhost:8080/api/me \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
   -H "X-Trace-ID: 0cbc1fe0-c29c-44d5-84a1-4ec5ddb9e08f"
 ```
+response:
+```json
+{
+  "id": "f4c28fec-07fd-415f-900c-37be7fb705fe",
+  "identity_number": "PNOEE-50001029996",
+  "personal_code": "50001029996",
+  "first_name": "TESTNUMBER",
+  "last_name": "ADULT"
+}
+```
+
+### Tokens
+
+### Refresh access token using refresh token
 
 * `POST /api/tokens/refresh`
 
@@ -99,18 +177,66 @@ response:
 ```
 
 example:
-```
+```sh
 curl -X POST http://localhost:8080/api/tokens/refresh \
   -H "Content-Type: application/json" \
   -H "X-Trace-ID: 754cfd21-69b2-436a-af5f-737932cfd874"
   -d '{ "refresh_token": "<REFRESH_TOKEN>" }'
 ```
 
-JWT access token example:
-```
+#### JWT access token examples
+
+##### Admin
+
+```json
 {
-  "exp": 1734454731,
+  "exp": 1734879499,
   "jti": "PNOEE-50001029996",
+  "roles": [
+    "admin",
+    "user"
+  ],
+  "permissions": [
+    "read:users",
+    "write:users",
+    "write:self",
+    "read:self"
+  ],
+  "scope": [
+    "self-service",
+    "sso-service"
+  ]
+}
+```
+
+##### Manager
+
+```json
+{
+  "exp": 1734879550,
+  "jti": "PNOBE-00010299944",
+  "roles": [
+    "manager",
+    "user"
+  ],
+  "permissions": [
+    "read:users",
+    "write:self",
+    "read:self"
+  ],
+  "scope": [
+    "self-service",
+    "sso-service"
+  ]
+}
+```
+
+##### User
+
+```json
+{
+  "exp": 1734879566,
+  "jti": "PNOEE-60001017869",
   "roles": [
     "user"
   ],
@@ -124,10 +250,11 @@ JWT access token example:
 }
 ```
 
-JWT refresh token example:
-```
+#### JWT refresh token example
+
+```json
 {
   "exp": 1734454731,
-  "jti": "PNOEE-50001029996",
+  "jti": "PNOEE-50001029996"
 }
 ```

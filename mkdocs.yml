@@ -1,5 +1,10 @@
-site_name: "Loki Documentation"
-repo_url: "https://github.com/tab/loki"
+site_name: Loki
+site_url: https://tab.github.io/loki
+site_author: tab
+site_description: SSO service for authentication via Smart-ID and Mobile-ID
+
+repo_name: tab/loki
+repo_url: https://github.com/tab/loki
 
 nav:
   - Home: index.md
@@ -11,6 +16,15 @@ site_dir: site
 
 theme:
   name: material
+  language: en
+  palette:
+    - scheme: default
+      media: "(prefers-color-scheme: light)"
+      primary: teal
 
 plugins:
   - search
+  - minify:
+      minify_html: true
+      minify_js: true
+      minify_css: true
