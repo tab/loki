@@ -1,0 +1,16 @@
+site_name: "Loki Documentation"
+repo_url: "https://github.com/tab/loki"
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Usage: usage.md
+
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+
+plugins:
+  - search
