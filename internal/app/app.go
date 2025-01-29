@@ -2,13 +2,13 @@ package app
 
 import (
 	"context"
-	"loki/internal/app/controllers/backoffice"
 	"net/http"
 	"time"
 
 	"go.uber.org/fx"
 
 	"loki/internal/app/controllers"
+	"loki/internal/app/controllers/backoffice"
 	"loki/internal/app/repositories"
 	"loki/internal/app/services"
 	"loki/internal/config"

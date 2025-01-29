@@ -10,7 +10,7 @@ const (
 	AccessTokenType  = "access_token"
 	RefreshTokenType = "refresh_token"
 
-	AccessTokenExp  = time.Hour * 24
+	AccessTokenExp  = time.Minute * 30
 	RefreshTokenExp = time.Hour * 24
 )
 

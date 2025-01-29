@@ -4,13 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"loki/internal/app/models/dto"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 
 	"loki/internal/app/errors"
 	"loki/internal/app/models"
+	"loki/internal/app/models/dto"
 	"loki/internal/app/serializers"
 	"loki/internal/app/services"
 )

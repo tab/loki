@@ -2,9 +2,10 @@ package dto
 
 import (
 	"encoding/json"
-	"github.com/google/uuid"
 	"io"
 	"strings"
+
+	"github.com/google/uuid"
 
 	"loki/internal/app/errors"
 )
