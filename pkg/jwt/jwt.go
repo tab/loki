@@ -100,6 +100,9 @@ func (j *jwtService) Decode(token string) (*Payload, error) {
 	}
 
 	return &Payload{
-		ID: claims.ID,
+		ID:          claims.ID,
+		Roles:       claims.Roles,
+		Permissions: claims.Permissions,
+		Scope:       claims.Scope,
 	}, nil
 }

@@ -43,6 +43,21 @@ func (m *MockRoleRepository) EXPECT() *MockRoleRepositoryMockRecorder {
 	return m.recorder
 }
 
+// Create mocks base method.
+func (m *MockRoleRepository) Create(ctx context.Context, params db.CreateRoleParams) (*models.Role, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Create", ctx, params)
+	ret0, _ := ret[0].(*models.Role)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create.
+func (mr *MockRoleRepositoryMockRecorder) Create(ctx, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockRoleRepository)(nil).Create), ctx, params)
+}
+
 // CreateUserRole mocks base method.
 func (m *MockRoleRepository) CreateUserRole(ctx context.Context, params db.CreateUserRoleParams) error {
 	m.ctrl.T.Helper()
@@ -55,6 +70,36 @@ func (m *MockRoleRepository) CreateUserRole(ctx context.Context, params db.Creat
 func (mr *MockRoleRepositoryMockRecorder) CreateUserRole(ctx, params any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserRole", reflect.TypeOf((*MockRoleRepository)(nil).CreateUserRole), ctx, params)
+}
+
+// Delete mocks base method.
+func (m *MockRoleRepository) Delete(ctx context.Context, id uuid.UUID) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", ctx, id)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockRoleRepositoryMockRecorder) Delete(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockRoleRepository)(nil).Delete), ctx, id)
+}
+
+// FindById mocks base method.
+func (m *MockRoleRepository) FindById(ctx context.Context, id uuid.UUID) (*models.Role, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindById", ctx, id)
+	ret0, _ := ret[0].(*models.Role)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindById indicates an expected call of FindById.
+func (mr *MockRoleRepositoryMockRecorder) FindById(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindById", reflect.TypeOf((*MockRoleRepository)(nil).FindById), ctx, id)
 }
 
 // FindByName mocks base method.
@@ -85,4 +130,50 @@ func (m *MockRoleRepository) FindByUserId(ctx context.Context, id uuid.UUID) ([]
 func (mr *MockRoleRepositoryMockRecorder) FindByUserId(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByUserId", reflect.TypeOf((*MockRoleRepository)(nil).FindByUserId), ctx, id)
+}
+
+// FindRoleDetailsById mocks base method.
+func (m *MockRoleRepository) FindRoleDetailsById(ctx context.Context, id uuid.UUID) (*models.Role, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindRoleDetailsById", ctx, id)
+	ret0, _ := ret[0].(*models.Role)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindRoleDetailsById indicates an expected call of FindRoleDetailsById.
+func (mr *MockRoleRepositoryMockRecorder) FindRoleDetailsById(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindRoleDetailsById", reflect.TypeOf((*MockRoleRepository)(nil).FindRoleDetailsById), ctx, id)
+}
+
+// List mocks base method.
+func (m *MockRoleRepository) List(ctx context.Context, limit, offset int32) ([]models.Role, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "List", ctx, limit, offset)
+	ret0, _ := ret[0].([]models.Role)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// List indicates an expected call of List.
+func (mr *MockRoleRepositoryMockRecorder) List(ctx, limit, offset any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockRoleRepository)(nil).List), ctx, limit, offset)
+}
+
+// Update mocks base method.
+func (m *MockRoleRepository) Update(ctx context.Context, params db.UpdateRoleParams) (*models.Role, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", ctx, params)
+	ret0, _ := ret[0].(*models.Role)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockRoleRepositoryMockRecorder) Update(ctx, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockRoleRepository)(nil).Update), ctx, params)
 }

@@ -16,32 +16,32 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockAuthMiddleware is a mock of AuthMiddleware interface.
-type MockAuthMiddleware struct {
+// MockAuthenticationMiddleware is a mock of AuthenticationMiddleware interface.
+type MockAuthenticationMiddleware struct {
 	ctrl     *gomock.Controller
-	recorder *MockAuthMiddlewareMockRecorder
+	recorder *MockAuthenticationMiddlewareMockRecorder
 	isgomock struct{}
 }
 
-// MockAuthMiddlewareMockRecorder is the mock recorder for MockAuthMiddleware.
-type MockAuthMiddlewareMockRecorder struct {
-	mock *MockAuthMiddleware
+// MockAuthenticationMiddlewareMockRecorder is the mock recorder for MockAuthenticationMiddleware.
+type MockAuthenticationMiddlewareMockRecorder struct {
+	mock *MockAuthenticationMiddleware
 }
 
-// NewMockAuthMiddleware creates a new mock instance.
-func NewMockAuthMiddleware(ctrl *gomock.Controller) *MockAuthMiddleware {
-	mock := &MockAuthMiddleware{ctrl: ctrl}
-	mock.recorder = &MockAuthMiddlewareMockRecorder{mock}
+// NewMockAuthenticationMiddleware creates a new mock instance.
+func NewMockAuthenticationMiddleware(ctrl *gomock.Controller) *MockAuthenticationMiddleware {
+	mock := &MockAuthenticationMiddleware{ctrl: ctrl}
+	mock.recorder = &MockAuthenticationMiddlewareMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockAuthMiddleware) EXPECT() *MockAuthMiddlewareMockRecorder {
+func (m *MockAuthenticationMiddleware) EXPECT() *MockAuthenticationMiddlewareMockRecorder {
 	return m.recorder
 }
 
 // Authenticate mocks base method.
-func (m *MockAuthMiddleware) Authenticate(next http.Handler) http.Handler {
+func (m *MockAuthenticationMiddleware) Authenticate(next http.Handler) http.Handler {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Authenticate", next)
 	ret0, _ := ret[0].(http.Handler)
@@ -49,7 +49,7 @@ func (m *MockAuthMiddleware) Authenticate(next http.Handler) http.Handler {
 }
 
 // Authenticate indicates an expected call of Authenticate.
-func (mr *MockAuthMiddlewareMockRecorder) Authenticate(next any) *gomock.Call {
+func (mr *MockAuthenticationMiddlewareMockRecorder) Authenticate(next any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Authenticate", reflect.TypeOf((*MockAuthMiddleware)(nil).Authenticate), next)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Authenticate", reflect.TypeOf((*MockAuthenticationMiddleware)(nil).Authenticate), next)
 }

@@ -97,6 +97,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorSerializer"
+
   /api/auth/mobile_id:
     post:
       summary: "Create a Mobile-ID authentication session"
@@ -190,6 +191,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorSerializer"
+
   /api/sessions/{id}:
     get:
       summary: "Get the status of an authentication session"
@@ -255,6 +257,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorSerializer"
+
   /api/tokens/refresh:
     post:
       summary: "Refresh tokens by providing a refresh token"
@@ -293,6 +296,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorSerializer"
+
   /api/me:
     get:
       summary: "Get current_user information"
@@ -319,6 +323,948 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorSerializer"
+
+  /api/backoffice/permissions:
+    get:
+      summary: "List permissions"
+      description: "Retrieves a paginated list of permissions"
+      tags:
+        - backoffice
+      parameters:
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+        - name: page
+          in: query
+          schema:
+            type: integer
+          description: "Page number for pagination"
+        - name: per
+          in: query
+          schema:
+            type: integer
+          description: "Number of items per page"
+      security:
+        - Authentication: []
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PermissionsListResponse"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+    post:
+      summary: "Create a permission"
+      description: "Creates a new permission"
+      tags:
+        - backoffice
+      parameters:
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      security:
+        - Authentication: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PermissionRequest"
+      responses:
+        "201":
+          description: "Created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PermissionSerializer"
+        "400":
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+
+  /api/backoffice/permissions/{id}:
+    get:
+      summary: "Get a permission"
+      description: "Retrieves a permission by its ID"
+      tags:
+        - backoffice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "Permission ID"
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      security:
+        - Authentication: []
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PermissionSerializer"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "404":
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+    put:
+      summary: "Update a permission"
+      description: "Updates a permission by its ID"
+      tags:
+        - backoffice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "Permission ID"
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      security:
+        - Authentication: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PermissionRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PermissionSerializer"
+        "400":
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+    delete:
+      summary: "Delete a permission"
+      description: "Deletes a permission by its ID"
+      tags:
+        - backoffice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "Permission ID"
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      security:
+        - Authentication: []
+      responses:
+        "204":
+          description: "No Content"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+
+  /api/backoffice/roles:
+    get:
+      summary: "List roles"
+      description: "Retrieves a paginated list of roles"
+      tags:
+        - backoffice
+      parameters:
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+        - name: page
+          in: query
+          schema:
+            type: integer
+          description: "Page number for pagination"
+        - name: per
+          in: query
+          schema:
+            type: integer
+          description: "Number of items per page"
+      security:
+        - Authentication: []
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RolesListResponse"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+    post:
+      summary: "Create a role"
+      description: "Creates a new role"
+      tags:
+        - backoffice
+      parameters:
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      security:
+        - Authentication: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoleRequest"
+      responses:
+        "201":
+          description: "Created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleSerializer"
+        "400":
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+
+  /api/backoffice/roles/{id}:
+    get:
+      summary: "Get a role"
+      description: "Retrieves a role by its ID"
+      tags:
+        - backoffice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "Role ID"
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      security:
+        - Authentication: []
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleSerializer"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "404":
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+    put:
+      summary: "Update a role"
+      description: "Updates a role by its ID"
+      tags:
+        - backoffice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "Role ID"
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      security:
+        - Authentication: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoleRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleSerializer"
+        "400":
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+    delete:
+      summary: "Delete a role"
+      description: "Deletes a role by its ID"
+      tags:
+        - backoffice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "Role ID"
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      security:
+        - Authentication: []
+      responses:
+        "204":
+          description: "No Content"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+
+  /api/backoffice/scopes:
+    get:
+      summary: "List scopes"
+      description: "Retrieves a paginated list of scopes"
+      tags:
+        - backoffice
+      parameters:
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+        - name: page
+          in: query
+          schema:
+            type: integer
+          description: "Page number for pagination"
+        - name: per
+          in: query
+          schema:
+            type: integer
+          description: "Number of items per page"
+      security:
+        - Authentication: []
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScopesListResponse"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+    post:
+      summary: "Create a scope"
+      description: "Creates a new scope"
+      tags:
+        - backoffice
+      parameters:
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      security:
+        - Authentication: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScopeRequest"
+      responses:
+        "201":
+          description: "Created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScopeSerializer"
+        "400":
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+
+  /api/backoffice/scopes/{id}:
+    get:
+      summary: "Get a scope"
+      description: "Retrieves a scope by its ID"
+      tags:
+        - backoffice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "Scope ID"
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      security:
+        - Authentication: []
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScopeSerializer"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "404":
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+    put:
+      summary: "Update a scope"
+      description: "Updates a scope by its ID"
+      tags:
+        - backoffice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "Scope ID"
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      security:
+        - Authentication: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScopeRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScopeSerializer"
+        "400":
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+    delete:
+      summary: "Delete a scope"
+      description: "Deletes a scope by its ID"
+      tags:
+        - backoffice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "Scope ID"
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      security:
+        - Authentication: []
+      responses:
+        "204":
+          description: "No Content"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+
+  /api/backoffice/tokens:
+    get:
+      summary: "List tokens"
+      description: "Retrieves a paginated list of tokens"
+      tags:
+        - backoffice
+      parameters:
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+        - name: page
+          in: query
+          schema:
+            type: integer
+          description: "Page number for pagination"
+        - name: per
+          in: query
+          schema:
+            type: integer
+          description: "Number of items per page"
+      security:
+        - Authentication: []
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokensListResponse"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+    delete:
+      summary: "Delete a token"
+      description: "Deletes a token by its ID"
+      tags:
+        - backoffice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "Token ID"
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      security:
+        - Authentication: []
+      responses:
+        "204":
+          description: "No Content"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+
+  /api/backoffice/users:
+    get:
+      summary: "List users"
+      description: "Retrieves a paginated list of users"
+      tags:
+        - backoffice
+      parameters:
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+        - name: page
+          in: query
+          schema:
+            type: integer
+          description: "Page number for pagination"
+        - name: per
+          in: query
+          schema:
+            type: integer
+          description: "Number of items per page"
+      security:
+        - Authentication: []
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsersListResponse"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+    post:
+      summary: "Create a user"
+      description: "Creates a new user with assigned role"
+      tags:
+        - backoffice
+      parameters:
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      security:
+        - Authentication: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRequest"
+      responses:
+        "201":
+          description: "Created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserSerializer"
+        "400":
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+
+  /api/backoffice/users/{id}:
+    get:
+      summary: "Get a user"
+      description: "Retrieves a user by its ID"
+      tags:
+        - backoffice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "User ID"
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      security:
+        - Authentication: []
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserSerializer"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "404":
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+    put:
+      summary: "Update a user"
+      description: "Updates a user by its ID"
+      tags:
+        - backoffice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "User ID"
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      security:
+        - Authentication: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserSerializer"
+        "400":
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+    delete:
+      summary: "Delete a user"
+      description: "Deletes a user by its ID"
+      tags:
+        - backoffice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: "User ID"
+        - name: X-Trace-ID
+          in: header
+          schema:
+            $ref: "#/components/schemas/TraceId"
+      security:
+        - Authentication: []
+      responses:
+        "204":
+          description: "No Content"
+        "401":
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+        "422":
+          description: "Unprocessable Entity"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorSerializer"
+
 components:
   securitySchemes:
     Authentication:
@@ -369,6 +1315,73 @@ components:
           description: "JWT refresh token"
       required:
         - refresh_token
+
+    PermissionRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "Updated name of the permission"
+        description:
+          type: string
+          description: "Updated description of the permission"
+      required:
+        - name
+        - description
+
+    RoleRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "Name of the role"
+        description:
+          type: string
+          description: "Description of the role"
+      required:
+        - name
+        - description
+
+    ScopeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "Name of the scope"
+        description:
+          type: string
+          description: "Description of the scope"
+      required:
+        - name
+        - description
+
+    UserRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+          description: "User's first name"
+        last_name:
+          type: string
+          description: "User's last name"
+        email:
+          type: string
+          format: email
+          description: "User's email address"
+        password:
+          type: string
+          format: password
+          description: "User's password"
+        role_id:
+          type: string
+          format: uuid
+          description: "Role ID to assign to the user"
+      required:
+        - first_name
+        - last_name
+        - email
+        - password
+        - role_id
 
     SessionSerializer:
       type: object
@@ -435,6 +1448,142 @@ components:
       required:
         - access_token
         - refresh_token
+
+    PermissionSerializer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: "Permission's unique ID"
+        name:
+          type: string
+          description: "Permission name"
+        description:
+          type: string
+          description: "Permission description"
+      required:
+        - id
+        - name
+        - description
+
+    RoleSerializer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: "Role's unique ID"
+        name:
+          type: string
+          description: "Role name"
+        description:
+          type: string
+          description: "Role description"
+      required:
+        - id
+        - name
+        - description
+
+    ScopeSerializer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: "Scope's unique ID"
+        name:
+          type: string
+          description: "Scope name"
+        description:
+          type: string
+          description: "Scope description"
+      required:
+        - id
+        - name
+        - description
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: "Current page number"
+        per:
+          type: integer
+          description: "Number of items per page"
+        total:
+          type: integer
+          description: "Total number of items"
+      required:
+        - page
+        - per
+        - total
+
+    PermissionsListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PermissionSerializer"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - data
+        - meta
+
+    RolesListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoleSerializer"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - data
+        - meta
+
+    ScopesListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScopeSerializer"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - data
+        - meta
+
+    TokensListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/TokensSerializer"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - data
+        - meta
+
+    UsersListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserSerializer"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required:
+        - data
+        - meta
 
     ErrorSerializer:
       type: object

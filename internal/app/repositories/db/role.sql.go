@@ -9,7 +9,32 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
+
+const createRole = `-- name: CreateRole :one
+INSERT INTO roles (name, description)
+VALUES ($1, $2)
+  RETURNING id, name, description
+`
+
+type CreateRoleParams struct {
+	Name        string
+	Description string
+}
+
+type CreateRoleRow struct {
+	ID          uuid.UUID
+	Name        string
+	Description string
+}
+
+func (q *Queries) CreateRole(ctx context.Context, arg CreateRoleParams) (CreateRoleRow, error) {
+	row := q.db.QueryRow(ctx, createRole, arg.Name, arg.Description)
+	var i CreateRoleRow
+	err := row.Scan(&i.ID, &i.Name, &i.Description)
+	return i, err
+}
 
 const createUserRole = `-- name: CreateUserRole :one
 INSERT INTO user_roles (user_id, role_id)
@@ -35,6 +60,78 @@ func (q *Queries) CreateUserRole(ctx context.Context, arg CreateUserRoleParams) 
 	return i, err
 }
 
+const createUserRoles = `-- name: CreateUserRoles :many
+WITH
+  deleted AS (
+    DELETE FROM user_roles
+    WHERE user_id = $1::uuid AND role_id NOT IN (SELECT unnest($2::uuid[]))
+  ),
+  inserted AS (
+    INSERT INTO user_roles (user_id, role_id)
+    SELECT $1::uuid, role_id
+    FROM unnest($2::uuid[]) AS role_id
+    ON CONFLICT (user_id, role_id) DO NOTHING
+      RETURNING user_id, role_id
+  )
+SELECT user_id, role_id FROM inserted
+`
+
+type CreateUserRolesParams struct {
+	UserID  uuid.UUID
+	RoleIds []uuid.UUID
+}
+
+type CreateUserRolesRow struct {
+	UserID uuid.UUID
+	RoleID uuid.UUID
+}
+
+func (q *Queries) CreateUserRoles(ctx context.Context, arg CreateUserRolesParams) ([]CreateUserRolesRow, error) {
+	rows, err := q.db.Query(ctx, createUserRoles, arg.UserID, arg.RoleIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CreateUserRolesRow
+	for rows.Next() {
+		var i CreateUserRolesRow
+		if err := rows.Scan(&i.UserID, &i.RoleID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const deleteRole = `-- name: DeleteRole :exec
+DELETE FROM roles WHERE id = $1
+`
+
+func (q *Queries) DeleteRole(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteRole, id)
+	return err
+}
+
+const findRoleById = `-- name: FindRoleById :one
+SELECT id, name, description FROM roles WHERE id = $1
+`
+
+type FindRoleByIdRow struct {
+	ID          uuid.UUID
+	Name        string
+	Description string
+}
+
+func (q *Queries) FindRoleById(ctx context.Context, id uuid.UUID) (FindRoleByIdRow, error) {
+	row := q.db.QueryRow(ctx, findRoleById, id)
+	var i FindRoleByIdRow
+	err := row.Scan(&i.ID, &i.Name, &i.Description)
+	return i, err
+}
+
 const findRoleByName = `-- name: FindRoleByName :one
 SELECT id, name FROM roles WHERE name = $1
 `
@@ -49,6 +146,95 @@ func (q *Queries) FindRoleByName(ctx context.Context, name string) (FindRoleByNa
 	var i FindRoleByNameRow
 	err := row.Scan(&i.ID, &i.Name)
 	return i, err
+}
+
+const findRoleDetailsById = `-- name: FindRoleDetailsById :one
+SELECT
+  r.id,
+  r.name,
+  r.description,
+  COALESCE(rp.permissions, ARRAY[]::uuid[]) AS permission_ids
+FROM roles r
+  LEFT JOIN (
+    SELECT
+      rp.role_id,
+      ARRAY_AGG(rp.permission_id) AS permissions
+    FROM role_permissions rp
+    GROUP BY rp.role_id
+  ) rp ON r.id = rp.role_id
+WHERE
+  r.id = $1
+`
+
+type FindRoleDetailsByIdRow struct {
+	ID            uuid.UUID
+	Name          string
+	Description   string
+	PermissionIds []uuid.UUID
+}
+
+func (q *Queries) FindRoleDetailsById(ctx context.Context, id uuid.UUID) (FindRoleDetailsByIdRow, error) {
+	row := q.db.QueryRow(ctx, findRoleDetailsById, id)
+	var i FindRoleDetailsByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.PermissionIds,
+	)
+	return i, err
+}
+
+const findRoles = `-- name: FindRoles :many
+WITH counter AS (
+  SELECT COUNT(*) AS total
+  FROM roles
+)
+SELECT
+  r.id,
+  r.name,
+  r.description,
+  counter.total
+FROM roles AS r
+RIGHT JOIN counter ON TRUE
+ORDER BY r.created_at DESC LIMIT $1 OFFSET $2
+`
+
+type FindRolesParams struct {
+	Limit  int32
+	Offset int32
+}
+
+type FindRolesRow struct {
+	ID          uuid.UUID
+	Name        pgtype.Text
+	Description pgtype.Text
+	Total       int64
+}
+
+func (q *Queries) FindRoles(ctx context.Context, arg FindRolesParams) ([]FindRolesRow, error) {
+	rows, err := q.db.Query(ctx, findRoles, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FindRolesRow
+	for rows.Next() {
+		var i FindRolesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Total,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const findUserRoles = `-- name: FindUserRoles :many
@@ -78,6 +264,36 @@ func (q *Queries) FindUserRoles(ctx context.Context, userID uuid.UUID) ([]FindUs
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateRole = `-- name: UpdateRole :one
+UPDATE roles
+SET
+  name = $2,
+  description = $3,
+  updated_at = NOW()
+WHERE id = $1
+RETURNING id, name, description
+`
+
+type UpdateRoleParams struct {
+	ID          uuid.UUID
+	Name        string
+	Description string
+	PermissionIDs []uuid.UUID
+}
+
+type UpdateRoleRow struct {
+	ID          uuid.UUID
+	Name        string
+	Description string
+}
+
+func (q *Queries) UpdateRole(ctx context.Context, arg UpdateRoleParams) (UpdateRoleRow, error) {
+	row := q.db.QueryRow(ctx, updateRole, arg.ID, arg.Name, arg.Description)
+	var i UpdateRoleRow
+	err := row.Scan(&i.ID, &i.Name, &i.Description)
+	return i, err
 }
 
 const upsertUserRoleByName = `-- name: UpsertUserRoleByName :one

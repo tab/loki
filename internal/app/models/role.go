@@ -12,6 +12,8 @@ type Role struct {
 	ID          uuid.UUID
 	Name        string
 	Description string
+
+	PermissionIDs []uuid.UUID
 }
 
 type RolePermission struct {

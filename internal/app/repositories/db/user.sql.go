@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -51,6 +52,15 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 	return i, err
 }
 
+const deleteUser = `-- name: DeleteUser :exec
+DELETE FROM users WHERE id = $1
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteUser, id)
+	return err
+}
+
 const findUserById = `-- name: FindUserById :one
 SELECT id, identity_number, personal_code, first_name, last_name FROM users WHERE id = $1
 `
@@ -91,6 +101,166 @@ type FindUserByIdentityNumberRow struct {
 func (q *Queries) FindUserByIdentityNumber(ctx context.Context, identityNumber string) (FindUserByIdentityNumberRow, error) {
 	row := q.db.QueryRow(ctx, findUserByIdentityNumber, identityNumber)
 	var i FindUserByIdentityNumberRow
+	err := row.Scan(
+		&i.ID,
+		&i.IdentityNumber,
+		&i.PersonalCode,
+		&i.FirstName,
+		&i.LastName,
+	)
+	return i, err
+}
+
+const findUserDetailsById = `-- name: FindUserDetailsById :one
+SELECT
+  u.id,
+  u.identity_number,
+  u.personal_code,
+  u.first_name,
+  u.last_name,
+  COALESCE(ur.roles, ARRAY[]::uuid[]) AS role_ids,
+  COALESCE(us.scopes, ARRAY[]::uuid[]) AS scope_ids
+FROM users u
+  LEFT JOIN (
+    SELECT
+      ur.user_id,
+      ARRAY_AGG(ur.role_id) AS roles
+    FROM user_roles ur
+    GROUP BY ur.user_id
+  ) ur ON u.id = ur.user_id
+  LEFT JOIN (
+    SELECT
+      us.user_id,
+      ARRAY_AGG(us.scope_id) AS scopes
+    FROM user_scopes us
+    GROUP BY us.user_id
+  ) us ON u.id = us.user_id
+WHERE
+  u.id = $1
+`
+
+type FindUserDetailsByIdRow struct {
+	ID             uuid.UUID
+	IdentityNumber string
+	PersonalCode   string
+	FirstName      string
+	LastName       string
+	RoleIds        []uuid.UUID
+	ScopeIds       []uuid.UUID
+}
+
+func (q *Queries) FindUserDetailsById(ctx context.Context, id uuid.UUID) (FindUserDetailsByIdRow, error) {
+	row := q.db.QueryRow(ctx, findUserDetailsById, id)
+	var i FindUserDetailsByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.IdentityNumber,
+		&i.PersonalCode,
+		&i.FirstName,
+		&i.LastName,
+		&i.RoleIds,
+		&i.ScopeIds,
+	)
+	return i, err
+}
+
+const findUsers = `-- name: FindUsers :many
+WITH counter AS (
+  SELECT COUNT(*) AS total
+  FROM users
+)
+SELECT
+  u.id,
+  u.identity_number,
+  u.personal_code,
+  u.first_name,
+  u.last_name,
+  counter.total
+FROM users AS u
+RIGHT JOIN counter ON TRUE
+ORDER BY u.created_at DESC LIMIT $1 OFFSET $2
+`
+
+type FindUsersParams struct {
+	Limit  int32
+	Offset int32
+}
+
+type FindUsersRow struct {
+	ID             uuid.UUID
+	IdentityNumber pgtype.Text
+	PersonalCode   pgtype.Text
+	FirstName      pgtype.Text
+	LastName       pgtype.Text
+	Total          int64
+}
+
+func (q *Queries) FindUsers(ctx context.Context, arg FindUsersParams) ([]FindUsersRow, error) {
+	rows, err := q.db.Query(ctx, findUsers, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FindUsersRow
+	for rows.Next() {
+		var i FindUsersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.IdentityNumber,
+			&i.PersonalCode,
+			&i.FirstName,
+			&i.LastName,
+			&i.Total,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateUser = `-- name: UpdateUser :one
+UPDATE users
+SET
+  identity_number = $2,
+  personal_code = $3,
+  first_name = $4,
+  last_name = $5,
+  updated_at = NOW()
+WHERE id = $1
+RETURNING id, identity_number, personal_code, first_name, last_name
+`
+
+type UpdateUserParams struct {
+	ID             uuid.UUID
+	IdentityNumber string
+	PersonalCode   string
+	FirstName      string
+	LastName       string
+	RoleIDs				[]uuid.UUID
+	ScopeIDs			[]uuid.UUID
+}
+
+type UpdateUserRow struct {
+	ID             uuid.UUID
+	IdentityNumber string
+	PersonalCode   string
+	FirstName      string
+	LastName       string
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error) {
+	row := q.db.QueryRow(ctx, updateUser,
+		arg.ID,
+		arg.IdentityNumber,
+		arg.PersonalCode,
+		arg.FirstName,
+		arg.LastName,
+	)
+	var i UpdateUserRow
 	err := row.Scan(
 		&i.ID,
 		&i.IdentityNumber,

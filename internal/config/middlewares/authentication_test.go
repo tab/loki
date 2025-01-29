@@ -25,7 +25,7 @@ func Test_AuthMiddleware_Authenticate(t *testing.T) {
 	jwtService := jwt.NewMockJwt(ctrl)
 	users := services.NewMockUsers(ctrl)
 	log := logger.NewLogger()
-	middleware := NewAuthMiddleware(jwtService, users, log)
+	middleware := NewAuthenticationMiddleware(jwtService, users, log)
 
 	identityNumber := "PNOEE-123456789"
 	id, err := uuid.NewRandom()

@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"loki/internal/app/controllers/backoffice"
 	"net/http"
 	"time"
 
@@ -23,6 +24,7 @@ var Module = fx.Options(
 	logger.Module,
 
 	controllers.Module,
+	backoffice.Module,
 	repositories.Module,
 	jwt.Module,
 	services.Module,

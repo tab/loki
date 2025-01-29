@@ -53,7 +53,7 @@ SET default_table_access_method = heap;
 CREATE TABLE public.permissions (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     name character varying(100) NOT NULL,
-    description text,
+    description text NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
@@ -68,8 +68,8 @@ ALTER TABLE public.permissions OWNER TO postgres;
 CREATE TABLE public.role_permissions (
     role_id uuid NOT NULL,
     permission_id uuid NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
@@ -82,7 +82,7 @@ ALTER TABLE public.role_permissions OWNER TO postgres;
 CREATE TABLE public.roles (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     name character varying(50) NOT NULL,
-    description text,
+    description text NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
@@ -97,7 +97,7 @@ ALTER TABLE public.roles OWNER TO postgres;
 CREATE TABLE public.scopes (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     name character varying(100) NOT NULL,
-    description text,
+    description text NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
@@ -115,8 +115,8 @@ CREATE TABLE public.tokens (
     type public.token_type NOT NULL,
     value text NOT NULL,
     expires_at timestamp without time zone NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
@@ -129,8 +129,8 @@ ALTER TABLE public.tokens OWNER TO postgres;
 CREATE TABLE public.user_roles (
     user_id uuid NOT NULL,
     role_id uuid NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
@@ -143,8 +143,8 @@ ALTER TABLE public.user_roles OWNER TO postgres;
 CREATE TABLE public.user_scopes (
     user_id uuid NOT NULL,
     scope_id uuid NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
@@ -160,8 +160,8 @@ CREATE TABLE public.users (
     personal_code character varying(20) NOT NULL,
     first_name character varying(50) NOT NULL,
     last_name character varying(50) NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     CONSTRAINT users_identity_number_not_empty CHECK ((length(TRIM(BOTH FROM identity_number)) > 10)),
     CONSTRAINT users_personal_code_not_empty CHECK ((length(TRIM(BOTH FROM personal_code)) > 10))
 );

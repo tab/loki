@@ -102,3 +102,99 @@ func (q *Queries) CreateTokens(ctx context.Context, arg CreateTokensParams) ([]C
 	}
 	return items, nil
 }
+
+const deleteToken = `-- name: DeleteToken :exec
+DELETE FROM tokens WHERE id = $1
+`
+
+func (q *Queries) DeleteToken(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteToken, id)
+	return err
+}
+
+const findTokenById = `-- name: FindTokenById :one
+SELECT id, user_id, type, value, expires_at FROM tokens WHERE id = $1
+`
+
+type FindTokenByIdRow struct {
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	Type      TokenType
+	Value     string
+	ExpiresAt pgtype.Timestamp
+}
+
+func (q *Queries) FindTokenById(ctx context.Context, id uuid.UUID) (FindTokenByIdRow, error) {
+	row := q.db.QueryRow(ctx, findTokenById, id)
+	var i FindTokenByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Type,
+		&i.Value,
+		&i.ExpiresAt,
+	)
+	return i, err
+}
+
+const findTokens = `-- name: FindTokens :many
+WITH counter AS (
+  SELECT COUNT(*) AS total
+  FROM tokens
+)
+SELECT
+  t.id,
+  t.user_id,
+  t.type,
+  t.value,
+  t.expires_at,
+  u.identity_number,
+  counter.total
+FROM tokens AS t
+  JOIN users AS u ON t.user_id = u.id
+  RIGHT JOIN counter ON TRUE
+ORDER BY t.created_at DESC LIMIT $1 OFFSET $2
+`
+
+type FindTokensParams struct {
+	Limit  int32
+	Offset int32
+}
+
+type FindTokensRow struct {
+	ID             uuid.UUID
+	UserID         uuid.UUID
+	Type           TokenType
+	Value          string
+	ExpiresAt      pgtype.Timestamp
+	IdentityNumber string
+	Total          int64
+}
+
+func (q *Queries) FindTokens(ctx context.Context, arg FindTokensParams) ([]FindTokensRow, error) {
+	rows, err := q.db.Query(ctx, findTokens, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FindTokensRow
+	for rows.Next() {
+		var i FindTokensRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Type,
+			&i.Value,
+			&i.ExpiresAt,
+			&i.IdentityNumber,
+			&i.Total,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

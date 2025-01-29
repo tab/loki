@@ -12,6 +12,7 @@ package repositories
 import (
 	context "context"
 	models "loki/internal/app/models"
+	db "loki/internal/app/repositories/db"
 	reflect "reflect"
 
 	uuid "github.com/google/uuid"
@@ -42,6 +43,51 @@ func (m *MockPermissionRepository) EXPECT() *MockPermissionRepositoryMockRecorde
 	return m.recorder
 }
 
+// Create mocks base method.
+func (m *MockPermissionRepository) Create(ctx context.Context, params db.CreatePermissionParams) (*models.Permission, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Create", ctx, params)
+	ret0, _ := ret[0].(*models.Permission)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create.
+func (mr *MockPermissionRepositoryMockRecorder) Create(ctx, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockPermissionRepository)(nil).Create), ctx, params)
+}
+
+// Delete mocks base method.
+func (m *MockPermissionRepository) Delete(ctx context.Context, id uuid.UUID) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", ctx, id)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockPermissionRepositoryMockRecorder) Delete(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockPermissionRepository)(nil).Delete), ctx, id)
+}
+
+// FindById mocks base method.
+func (m *MockPermissionRepository) FindById(ctx context.Context, id uuid.UUID) (*models.Permission, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindById", ctx, id)
+	ret0, _ := ret[0].(*models.Permission)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindById indicates an expected call of FindById.
+func (mr *MockPermissionRepositoryMockRecorder) FindById(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindById", reflect.TypeOf((*MockPermissionRepository)(nil).FindById), ctx, id)
+}
+
 // FindByUserId mocks base method.
 func (m *MockPermissionRepository) FindByUserId(ctx context.Context, id uuid.UUID) ([]models.Permission, error) {
 	m.ctrl.T.Helper()
@@ -55,4 +101,35 @@ func (m *MockPermissionRepository) FindByUserId(ctx context.Context, id uuid.UUI
 func (mr *MockPermissionRepositoryMockRecorder) FindByUserId(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByUserId", reflect.TypeOf((*MockPermissionRepository)(nil).FindByUserId), ctx, id)
+}
+
+// List mocks base method.
+func (m *MockPermissionRepository) List(ctx context.Context, limit, offset int32) ([]models.Permission, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "List", ctx, limit, offset)
+	ret0, _ := ret[0].([]models.Permission)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// List indicates an expected call of List.
+func (mr *MockPermissionRepositoryMockRecorder) List(ctx, limit, offset any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockPermissionRepository)(nil).List), ctx, limit, offset)
+}
+
+// Update mocks base method.
+func (m *MockPermissionRepository) Update(ctx context.Context, params db.UpdatePermissionParams) (*models.Permission, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", ctx, params)
+	ret0, _ := ret[0].(*models.Permission)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockPermissionRepositoryMockRecorder) Update(ctx, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockPermissionRepository)(nil).Update), ctx, params)
 }
