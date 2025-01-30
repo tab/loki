@@ -49,7 +49,8 @@ func parseQueryParam(r *http.Request, key string, defaultValue int32) int32 {
 		return defaultValue
 	}
 
-	return int32(value)
+	// NOTE: Safe to convert because ParseInt with bitSize 32 ensures the value fits in int32
+	return int32(value) // #nosec G115
 }
 
 func (p *Pagination) Limit() int32 {
