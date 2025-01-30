@@ -8,6 +8,7 @@ import (
 	"go.uber.org/fx"
 
 	"loki/internal/app/controllers"
+	"loki/internal/app/controllers/backoffice"
 	"loki/internal/app/repositories"
 	"loki/internal/app/services"
 	"loki/internal/config"
@@ -23,6 +24,7 @@ var Module = fx.Options(
 	logger.Module,
 
 	controllers.Module,
+	backoffice.Module,
 	repositories.Module,
 	jwt.Module,
 	services.Module,

@@ -57,7 +57,7 @@ func (ns NullTokenType) Value() (driver.Value, error) {
 type Permission struct {
 	ID          uuid.UUID
 	Name        string
-	Description pgtype.Text
+	Description string
 	CreatedAt   pgtype.Timestamp
 	UpdatedAt   pgtype.Timestamp
 }
@@ -65,7 +65,7 @@ type Permission struct {
 type Role struct {
 	ID          uuid.UUID
 	Name        string
-	Description pgtype.Text
+	Description string
 	CreatedAt   pgtype.Timestamp
 	UpdatedAt   pgtype.Timestamp
 }
@@ -80,7 +80,7 @@ type RolePermission struct {
 type Scope struct {
 	ID          uuid.UUID
 	Name        string
-	Description pgtype.Text
+	Description string
 	CreatedAt   pgtype.Timestamp
 	UpdatedAt   pgtype.Timestamp
 }

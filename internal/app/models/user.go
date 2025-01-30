@@ -8,6 +8,10 @@ type User struct {
 	PersonalCode   string
 	FirstName      string
 	LastName       string
-	AccessToken    string
-	RefreshToken   string
+
+	AccessToken  string
+	RefreshToken string
+
+	RoleIDs  []uuid.UUID
+	ScopeIDs []uuid.UUID
 }

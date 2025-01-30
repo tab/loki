@@ -14,6 +14,93 @@ import (
 	"loki/pkg/logger"
 )
 
+func Test_Users_List(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	ctx := context.Background()
+	repository := repositories.NewMockUserRepository(ctrl)
+	log := logger.NewLogger()
+	service := NewUsers(repository, log)
+
+	tests := []struct {
+		name     string
+		before   func()
+		expected []models.User
+		total    int
+		error    error
+	}{
+		{
+			name: "Success",
+			before: func() {
+				repository.EXPECT().List(ctx, int32(10), int32(0)).Return([]models.User{
+					{
+						ID:             uuid.MustParse("10000000-1000-1000-1000-000000000001"),
+						IdentityNumber: "PNOEE-123456789",
+						PersonalCode:   "123456789",
+						FirstName:      "John",
+						LastName:       "Doe",
+					},
+					{
+						ID:             uuid.MustParse("10000000-1000-1000-1000-000000000002"),
+						IdentityNumber: "PNOEE-987654321",
+						PersonalCode:   "987654321",
+						FirstName:      "Jane",
+						LastName:       "Doe",
+					},
+				}, 2, nil)
+			},
+			expected: []models.User{
+				{
+					ID:             uuid.MustParse("10000000-1000-1000-1000-000000000001"),
+					IdentityNumber: "PNOEE-123456789",
+					PersonalCode:   "123456789",
+					FirstName:      "John",
+					LastName:       "Doe",
+				},
+				{
+					ID:             uuid.MustParse("10000000-1000-1000-1000-000000000002"),
+					IdentityNumber: "PNOEE-987654321",
+					PersonalCode:   "987654321",
+					FirstName:      "Jane",
+					LastName:       "Doe",
+				},
+			},
+			total: 2,
+		},
+		{
+			name: "Error",
+			before: func() {
+				repository.EXPECT().List(ctx, int32(10), int32(0)).Return(nil, 0, assert.AnError)
+			},
+			expected: nil,
+			total:    0,
+			error:    assert.AnError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.before()
+
+			result, total, err := service.List(ctx, &Pagination{
+				Page:    int32(1),
+				PerPage: int32(10),
+			})
+
+			if tt.error != nil {
+				assert.Error(t, err)
+				assert.Nil(t, result)
+				assert.Zero(t, total)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected, result)
+				assert.Equal(t, tt.total, total)
+			}
+		})
+	}
+}
+
 func Test_Users_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -97,6 +184,92 @@ func Test_Users_Create(t *testing.T) {
 	}
 }
 
+func Test_Users_Update(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	ctx := context.Background()
+	repository := repositories.NewMockUserRepository(ctrl)
+	log := logger.NewLogger()
+	service := NewUsers(repository, log)
+
+	id, err := uuid.NewRandom()
+	assert.NoError(t, err)
+
+	tests := []struct {
+		name     string
+		before   func()
+		expected *models.User
+		error    error
+	}{
+		{
+			name: "Success",
+			before: func() {
+				repository.EXPECT().Update(ctx, db.UpdateUserParams{
+					ID:             id,
+					IdentityNumber: "PNOEE-123456789",
+					PersonalCode:   "123456789",
+					FirstName:      "John",
+					LastName:       "Doe",
+				}).Return(&models.User{
+					ID:             id,
+					IdentityNumber: "PNOEE-123456789",
+					PersonalCode:   "123456789",
+					FirstName:      "John",
+					LastName:       "Doe",
+					AccessToken:    "access-token",
+					RefreshToken:   "refresh-token",
+				}, nil)
+			},
+			expected: &models.User{
+				ID:             id,
+				IdentityNumber: "PNOEE-123456789",
+				PersonalCode:   "123456789",
+				FirstName:      "John",
+				LastName:       "Doe",
+				AccessToken:    "access-token",
+				RefreshToken:   "refresh-token",
+			},
+		},
+		{
+			name: "Error",
+			before: func() {
+				repository.EXPECT().Update(ctx, db.UpdateUserParams{
+					ID:             id,
+					IdentityNumber: "PNOEE-123456789",
+					PersonalCode:   "123456789",
+					FirstName:      "John",
+					LastName:       "Doe",
+				}).Return(nil, assert.AnError)
+			},
+			expected: nil,
+			error:    assert.AnError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.before()
+
+			result, err := service.Update(ctx, &models.User{
+				ID:             id,
+				IdentityNumber: "PNOEE-123456789",
+				PersonalCode:   "123456789",
+				FirstName:      "John",
+				LastName:       "Doe",
+			})
+
+			if tt.error != nil {
+				assert.Error(t, err)
+				assert.Nil(t, result)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected, result)
+			}
+		})
+	}
+}
+
 func Test_Users_FindById(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -161,6 +334,58 @@ func Test_Users_FindById(t *testing.T) {
 	}
 }
 
+func Test_Users_Delete(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	ctx := context.Background()
+	repository := repositories.NewMockUserRepository(ctrl)
+	log := logger.NewLogger()
+	service := NewUsers(repository, log)
+
+	id, err := uuid.NewRandom()
+	assert.NoError(t, err)
+
+	tests := []struct {
+		name     string
+		before   func()
+		expected bool
+		error    error
+	}{
+		{
+			name: "Success",
+			before: func() {
+				repository.EXPECT().Delete(ctx, id).Return(true, nil)
+			},
+			expected: true,
+		},
+		{
+			name: "Error",
+			before: func() {
+				repository.EXPECT().Delete(ctx, id).Return(false, assert.AnError)
+			},
+			expected: false,
+			error:    assert.AnError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.before()
+
+			result, err := service.Delete(ctx, id)
+
+			if tt.error != nil {
+				assert.Error(t, err)
+				assert.False(t, result)
+			} else {
+				assert.NoError(t, err)
+				assert.True(t, result)
+			}
+		})
+	}
+}
+
 func Test_Users_FindByIdentityNumber(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -215,6 +440,102 @@ func Test_Users_FindByIdentityNumber(t *testing.T) {
 			tt.before()
 
 			result, err := service.FindByIdentityNumber(ctx, identityNumber)
+
+			if tt.error != nil {
+				assert.Error(t, err)
+				assert.Nil(t, result)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected, result)
+			}
+		})
+	}
+}
+
+func Test_Users_FindUserDetailsById(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	ctx := context.Background()
+	repository := repositories.NewMockUserRepository(ctrl)
+	log := logger.NewLogger()
+	service := NewUsers(repository, log)
+
+	id, err := uuid.NewRandom()
+	assert.NoError(t, err)
+
+	tests := []struct {
+		name     string
+		before   func()
+		expected *models.User
+		error    error
+	}{
+		{
+			name: "Success",
+			before: func() {
+				repository.EXPECT().FindUserDetailsById(ctx, id).Return(&models.User{
+					ID:             id,
+					IdentityNumber: "PNOEE-123456789",
+					PersonalCode:   "123456789",
+					FirstName:      "John",
+					LastName:       "Doe",
+					RoleIDs: []uuid.UUID{
+						uuid.MustParse("10000000-1000-1000-1000-000000000003"),
+					},
+					ScopeIDs: []uuid.UUID{
+						uuid.MustParse("10000000-1000-1000-2000-000000000002"),
+					},
+				}, nil)
+			},
+			expected: &models.User{
+				ID:             id,
+				IdentityNumber: "PNOEE-123456789",
+				PersonalCode:   "123456789",
+				FirstName:      "John",
+				LastName:       "Doe",
+				RoleIDs: []uuid.UUID{
+					uuid.MustParse("10000000-1000-1000-1000-000000000003"),
+				},
+				ScopeIDs: []uuid.UUID{
+					uuid.MustParse("10000000-1000-1000-2000-000000000002"),
+				},
+			},
+		},
+		{
+			name: "Without Roles and Scopes",
+			before: func() {
+				repository.EXPECT().FindUserDetailsById(ctx, id).Return(&models.User{
+					ID:             id,
+					IdentityNumber: "PNOEE-123456789",
+					PersonalCode:   "123456789",
+					FirstName:      "John",
+					LastName:       "Doe",
+				}, nil)
+			},
+			expected: &models.User{
+				ID:             id,
+				IdentityNumber: "PNOEE-123456789",
+				PersonalCode:   "123456789",
+				FirstName:      "John",
+				LastName:       "Doe",
+			},
+			error: nil,
+		},
+		{
+			name: "Error",
+			before: func() {
+				repository.EXPECT().FindUserDetailsById(ctx, id).Return(nil, assert.AnError)
+			},
+			expected: nil,
+			error:    assert.AnError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.before()
+
+			result, err := service.FindUserDetailsById(ctx, id)
 
 			if tt.error != nil {
 				assert.Error(t, err)

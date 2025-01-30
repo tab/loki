@@ -57,6 +57,21 @@ func (mr *MockUsersMockRecorder) Create(ctx, params any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockUsers)(nil).Create), ctx, params)
 }
 
+// Delete mocks base method.
+func (m *MockUsers) Delete(ctx context.Context, id uuid.UUID) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", ctx, id)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockUsersMockRecorder) Delete(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockUsers)(nil).Delete), ctx, id)
+}
+
 // FindById mocks base method.
 func (m *MockUsers) FindById(ctx context.Context, id uuid.UUID) (*models.User, error) {
 	m.ctrl.T.Helper()
@@ -85,4 +100,50 @@ func (m *MockUsers) FindByIdentityNumber(ctx context.Context, identityNumber str
 func (mr *MockUsersMockRecorder) FindByIdentityNumber(ctx, identityNumber any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByIdentityNumber", reflect.TypeOf((*MockUsers)(nil).FindByIdentityNumber), ctx, identityNumber)
+}
+
+// FindUserDetailsById mocks base method.
+func (m *MockUsers) FindUserDetailsById(ctx context.Context, id uuid.UUID) (*models.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindUserDetailsById", ctx, id)
+	ret0, _ := ret[0].(*models.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindUserDetailsById indicates an expected call of FindUserDetailsById.
+func (mr *MockUsersMockRecorder) FindUserDetailsById(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserDetailsById", reflect.TypeOf((*MockUsers)(nil).FindUserDetailsById), ctx, id)
+}
+
+// List mocks base method.
+func (m *MockUsers) List(ctx context.Context, pagination *Pagination) ([]models.User, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "List", ctx, pagination)
+	ret0, _ := ret[0].([]models.User)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// List indicates an expected call of List.
+func (mr *MockUsersMockRecorder) List(ctx, pagination any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockUsers)(nil).List), ctx, pagination)
+}
+
+// Update mocks base method.
+func (m *MockUsers) Update(ctx context.Context, params *models.User) (*models.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", ctx, params)
+	ret0, _ := ret[0].(*models.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockUsersMockRecorder) Update(ctx, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockUsers)(nil).Update), ctx, params)
 }

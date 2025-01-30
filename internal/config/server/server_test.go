@@ -10,6 +10,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"loki/internal/app/controllers"
+	"loki/internal/app/controllers/backoffice"
 	"loki/internal/config"
 	"loki/internal/config/middlewares"
 	"loki/internal/config/router"
@@ -24,19 +25,41 @@ func Test_NewServer(t *testing.T) {
 		AppAddr: "localhost:8080",
 	}
 
-	mockAuthMiddleware := middlewares.NewMockAuthMiddleware(ctrl)
+	mockAuthenticationMiddleware := middlewares.NewMockAuthenticationMiddleware(ctrl)
+	mockAuthorizationMiddleware := middlewares.NewMockAuthorizationMiddleware(ctrl)
 	mockTelemetryMiddleware := middlewares.NewMockTelemetryMiddleware(ctrl)
+
 	mockSmartIdController := controllers.NewMockSmartIdController(ctrl)
 	mockMobileIdController := controllers.NewMockMobileIdController(ctrl)
 	mockSessionsController := controllers.NewMockSessionsController(ctrl)
 	mockTokensController := controllers.NewMockTokensController(ctrl)
 	mockUsersController := controllers.NewMockUsersController(ctrl)
 
-	mockAuthMiddleware.EXPECT().
+	mockBackofficePermissionsController := backoffice.NewMockBackofficePermissionsController(ctrl)
+	mockBackofficeRolesController := backoffice.NewMockBackofficeRolesController(ctrl)
+	mockBackofficeScopesController := backoffice.NewMockBackofficeScopesController(ctrl)
+	mockBackofficeTokensController := backoffice.NewMockBackofficeTokensController(ctrl)
+	mockBackofficeUsersController := backoffice.NewMockBackofficeUsersController(ctrl)
+
+	mockAuthenticationMiddleware.EXPECT().
 		Authenticate(gomock.Any()).
 		AnyTimes().
 		DoAndReturn(func(next http.Handler) http.Handler {
 			return next
+		})
+	mockAuthorizationMiddleware.EXPECT().
+		Authorize(gomock.Any()).
+		AnyTimes().
+		DoAndReturn(func(next http.Handler) http.Handler {
+			return next
+		})
+	mockAuthorizationMiddleware.EXPECT().
+		Check(gomock.Any()).
+		AnyTimes().
+		DoAndReturn(func(permission string) func(http.Handler) http.Handler {
+			return func(next http.Handler) http.Handler {
+				return next
+			}
 		})
 	mockTelemetryMiddleware.EXPECT().
 		Trace(gomock.Any()).
@@ -47,13 +70,19 @@ func Test_NewServer(t *testing.T) {
 
 	appRouter := router.NewRouter(
 		cfg,
-		mockAuthMiddleware,
+		mockAuthenticationMiddleware,
+		mockAuthorizationMiddleware,
 		mockTelemetryMiddleware,
 		mockSmartIdController,
 		mockMobileIdController,
 		mockSessionsController,
 		mockTokensController,
 		mockUsersController,
+		mockBackofficePermissionsController,
+		mockBackofficeRolesController,
+		mockBackofficeScopesController,
+		mockBackofficeTokensController,
+		mockBackofficeUsersController,
 	)
 
 	srv := NewServer(cfg, appRouter)

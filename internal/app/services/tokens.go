@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"loki/internal/app/errors"
 	"loki/internal/app/models"
 	"loki/internal/app/repositories"
 	"loki/internal/app/repositories/db"
@@ -13,8 +14,11 @@ import (
 )
 
 type Tokens interface {
+	List(ctx context.Context, pagination *Pagination) ([]models.Token, int, error)
 	Create(ctx context.Context, userId uuid.UUID) (*models.User, error)
 	Update(ctx context.Context, refreshToken string) (*models.User, error)
+	FindById(ctx context.Context, id uuid.UUID) (*models.Token, error)
+	Delete(ctx context.Context, id uuid.UUID) (bool, error)
 }
 
 type tokens struct {
@@ -45,6 +49,16 @@ func NewTokens(
 		user:       user,
 		log:        log,
 	}
+}
+
+func (t *tokens) List(ctx context.Context, pagination *Pagination) ([]models.Token, int, error) {
+	collection, total, err := t.token.List(ctx, pagination.Limit(), pagination.Offset())
+
+	if err != nil {
+		return nil, 0, errors.ErrFailedToFetchResults
+	}
+
+	return collection, total, err
 }
 
 func (t *tokens) Create(ctx context.Context, userId uuid.UUID) (*models.User, error) {
@@ -153,4 +167,22 @@ func (t *tokens) generate(ctx context.Context, user *models.User) (string, strin
 	}
 
 	return accessToken, refreshToken, nil
+}
+
+func (t *tokens) FindById(ctx context.Context, id uuid.UUID) (*models.Token, error) {
+	token, err := t.token.FindById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return token, nil
+}
+
+func (t *tokens) Delete(ctx context.Context, id uuid.UUID) (bool, error) {
+	ok, err := t.token.Delete(ctx, id)
+	if err != nil {
+		return false, err
+	}
+
+	return ok, nil
 }

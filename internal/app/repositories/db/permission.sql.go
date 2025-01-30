@@ -9,7 +9,156 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
+
+const createPermission = `-- name: CreatePermission :one
+INSERT INTO permissions (name, description)
+VALUES ($1, $2)
+RETURNING id, name, description
+`
+
+type CreatePermissionParams struct {
+	Name        string
+	Description string
+}
+
+type CreatePermissionRow struct {
+	ID          uuid.UUID
+	Name        string
+	Description string
+}
+
+func (q *Queries) CreatePermission(ctx context.Context, arg CreatePermissionParams) (CreatePermissionRow, error) {
+	row := q.db.QueryRow(ctx, createPermission, arg.Name, arg.Description)
+	var i CreatePermissionRow
+	err := row.Scan(&i.ID, &i.Name, &i.Description)
+	return i, err
+}
+
+const createRolePermissions = `-- name: CreateRolePermissions :many
+WITH
+  deleted AS (
+    DELETE FROM role_permissions
+    WHERE role_id = $1::uuid AND permission_id NOT IN (SELECT unnest($2::uuid[]))
+  ),
+  inserted AS (
+    INSERT INTO role_permissions (role_id, permission_id)
+    SELECT $1::uuid, permission_id
+    FROM unnest($2::uuid[]) AS permission_id
+    ON CONFLICT (role_id, permission_id) DO NOTHING
+      RETURNING role_id, permission_id
+  )
+SELECT role_id, permission_id FROM inserted
+`
+
+type CreateRolePermissionsParams struct {
+	RoleID        uuid.UUID
+	PermissionIds []uuid.UUID
+}
+
+type CreateRolePermissionsRow struct {
+	RoleID       uuid.UUID
+	PermissionID uuid.UUID
+}
+
+func (q *Queries) CreateRolePermissions(ctx context.Context, arg CreateRolePermissionsParams) ([]CreateRolePermissionsRow, error) {
+	rows, err := q.db.Query(ctx, createRolePermissions, arg.RoleID, arg.PermissionIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CreateRolePermissionsRow
+	for rows.Next() {
+		var i CreateRolePermissionsRow
+		if err := rows.Scan(&i.RoleID, &i.PermissionID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const deletePermission = `-- name: DeletePermission :exec
+DELETE FROM permissions WHERE id = $1
+`
+
+func (q *Queries) DeletePermission(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deletePermission, id)
+	return err
+}
+
+const findPermissionById = `-- name: FindPermissionById :one
+SELECT id, name, description FROM permissions WHERE id = $1
+`
+
+type FindPermissionByIdRow struct {
+	ID          uuid.UUID
+	Name        string
+	Description string
+}
+
+func (q *Queries) FindPermissionById(ctx context.Context, id uuid.UUID) (FindPermissionByIdRow, error) {
+	row := q.db.QueryRow(ctx, findPermissionById, id)
+	var i FindPermissionByIdRow
+	err := row.Scan(&i.ID, &i.Name, &i.Description)
+	return i, err
+}
+
+const findPermissions = `-- name: FindPermissions :many
+WITH counter AS (
+  SELECT COUNT(*) AS total
+  FROM permissions
+)
+SELECT
+  p.id,
+  p.name,
+  p.description,
+  counter.total
+FROM permissions AS p
+RIGHT JOIN counter ON TRUE
+ORDER BY p.created_at DESC LIMIT $1 OFFSET $2
+`
+
+type FindPermissionsParams struct {
+	Limit  int32
+	Offset int32
+}
+
+type FindPermissionsRow struct {
+	ID          uuid.UUID
+	Name        pgtype.Text
+	Description pgtype.Text
+	Total       int64
+}
+
+func (q *Queries) FindPermissions(ctx context.Context, arg FindPermissionsParams) ([]FindPermissionsRow, error) {
+	rows, err := q.db.Query(ctx, findPermissions, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FindPermissionsRow
+	for rows.Next() {
+		var i FindPermissionsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Total,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
 
 const findUserPermissions = `-- name: FindUserPermissions :many
 SELECT id, name FROM permissions WHERE id IN (
@@ -40,4 +189,33 @@ func (q *Queries) FindUserPermissions(ctx context.Context, userID uuid.UUID) ([]
 		return nil, err
 	}
 	return items, nil
+}
+
+const updatePermission = `-- name: UpdatePermission :one
+UPDATE permissions
+SET
+  name = $2,
+  description = $3,
+  updated_at = NOW()
+WHERE id = $1
+RETURNING id, name, description
+`
+
+type UpdatePermissionParams struct {
+	ID          uuid.UUID
+	Name        string
+	Description string
+}
+
+type UpdatePermissionRow struct {
+	ID          uuid.UUID
+	Name        string
+	Description string
+}
+
+func (q *Queries) UpdatePermission(ctx context.Context, arg UpdatePermissionParams) (UpdatePermissionRow, error) {
+	row := q.db.QueryRow(ctx, updatePermission, arg.ID, arg.Name, arg.Description)
+	var i UpdatePermissionRow
+	err := row.Scan(&i.ID, &i.Name, &i.Description)
+	return i, err
 }

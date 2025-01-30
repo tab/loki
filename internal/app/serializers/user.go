@@ -8,6 +8,10 @@ type UserSerializer struct {
 	PersonalCode   string    `json:"personal_code"`
 	FirstName      string    `json:"first_name"`
 	LastName       string    `json:"last_name"`
-	AccessToken    string    `json:"access_token,omitempty"`
-	RefreshToken   string    `json:"refresh_token,omitempty"`
+
+	AccessToken  string `json:"access_token,omitempty"`
+	RefreshToken string `json:"refresh_token,omitempty"`
+
+	RoleIDs  []uuid.UUID `json:"role_ids,omitempty"`
+	ScopeIDs []uuid.UUID `json:"scope_ids,omitempty"`
 }

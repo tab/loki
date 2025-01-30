@@ -9,7 +9,32 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
+
+const createScope = `-- name: CreateScope :one
+INSERT INTO scopes (name, description)
+VALUES ($1, $2)
+  RETURNING id, name, description
+`
+
+type CreateScopeParams struct {
+	Name        string
+	Description string
+}
+
+type CreateScopeRow struct {
+	ID          uuid.UUID
+	Name        string
+	Description string
+}
+
+func (q *Queries) CreateScope(ctx context.Context, arg CreateScopeParams) (CreateScopeRow, error) {
+	row := q.db.QueryRow(ctx, createScope, arg.Name, arg.Description)
+	var i CreateScopeRow
+	err := row.Scan(&i.ID, &i.Name, &i.Description)
+	return i, err
+}
 
 const createUserScope = `-- name: CreateUserScope :one
 INSERT INTO user_scopes (user_id, scope_id)
@@ -35,6 +60,78 @@ func (q *Queries) CreateUserScope(ctx context.Context, arg CreateUserScopeParams
 	return i, err
 }
 
+const createUserScopes = `-- name: CreateUserScopes :many
+WITH
+  deleted AS (
+    DELETE FROM user_scopes
+    WHERE user_id = $1::uuid AND scope_id NOT IN (SELECT unnest($2::uuid[]))
+  ),
+  inserted AS (
+    INSERT INTO user_scopes (user_id, scope_id)
+    SELECT $1::uuid, scope_id
+    FROM unnest($2::uuid[]) AS scope_id
+    ON CONFLICT (user_id, scope_id) DO NOTHING
+      RETURNING user_id, scope_id
+  )
+SELECT user_id, scope_id FROM inserted
+`
+
+type CreateUserScopesParams struct {
+	UserID   uuid.UUID
+	ScopeIds []uuid.UUID
+}
+
+type CreateUserScopesRow struct {
+	UserID  uuid.UUID
+	ScopeID uuid.UUID
+}
+
+func (q *Queries) CreateUserScopes(ctx context.Context, arg CreateUserScopesParams) ([]CreateUserScopesRow, error) {
+	rows, err := q.db.Query(ctx, createUserScopes, arg.UserID, arg.ScopeIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CreateUserScopesRow
+	for rows.Next() {
+		var i CreateUserScopesRow
+		if err := rows.Scan(&i.UserID, &i.ScopeID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const deleteScope = `-- name: DeleteScope :exec
+DELETE FROM scopes WHERE id = $1
+`
+
+func (q *Queries) DeleteScope(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteScope, id)
+	return err
+}
+
+const findScopeById = `-- name: FindScopeById :one
+SELECT id, name, description FROM scopes WHERE id = $1
+`
+
+type FindScopeByIdRow struct {
+	ID          uuid.UUID
+	Name        string
+	Description string
+}
+
+func (q *Queries) FindScopeById(ctx context.Context, id uuid.UUID) (FindScopeByIdRow, error) {
+	row := q.db.QueryRow(ctx, findScopeById, id)
+	var i FindScopeByIdRow
+	err := row.Scan(&i.ID, &i.Name, &i.Description)
+	return i, err
+}
+
 const findScopeByName = `-- name: FindScopeByName :one
 SELECT id, name FROM scopes WHERE name = $1
 `
@@ -49,6 +146,58 @@ func (q *Queries) FindScopeByName(ctx context.Context, name string) (FindScopeBy
 	var i FindScopeByNameRow
 	err := row.Scan(&i.ID, &i.Name)
 	return i, err
+}
+
+const findScopes = `-- name: FindScopes :many
+WITH counter AS (
+  SELECT COUNT(*) AS total
+  FROM scopes
+)
+SELECT
+  s.id,
+  s.name,
+  s.description,
+  counter.total
+FROM scopes AS s
+RIGHT JOIN counter ON TRUE
+ORDER BY s.created_at DESC LIMIT $1 OFFSET $2
+`
+
+type FindScopesParams struct {
+	Limit  int32
+	Offset int32
+}
+
+type FindScopesRow struct {
+	ID          uuid.UUID
+	Name        pgtype.Text
+	Description pgtype.Text
+	Total       int64
+}
+
+func (q *Queries) FindScopes(ctx context.Context, arg FindScopesParams) ([]FindScopesRow, error) {
+	rows, err := q.db.Query(ctx, findScopes, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FindScopesRow
+	for rows.Next() {
+		var i FindScopesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Total,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const findUserScopes = `-- name: FindUserScopes :many
@@ -78,6 +227,35 @@ func (q *Queries) FindUserScopes(ctx context.Context, userID uuid.UUID) ([]FindU
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateScope = `-- name: UpdateScope :one
+UPDATE scopes
+SET
+  name = $2,
+  description = $3,
+  updated_at = NOW()
+WHERE id = $1
+RETURNING id, name, description
+`
+
+type UpdateScopeParams struct {
+	ID          uuid.UUID
+	Name        string
+	Description string
+}
+
+type UpdateScopeRow struct {
+	ID          uuid.UUID
+	Name        string
+	Description string
+}
+
+func (q *Queries) UpdateScope(ctx context.Context, arg UpdateScopeParams) (UpdateScopeRow, error) {
+	row := q.db.QueryRow(ctx, updateScope, arg.ID, arg.Name, arg.Description)
+	var i UpdateScopeRow
+	err := row.Scan(&i.ID, &i.Name, &i.Description)
+	return i, err
 }
 
 const upsertUserScopeByName = `-- name: UpsertUserScopeByName :one

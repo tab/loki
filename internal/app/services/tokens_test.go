@@ -15,6 +15,78 @@ import (
 	"loki/pkg/logger"
 )
 
+func Test_Tokens_List(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	ctx := context.Background()
+	permissionRepository := repositories.NewMockPermissionRepository(ctrl)
+	roleRepository := repositories.NewMockRoleRepository(ctrl)
+	scopeRepository := repositories.NewMockScopeRepository(ctrl)
+	tokenRepository := repositories.NewMockTokenRepository(ctrl)
+	userRepository := repositories.NewMockUserRepository(ctrl)
+
+	jwtService := jwt.NewMockJwt(ctrl)
+	log := logger.NewLogger()
+	service := NewTokens(
+		jwtService,
+		permissionRepository,
+		roleRepository,
+		scopeRepository,
+		tokenRepository,
+		userRepository,
+		log,
+	)
+
+	tests := []struct {
+		name     string
+		before   func()
+		expected []models.Token
+		total    int
+		error    error
+	}{
+		{
+			name: "Success",
+			before: func() {
+				tokenRepository.EXPECT().List(ctx, int32(10), int32(0)).Return([]models.Token{}, 0, nil)
+			},
+			expected: []models.Token{},
+			total:    0,
+			error:    nil,
+		},
+		{
+			name: "Failed to fetch results",
+			before: func() {
+				tokenRepository.EXPECT().List(ctx, int32(10), int32(0)).Return(nil, 0, assert.AnError)
+			},
+			expected: nil,
+			total:    0,
+			error:    errors.ErrFailedToFetchResults,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.before()
+
+			result, total, err := service.List(ctx, &Pagination{
+				Page:    int32(1),
+				PerPage: int32(10),
+			})
+
+			if tt.error != nil {
+				assert.Error(t, err)
+				assert.Nil(t, result)
+				assert.Zero(t, total)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected, result)
+				assert.Equal(t, tt.total, total)
+			}
+		})
+	}
+}
+
 func Test_Tokens_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

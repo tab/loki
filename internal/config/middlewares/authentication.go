@@ -16,28 +16,29 @@ import (
 const bearerScheme = "Bearer "
 
 type CurrentUser struct{}
+type Claim struct{}
 
-type AuthMiddleware interface {
+type AuthenticationMiddleware interface {
 	Authenticate(next http.Handler) http.Handler
 }
 
-type authMiddleware struct {
+type authenticationMiddleware struct {
 	jwt   jwt.Jwt
 	users services.Users
 	log   *logger.Logger
 }
 
-func NewAuthMiddleware(jwt jwt.Jwt, users services.Users, log *logger.Logger) AuthMiddleware {
-	return &authMiddleware{
+func NewAuthenticationMiddleware(jwt jwt.Jwt, users services.Users, log *logger.Logger) AuthenticationMiddleware {
+	return &authenticationMiddleware{
 		jwt:   jwt,
 		users: users,
 		log:   log,
 	}
 }
 
-func (m *authMiddleware) Authenticate(next http.Handler) http.Handler {
+func (m *authenticationMiddleware) Authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token, ok := parseBearerToken(r)
+		token, ok := extractBearerToken(r)
 		if !ok {
 			m.log.Error().Msg("Invalid authorization header")
 			w.WriteHeader(http.StatusUnauthorized)
@@ -60,7 +61,7 @@ func (m *authMiddleware) Authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), CurrentUser{}, user)
+		ctx := withCurrentUser(r.Context(), user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -75,7 +76,17 @@ func CurrentUserFromContext(ctx context.Context) (*models.User, bool) {
 	return user, ok
 }
 
-func parseBearerToken(r *http.Request) (string, bool) {
+func CurrentClaimFromContext(ctx context.Context) (*jwt.Payload, bool) {
+	c, ok := ctx.Value(Claim{}).(*jwt.Payload)
+	return c, ok
+}
+
+func withCurrentUser(ctx context.Context, user *models.User) context.Context {
+	ctx = context.WithValue(ctx, CurrentUser{}, user)
+	return ctx
+}
+
+func extractBearerToken(r *http.Request) (string, bool) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		return "", false
