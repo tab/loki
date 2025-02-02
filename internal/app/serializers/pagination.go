@@ -6,7 +6,7 @@ type PaginationMeta struct {
 	Total int `json:"total"`
 }
 
-type PaginationResponse[T any] struct {
+type PaginationResponse[T interface{}] struct {
 	Data []T            `json:"data"`
 	Meta PaginationMeta `json:"meta"`
 }
