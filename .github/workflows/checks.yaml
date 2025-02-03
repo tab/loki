@@ -9,33 +9,8 @@ concurrency:
   group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
   cancel-in-progress: true
 jobs:
-#  analyzer:
-#    name: Code analyzer
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v4
-#      - uses: actions/setup-go@v5
-#        with:
-#          go-version: '1.23'
-#      - name: Download statictest binary
-#        uses: robinraju/release-downloader@v1.11
-#        with:
-#          repository: Yandex-Practicum/go-autotests
-#          latest: true
-#          fileName: statictest
-#          out-file-path: .tools
-#          token: ${{ secrets.GITHUB_TOKEN }}
-#      - name: Setup autotest binary
-#        run: |
-#          chmod -R +x $GITHUB_WORKSPACE/.tools/statictest
-#          mv $GITHUB_WORKSPACE/.tools/statictest /usr/local/bin/statictest
-#      - name: Run statictest
-#        run: |
-#          go vet -vettool=$(which statictest) ./...
-
   linter:
     name: Golang CI
-    # needs: analyzer
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -43,9 +18,22 @@ jobs:
         with:
           go-version: '1.23'
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        # NOTE: https://github.com/golangci/golangci-lint-action/releases/tag/v6.2.0
+        uses: golangci/golangci-lint-action@ec5d18412c0aeab7936cb16880d708ba2a64e1ae
         with:
           version: v1.60
+
+  static-check:
+    name: Static check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.1'
+      - name: Run static check
+        # NOTE: https://github.com/dominikh/staticcheck-action/releases/tag/v1.3.1
+        uses: dominikh/staticcheck-action@fe1dd0c3658873b46f8c9bb3291096a617310ca6
 
   coverage:
     name: Codecov
