@@ -102,8 +102,8 @@ func (p *permission) Delete(ctx context.Context, id uuid.UUID) (bool, error) {
 	return true, nil
 }
 
-func (r *permission) FindByUserId(ctx context.Context, id uuid.UUID) ([]models.Permission, error) {
-	records, err := r.client.Queries().FindUserPermissions(ctx, id)
+func (p *permission) FindByUserId(ctx context.Context, id uuid.UUID) ([]models.Permission, error) {
+	records, err := p.client.Queries().FindUserPermissions(ctx, id)
 	if err != nil {
 		return nil, err
 	}
