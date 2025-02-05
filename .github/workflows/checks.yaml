@@ -82,6 +82,7 @@ jobs:
       - name: Run tests
         run: go test ./... -race -coverprofile=coverage.out -covermode=atomic
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        # NOTE: https://github.com/codecov/codecov-action/tree/v5.3.1
+        uses: codecov/codecov-action@13ce06bfc6bbe3ecf90edbbf1bc32fe5978ca1d3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
