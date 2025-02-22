@@ -51,3 +51,15 @@ func (mr *MockHealthControllerMockRecorder) HandleLiveness(w, r any) *gomock.Cal
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleLiveness", reflect.TypeOf((*MockHealthController)(nil).HandleLiveness), w, r)
 }
+
+// HandleReadiness mocks base method.
+func (m *MockHealthController) HandleReadiness(w http.ResponseWriter, r *http.Request) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "HandleReadiness", w, r)
+}
+
+// HandleReadiness indicates an expected call of HandleReadiness.
+func (mr *MockHealthControllerMockRecorder) HandleReadiness(w, r any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleReadiness", reflect.TypeOf((*MockHealthController)(nil).HandleReadiness), w, r)
+}

@@ -18,6 +18,7 @@ var Module = fx.Options(
 			return make(chan *MobileIdQueue, QueueSize)
 		},
 	),
+	fx.Provide(NewHealthChecker),
 	fx.Provide(NewAuthentication),
 	fx.Provide(NewCertificate),
 	fx.Provide(NewSessions),
