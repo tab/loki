@@ -2,6 +2,11 @@ package services
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/sha256"
+	"crypto/sha512"
+	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 
@@ -122,4 +127,32 @@ func (s *mobileIdProvider) GetSessionStatus(id uuid.UUID) (*dto.MobileIdProvider
 	}
 
 	return &result, nil
+}
+
+func generateHash() (string, error) {
+	randBytes := make([]byte, 64)
+	_, err := rand.Read(randBytes)
+	if err != nil {
+		return "", err
+	}
+
+	hash := sha512.Sum512(randBytes)
+	encoded := base64.StdEncoding.EncodeToString(hash[:])
+
+	return encoded, nil
+}
+
+func generateCode(hash string) (string, error) {
+	decodedHash, err := base64.StdEncoding.DecodeString(hash)
+	if err != nil {
+		return "", err
+	}
+
+	sha256Hash := sha256.Sum256(decodedHash)
+	lastTwoBytes := sha256Hash[len(sha256Hash)-2:]
+	codeInt := binary.BigEndian.Uint16(lastTwoBytes)
+	vc := codeInt % 10000
+	code := fmt.Sprintf("%04d", vc)
+
+	return code, nil
 }

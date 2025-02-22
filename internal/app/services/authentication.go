@@ -20,8 +20,6 @@ const (
 )
 
 type Authentication interface {
-	CreateSmartIdSession(ctx context.Context, params dto.CreateSmartIdSessionRequest) (*models.Session, error)
-	GetSmartIdSessionStatus(ctx context.Context, id uuid.UUID) (*dto.SmartIdProviderSessionStatusResponse, error)
 	CreateMobileIdSession(ctx context.Context, params dto.CreateMobileIdSessionRequest) (*models.Session, error)
 	GetMobileIdSessionStatus(ctx context.Context, id uuid.UUID) (*dto.MobileIdProviderSessionStatusResponse, error)
 	Complete(ctx context.Context, id string) (*models.User, error)
@@ -29,8 +27,6 @@ type Authentication interface {
 
 type authentication struct {
 	cfg              *config.Config
-	smartIdProvider  SmartIdProvider
-	smartIdQueue     chan<- *SmartIdQueue
 	mobileIdProvider MobileIdProvider
 	mobileIdQueue    chan<- *MobileIdQueue
 	sessions         Sessions
@@ -40,8 +36,6 @@ type authentication struct {
 
 func NewAuthentication(
 	cfg *config.Config,
-	smartIdProvider SmartIdProvider,
-	smartIdQueue chan *SmartIdQueue,
 	mobileIdProvider MobileIdProvider,
 	mobileIdQueue chan *MobileIdQueue,
 	sessions Sessions,
@@ -50,52 +44,12 @@ func NewAuthentication(
 ) Authentication {
 	return &authentication{
 		cfg:              cfg,
-		smartIdProvider:  smartIdProvider,
-		smartIdQueue:     smartIdQueue,
 		mobileIdProvider: mobileIdProvider,
 		mobileIdQueue:    mobileIdQueue,
 		sessions:         sessions,
 		tokens:           tokens,
 		log:              log,
 	}
-}
-
-func (a *authentication) CreateSmartIdSession(ctx context.Context, params dto.CreateSmartIdSessionRequest) (*models.Session, error) {
-	traceId := trace.SpanContextFromContext(ctx).TraceID().String()
-
-	result, err := a.smartIdProvider.CreateSession(ctx, params)
-	if err != nil {
-		a.log.Error().Err(err).Msg("Failed to initiate SmartId authentication")
-		return nil, err
-	}
-
-	session, err := a.sessions.Create(ctx, &models.CreateSessionParams{
-		SessionId: result.ID,
-		Code:      result.Code,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	a.smartIdQueue <- &SmartIdQueue{
-		ID:      session.ID,
-		TraceId: traceId,
-	}
-
-	return &models.Session{
-		ID:   session.ID,
-		Code: session.Code,
-	}, nil
-}
-
-func (a *authentication) GetSmartIdSessionStatus(_ context.Context, id uuid.UUID) (*dto.SmartIdProviderSessionStatusResponse, error) {
-	result, err := a.smartIdProvider.GetSessionStatus(id)
-	if err != nil {
-		a.log.Error().Err(err).Msg("Failed to get SmartId session status")
-		return nil, err
-	}
-
-	return result, nil
 }
 
 func (a *authentication) CreateMobileIdSession(ctx context.Context, params dto.CreateMobileIdSessionRequest) (*models.Session, error) {

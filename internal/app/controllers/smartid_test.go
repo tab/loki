@@ -15,7 +15,7 @@ import (
 	"loki/internal/app/models"
 	"loki/internal/app/models/dto"
 	"loki/internal/app/serializers"
-	"loki/internal/app/services"
+	"loki/internal/app/services/authentication"
 )
 
 func Test_SmartIdController_CreateSession(t *testing.T) {
@@ -23,9 +23,8 @@ func Test_SmartIdController_CreateSession(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := gomock.Any()
-	authentication := services.NewMockAuthentication(ctrl)
-	provider := services.NewMockSmartIdProvider(ctrl)
-	controller := NewSmartIdController(authentication, provider)
+	provider := authentication.NewMockSmartIdProvider(ctrl)
+	controller := NewSmartIdController(provider)
 
 	sessionId := uuid.MustParse("8fdb516d-1a82-43ba-b82d-be63df569b86")
 
@@ -46,7 +45,7 @@ func Test_SmartIdController_CreateSession(t *testing.T) {
 			name: "Success",
 			body: strings.NewReader(`{"country": "EE", "personal_code": "30303039914"}`),
 			before: func() {
-				authentication.EXPECT().CreateSmartIdSession(ctx, dto.CreateSmartIdSessionRequest{
+				provider.EXPECT().CreateSession(ctx, dto.CreateSmartIdSessionRequest{
 					Country:      "EE",
 					PersonalCode: "30303039914",
 				}).Return(&models.Session{
@@ -77,7 +76,7 @@ func Test_SmartIdController_CreateSession(t *testing.T) {
 			name: "Unprocessable entity",
 			body: strings.NewReader(`{"country": "EE", "personal_code": "30303039914"}`),
 			before: func() {
-				authentication.EXPECT().CreateSmartIdSession(ctx, dto.CreateSmartIdSessionRequest{
+				provider.EXPECT().CreateSession(ctx, dto.CreateSmartIdSessionRequest{
 					Country:      "EE",
 					PersonalCode: "30303039914",
 				}).Return(nil, assert.AnError)

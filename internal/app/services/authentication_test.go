@@ -14,241 +14,6 @@ import (
 	"loki/pkg/logger"
 )
 
-func Test_Authentication_CreateSmartIdSession(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	ctx := context.Background()
-	cfg := &config.Config{
-		SmartId: config.SmartId{
-			BaseURL:          "https://sid.demo.sk.ee/smart-id-rp/v2",
-			RelyingPartyName: "DEMO",
-			RelyingPartyUUID: "00000000-0000-0000-0000-000000000000",
-			Text:             "Enter PIN1",
-		},
-	}
-	smartIdMock := NewMockSmartIdProvider(ctrl)
-	smartIdQueue := make(chan *SmartIdQueue, 1)
-
-	mobileIdMock := NewMockMobileIdProvider(ctrl)
-	mobileIdQueue := make(chan *MobileIdQueue, 1)
-
-	sessionsService := NewMockSessions(ctrl)
-	tokensService := NewMockTokens(ctrl)
-	log := logger.NewLogger()
-
-	service := NewAuthentication(
-		cfg,
-		smartIdMock,
-		smartIdQueue,
-		mobileIdMock,
-		mobileIdQueue,
-		sessionsService,
-		tokensService,
-		log)
-
-	id := uuid.MustParse("8fdb516d-1a82-43ba-b82d-be63df569b86")
-	sessionId := id.String()
-
-	tests := []struct {
-		name     string
-		before   func()
-		params   dto.CreateSmartIdSessionRequest
-		expected *models.Session
-		error    error
-	}{
-		{
-			name: "Success",
-			before: func() {
-				smartIdMock.EXPECT().CreateSession(ctx, dto.CreateSmartIdSessionRequest{
-					Country:      "EE",
-					PersonalCode: "30303039914",
-				}).Return(&dto.SmartIdProviderSessionResponse{
-					ID:   sessionId,
-					Code: "1234",
-				}, nil)
-
-				sessionsService.EXPECT().Create(ctx, &models.CreateSessionParams{
-					SessionId: sessionId,
-					Code:      "1234",
-				}).Return(&models.Session{
-					ID:   id,
-					Code: "1234",
-				}, nil)
-			},
-			params: dto.CreateSmartIdSessionRequest{
-				Country:      "EE",
-				PersonalCode: "30303039914",
-			},
-			expected: &models.Session{
-				ID:   id,
-				Code: "1234",
-			},
-			error: nil,
-		},
-		{
-			name: "Error to create smart-id session",
-			before: func() {
-				smartIdMock.EXPECT().CreateSession(ctx, dto.CreateSmartIdSessionRequest{
-					Country:      "EE",
-					PersonalCode: "30303039914",
-				}).Return(nil, assert.AnError)
-			},
-			params: dto.CreateSmartIdSessionRequest{
-				Country:      "EE",
-				PersonalCode: "30303039914",
-			},
-			expected: nil,
-			error:    assert.AnError,
-		},
-		{
-			name: "Error to save smart-id session",
-			before: func() {
-				smartIdMock.EXPECT().CreateSession(ctx, dto.CreateSmartIdSessionRequest{
-					Country:      "EE",
-					PersonalCode: "30303039914",
-				}).Return(&dto.SmartIdProviderSessionResponse{
-					ID:   sessionId,
-					Code: "1234",
-				}, nil)
-
-				sessionsService.EXPECT().Create(ctx, &models.CreateSessionParams{
-					SessionId: sessionId,
-					Code:      "1234",
-				}).Return(nil, assert.AnError)
-			},
-			params: dto.CreateSmartIdSessionRequest{
-				Country:      "EE",
-				PersonalCode: "30303039914",
-			},
-			expected: nil,
-			error:    assert.AnError,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.before()
-
-			result, err := service.CreateSmartIdSession(ctx, tt.params)
-
-			if tt.error != nil {
-				assert.Error(t, err)
-				assert.Nil(t, result)
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.expected, result)
-			}
-		})
-	}
-}
-
-func Test_Authentication_GetSmartIdSessionStatus(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	ctx := context.Background()
-	cfg := &config.Config{
-		SmartId: config.SmartId{
-			BaseURL:          "https://sid.demo.sk.ee/smart-id-rp/v2",
-			RelyingPartyName: "DEMO",
-			RelyingPartyUUID: "00000000-0000-0000-0000-000000000000",
-			Text:             "Enter PIN1",
-		},
-	}
-	smartIdMock := NewMockSmartIdProvider(ctrl)
-	smartIdQueue := make(chan *SmartIdQueue, 1)
-
-	mobileIdMock := NewMockMobileIdProvider(ctrl)
-	mobileIdQueue := make(chan *MobileIdQueue, 1)
-
-	sessionsService := NewMockSessions(ctrl)
-	tokensService := NewMockTokens(ctrl)
-	log := logger.NewLogger()
-
-	service := NewAuthentication(
-		cfg,
-		smartIdMock,
-		smartIdQueue,
-		mobileIdMock,
-		mobileIdQueue,
-		sessionsService,
-		tokensService,
-		log)
-
-	id := uuid.MustParse("8fdb516d-1a82-43ba-b82d-be63df569b86")
-
-	tests := []struct {
-		name     string
-		before   func()
-		id       uuid.UUID
-		expected *dto.SmartIdProviderSessionStatusResponse
-		error    error
-	}{
-		{
-			name: "Success",
-			before: func() {
-				smartIdMock.EXPECT().GetSessionStatus(id).Return(&dto.SmartIdProviderSessionStatusResponse{
-					State: "COMPLETE",
-					Result: dto.SmartIdProviderResult{
-						EndResult: "OK",
-					},
-					Signature: dto.SmartIdProviderSignature{
-						Value:     "signature",
-						Algorithm: "algorithm",
-					},
-					Cert: dto.SmartIdProviderCertificate{
-						Value:            "certificate",
-						CertificateLevel: "QUALIFIED",
-					},
-					InteractionFlowUsed: "displayTextAndPIN",
-				}, nil)
-			},
-			id: id,
-			expected: &dto.SmartIdProviderSessionStatusResponse{
-				State: "COMPLETE",
-				Result: dto.SmartIdProviderResult{
-					EndResult: "OK",
-				},
-				Signature: dto.SmartIdProviderSignature{
-					Value:     "signature",
-					Algorithm: "algorithm",
-				},
-				Cert: dto.SmartIdProviderCertificate{
-					Value:            "certificate",
-					CertificateLevel: "QUALIFIED",
-				},
-				InteractionFlowUsed: "displayTextAndPIN",
-			},
-		},
-		{
-			name: "Error",
-			before: func() {
-				smartIdMock.EXPECT().GetSessionStatus(id).Return(nil, assert.AnError)
-			},
-			id:       id,
-			expected: nil,
-			error:    assert.AnError,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.before()
-
-			result, err := service.GetSmartIdSessionStatus(ctx, tt.id)
-
-			if tt.error != nil {
-				assert.Error(t, err)
-				assert.Nil(t, result)
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.expected, result)
-			}
-		})
-	}
-}
-
 func Test_Authentication_CreateMobileIdSession(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -262,9 +27,6 @@ func Test_Authentication_CreateMobileIdSession(t *testing.T) {
 			Text:             "Enter PIN1",
 		},
 	}
-	smartIdMock := NewMockSmartIdProvider(ctrl)
-	smartIdQueue := make(chan *SmartIdQueue, 1)
-
 	mobileIdMock := NewMockMobileIdProvider(ctrl)
 	mobileIdQueue := make(chan *MobileIdQueue, 1)
 
@@ -274,8 +36,6 @@ func Test_Authentication_CreateMobileIdSession(t *testing.T) {
 
 	service := NewAuthentication(
 		cfg,
-		smartIdMock,
-		smartIdQueue,
 		mobileIdMock,
 		mobileIdQueue,
 		sessionsService,
@@ -397,9 +157,6 @@ func Test_Authentication_GetMobileIdSessionStatus(t *testing.T) {
 			Text:             "Enter PIN1",
 		},
 	}
-	smartIdMock := NewMockSmartIdProvider(ctrl)
-	smartIdQueue := make(chan *SmartIdQueue, 1)
-
 	mobileIdMock := NewMockMobileIdProvider(ctrl)
 	mobileIdQueue := make(chan *MobileIdQueue, 1)
 
@@ -409,8 +166,6 @@ func Test_Authentication_GetMobileIdSessionStatus(t *testing.T) {
 
 	service := NewAuthentication(
 		cfg,
-		smartIdMock,
-		smartIdQueue,
 		mobileIdMock,
 		mobileIdQueue,
 		sessionsService,
@@ -497,9 +252,6 @@ func Test_Authentication_Complete(t *testing.T) {
 			Text:             "Enter PIN1",
 		},
 	}
-	smartIdMock := NewMockSmartIdProvider(ctrl)
-	smartIdQueue := make(chan *SmartIdQueue, 1)
-
 	mobileIdMock := NewMockMobileIdProvider(ctrl)
 	mobileIdQueue := make(chan *MobileIdQueue, 1)
 
@@ -513,8 +265,6 @@ func Test_Authentication_Complete(t *testing.T) {
 
 	service := NewAuthentication(
 		cfg,
-		smartIdMock,
-		smartIdQueue,
 		mobileIdMock,
 		mobileIdQueue,
 		sessionsService,
