@@ -27,6 +27,7 @@ func Test_HealthCheck(t *testing.T) {
 	mockAuthorizationMiddleware := middlewares.NewMockAuthorizationMiddleware(ctrl)
 	mockTelemetryMiddleware := middlewares.NewMockTelemetryMiddleware(ctrl)
 
+	mockHealthController := controllers.NewMockHealthController(ctrl)
 	mockSmartIdController := controllers.NewMockSmartIdController(ctrl)
 	mockMobileIdController := controllers.NewMockMobileIdController(ctrl)
 	mockSessionsController := controllers.NewMockSessionsController(ctrl)
@@ -71,6 +72,7 @@ func Test_HealthCheck(t *testing.T) {
 		mockAuthenticationMiddleware,
 		mockAuthorizationMiddleware,
 		mockTelemetryMiddleware,
+		mockHealthController,
 		mockSmartIdController,
 		mockMobileIdController,
 		mockSessionsController,
