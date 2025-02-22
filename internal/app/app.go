@@ -5,12 +5,15 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/tab/smartid"
 	"go.uber.org/fx"
 
 	"loki/internal/app/controllers"
 	"loki/internal/app/controllers/backoffice"
 	"loki/internal/app/repositories"
 	"loki/internal/app/services"
+	"loki/internal/app/services/authentication"
+	"loki/internal/app/workers"
 	"loki/internal/config"
 	"loki/internal/config/middlewares"
 	"loki/internal/config/router"
@@ -23,11 +26,13 @@ import (
 var Module = fx.Options(
 	logger.Module,
 
+	authentication.Module,
 	controllers.Module,
 	backoffice.Module,
 	repositories.Module,
 	jwt.Module,
 	services.Module,
+	workers.Module,
 
 	middlewares.Module,
 
@@ -72,16 +77,16 @@ func registerHooks(
 func registerWorkers(
 	lifecycle fx.Lifecycle,
 	cfg *config.Config,
-	smartId services.SmartIdWorker,
+	smartId smartid.Worker,
 	mobileId services.MobileIdWorker,
 	log *logger.Logger,
 ) {
 	var ctx, cancel = context.WithCancel(context.Background())
+	workers.Ctx = ctx
 
 	lifecycle.Append(fx.Hook{
 		OnStart: func(_ context.Context) error {
 			log.Info().Msgf("Starting workers in %s environment", cfg.AppEnv)
-
 			smartId.Start(ctx)
 			mobileId.Start(ctx)
 
@@ -100,7 +105,7 @@ func registerWorkers(
 }
 
 func registerTelemetry(lifecycle fx.Lifecycle, cfg *config.Config) {
-	ctx := context.Background()
+	var ctx, cancel = context.WithCancel(context.Background())
 	service, _ := telemetry.NewTelemetry(ctx, cfg)
 
 	lifecycle.Append(fx.Hook{
@@ -108,6 +113,7 @@ func registerTelemetry(lifecycle fx.Lifecycle, cfg *config.Config) {
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
+			cancel()
 			return service.Shutdown(ctx)
 		},
 	})

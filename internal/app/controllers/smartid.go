@@ -6,7 +6,7 @@ import (
 
 	"loki/internal/app/models/dto"
 	"loki/internal/app/serializers"
-	"loki/internal/app/services"
+	"loki/internal/app/services/authentication"
 )
 
 type SmartIdController interface {
@@ -14,17 +14,12 @@ type SmartIdController interface {
 }
 
 type smartIdController struct {
-	authentication services.Authentication
-	provider       services.SmartIdProvider
+	provider authentication.SmartIdProvider
 }
 
-func NewSmartIdController(
-	authentication services.Authentication,
-	provider services.SmartIdProvider,
-) SmartIdController {
+func NewSmartIdController(provider authentication.SmartIdProvider) SmartIdController {
 	return &smartIdController{
-		authentication: authentication,
-		provider:       provider,
+		provider: provider,
 	}
 }
 
@@ -38,7 +33,7 @@ func (c *smartIdController) CreateSession(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	session, err := c.authentication.CreateSmartIdSession(r.Context(), dto.CreateSmartIdSessionRequest{
+	session, err := c.provider.CreateSession(r.Context(), dto.CreateSmartIdSessionRequest{
 		Country:      params.Country,
 		PersonalCode: params.PersonalCode,
 	})

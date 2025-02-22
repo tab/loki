@@ -7,11 +7,6 @@ import (
 
 const QueueSize = 50
 
-type SmartIdQueue struct {
-	ID      uuid.UUID
-	TraceId string
-}
-
 type MobileIdQueue struct {
 	ID      uuid.UUID
 	TraceId string
@@ -19,9 +14,6 @@ type MobileIdQueue struct {
 
 var Module = fx.Options(
 	fx.Provide(
-		func() chan *SmartIdQueue {
-			return make(chan *SmartIdQueue, QueueSize)
-		},
 		func() chan *MobileIdQueue {
 			return make(chan *MobileIdQueue, QueueSize)
 		},
@@ -34,8 +26,6 @@ var Module = fx.Options(
 	fx.Provide(NewScopes),
 	fx.Provide(NewTokens),
 	fx.Provide(NewUsers),
-	fx.Provide(NewSmartId),
-	fx.Provide(NewSmartIdWorker),
 	fx.Provide(NewMobileId),
 	fx.Provide(NewMobileIdWorker),
 )

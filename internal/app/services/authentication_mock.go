@@ -73,21 +73,6 @@ func (mr *MockAuthenticationMockRecorder) CreateMobileIdSession(ctx, params any)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMobileIdSession", reflect.TypeOf((*MockAuthentication)(nil).CreateMobileIdSession), ctx, params)
 }
 
-// CreateSmartIdSession mocks base method.
-func (m *MockAuthentication) CreateSmartIdSession(ctx context.Context, params dto.CreateSmartIdSessionRequest) (*models.Session, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSmartIdSession", ctx, params)
-	ret0, _ := ret[0].(*models.Session)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateSmartIdSession indicates an expected call of CreateSmartIdSession.
-func (mr *MockAuthenticationMockRecorder) CreateSmartIdSession(ctx, params any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSmartIdSession", reflect.TypeOf((*MockAuthentication)(nil).CreateSmartIdSession), ctx, params)
-}
-
 // GetMobileIdSessionStatus mocks base method.
 func (m *MockAuthentication) GetMobileIdSessionStatus(ctx context.Context, id uuid.UUID) (*dto.MobileIdProviderSessionStatusResponse, error) {
 	m.ctrl.T.Helper()
@@ -101,19 +86,4 @@ func (m *MockAuthentication) GetMobileIdSessionStatus(ctx context.Context, id uu
 func (mr *MockAuthenticationMockRecorder) GetMobileIdSessionStatus(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMobileIdSessionStatus", reflect.TypeOf((*MockAuthentication)(nil).GetMobileIdSessionStatus), ctx, id)
-}
-
-// GetSmartIdSessionStatus mocks base method.
-func (m *MockAuthentication) GetSmartIdSessionStatus(ctx context.Context, id uuid.UUID) (*dto.SmartIdProviderSessionStatusResponse, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSmartIdSessionStatus", ctx, id)
-	ret0, _ := ret[0].(*dto.SmartIdProviderSessionStatusResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSmartIdSessionStatus indicates an expected call of GetSmartIdSessionStatus.
-func (mr *MockAuthenticationMockRecorder) GetSmartIdSessionStatus(ctx, id any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSmartIdSessionStatus", reflect.TypeOf((*MockAuthentication)(nil).GetSmartIdSessionStatus), ctx, id)
 }
