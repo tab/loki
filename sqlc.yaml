@@ -4,6 +4,7 @@ sql:
     engine: postgresql
     schema: db/schema.sql
     queries:
+      - db/sqlc/health.sql
       - db/sqlc/permission.sql
       - db/sqlc/role.sql
       - db/sqlc/scope.sql

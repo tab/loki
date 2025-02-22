@@ -21,6 +21,7 @@ func NewRouter(
 	authorization middlewares.AuthorizationMiddleware,
 	telemetry middlewares.TelemetryMiddleware,
 
+	health controllers.HealthController,
 	smartId controllers.SmartIdController,
 	mobileID controllers.MobileIdController,
 	sessions controllers.SessionsController,
@@ -47,6 +48,9 @@ func NewRouter(
 			MaxAge:         300,
 		}),
 	)
+
+	r.Get("/live", health.HandleLiveness)
+	r.Get("/ready", health.HandleReadiness)
 
 	r.Route("/api", func(r chi.Router) {
 		r.Post("/auth/smart_id", smartId.CreateSession)

@@ -11,6 +11,7 @@ var Module = fx.Options(
 	fx.Provide(postgres.NewPostgresClient),
 	fx.Provide(redis.NewRedisClient),
 
+	fx.Provide(NewHealthRepository),
 	fx.Provide(NewSessionRepository),
 	fx.Provide(NewPermissionRepository),
 	fx.Provide(NewRoleRepository),
