@@ -11,6 +11,8 @@ concurrency:
 jobs:
   linter:
     name: Golang CI
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,6 +27,8 @@ jobs:
 
   static-check:
     name: Static check
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,6 +41,9 @@ jobs:
 
   coverage:
     name: Codecov
+    permissions:
+      contents: read
+      pull-requests: write
     env:
       GO_ENV: test
     runs-on: ubuntu-latest
