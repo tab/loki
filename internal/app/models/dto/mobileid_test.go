@@ -18,23 +18,18 @@ func Test_ValidateMobileIdParams(t *testing.T) {
 	}{
 		{
 			name:     "Success",
-			body:     strings.NewReader(`{"locale": "ENG", "phone_number": "+37268000769", "personal_code": "60001017869"}`),
+			body:     strings.NewReader(`{"phone_number": "+37268000769", "personal_code": "60001017869"}`),
 			expected: nil,
 		},
 		{
 			name:     "Empty personal code",
-			body:     strings.NewReader(`{"locale": "ENG", "phone_number": "+37268000769"}`),
+			body:     strings.NewReader(`{"phone_number": "+37268000769"}`),
 			expected: errors.ErrEmptyPersonalCode,
 		},
 		{
 			name:     "Empty phone number",
-			body:     strings.NewReader(`{"locale": "ENG", "personal_code": "60001017869"}`),
+			body:     strings.NewReader(`{"personal_code": "60001017869"}`),
 			expected: errors.ErrEmptyPhoneNumber,
-		},
-		{
-			name:     "Empty locale",
-			body:     strings.NewReader(`{"phone_number": "+37268000769", "personal_code": "60001017869"}`),
-			expected: errors.ErrEmptyLocale,
 		},
 	}
 

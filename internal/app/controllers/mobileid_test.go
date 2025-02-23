@@ -15,7 +15,7 @@ import (
 	"loki/internal/app/models"
 	"loki/internal/app/models/dto"
 	"loki/internal/app/serializers"
-	"loki/internal/app/services"
+	"loki/internal/app/services/authentication"
 )
 
 func Test_MobileIdController_CreateSession(t *testing.T) {
@@ -23,9 +23,8 @@ func Test_MobileIdController_CreateSession(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := gomock.Any()
-	authentication := services.NewMockAuthentication(ctrl)
-	provider := services.NewMockMobileIdProvider(ctrl)
-	controller := NewMobileIdController(authentication, provider)
+	provider := authentication.NewMockMobileIdProvider(ctrl)
+	controller := NewMobileIdController(provider)
 
 	sessionId := uuid.MustParse("8fdb516d-1a82-43ba-b82d-be63df569b86")
 
@@ -46,8 +45,7 @@ func Test_MobileIdController_CreateSession(t *testing.T) {
 			name: "Success",
 			body: strings.NewReader(`{"locale": "ENG", "phone_number": "+37268000769", "personal_code": "60001017869"}`),
 			before: func() {
-				authentication.EXPECT().CreateMobileIdSession(ctx, dto.CreateMobileIdSessionRequest{
-					Locale:       "ENG",
+				provider.EXPECT().CreateSession(ctx, dto.CreateMobileIdSessionRequest{
 					PhoneNumber:  "+37268000769",
 					PersonalCode: "60001017869",
 				}).Return(&models.Session{
@@ -78,8 +76,7 @@ func Test_MobileIdController_CreateSession(t *testing.T) {
 			name: "Unprocessable entity",
 			body: strings.NewReader(`{"locale": "ENG", "phone_number": "+37268000769", "personal_code": "60001017869"}`),
 			before: func() {
-				authentication.EXPECT().CreateMobileIdSession(ctx, dto.CreateMobileIdSessionRequest{
-					Locale:       "ENG",
+				provider.EXPECT().CreateSession(ctx, dto.CreateMobileIdSessionRequest{
 					PhoneNumber:  "+37268000769",
 					PersonalCode: "60001017869",
 				}).Return(nil, assert.AnError)

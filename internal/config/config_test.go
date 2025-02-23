@@ -53,6 +53,8 @@ func Test_LoadConfig(t *testing.T) {
 					RelyingPartyName: "DEMO",
 					RelyingPartyUUID: "00000000-0000-0000-0000-000000000000",
 					Text:             "Enter PIN1",
+					TextFormat:       "GSM-7",
+					Language:         "ENG",
 				},
 			},
 		},
