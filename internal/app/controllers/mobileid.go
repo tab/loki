@@ -6,7 +6,7 @@ import (
 
 	"loki/internal/app/models/dto"
 	"loki/internal/app/serializers"
-	"loki/internal/app/services"
+	"loki/internal/app/services/authentication"
 )
 
 type MobileIdController interface {
@@ -14,17 +14,14 @@ type MobileIdController interface {
 }
 
 type mobileIdController struct {
-	authentication services.Authentication
-	provider       services.MobileIdProvider
+	provider authentication.MobileIdProvider
 }
 
 func NewMobileIdController(
-	authentication services.Authentication,
-	provider services.MobileIdProvider,
+	provider authentication.MobileIdProvider,
 ) MobileIdController {
 	return &mobileIdController{
-		authentication: authentication,
-		provider:       provider,
+		provider: provider,
 	}
 }
 
@@ -38,8 +35,7 @@ func (c *mobileIdController) CreateSession(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	session, err := c.authentication.CreateMobileIdSession(r.Context(), dto.CreateMobileIdSessionRequest{
-		Locale:       params.Locale,
+	session, err := c.provider.CreateSession(r.Context(), dto.CreateMobileIdSessionRequest{
 		PersonalCode: params.PersonalCode,
 		PhoneNumber:  params.PhoneNumber,
 	})

@@ -12,10 +12,8 @@ package services
 import (
 	context "context"
 	models "loki/internal/app/models"
-	dto "loki/internal/app/models/dto"
 	reflect "reflect"
 
-	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -56,34 +54,4 @@ func (m *MockAuthentication) Complete(ctx context.Context, id string) (*models.U
 func (mr *MockAuthenticationMockRecorder) Complete(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Complete", reflect.TypeOf((*MockAuthentication)(nil).Complete), ctx, id)
-}
-
-// CreateMobileIdSession mocks base method.
-func (m *MockAuthentication) CreateMobileIdSession(ctx context.Context, params dto.CreateMobileIdSessionRequest) (*models.Session, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateMobileIdSession", ctx, params)
-	ret0, _ := ret[0].(*models.Session)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateMobileIdSession indicates an expected call of CreateMobileIdSession.
-func (mr *MockAuthenticationMockRecorder) CreateMobileIdSession(ctx, params any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMobileIdSession", reflect.TypeOf((*MockAuthentication)(nil).CreateMobileIdSession), ctx, params)
-}
-
-// GetMobileIdSessionStatus mocks base method.
-func (m *MockAuthentication) GetMobileIdSessionStatus(ctx context.Context, id uuid.UUID) (*dto.MobileIdProviderSessionStatusResponse, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMobileIdSessionStatus", ctx, id)
-	ret0, _ := ret[0].(*dto.MobileIdProviderSessionStatusResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetMobileIdSessionStatus indicates an expected call of GetMobileIdSessionStatus.
-func (mr *MockAuthenticationMockRecorder) GetMobileIdSessionStatus(ctx, id any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMobileIdSessionStatus", reflect.TypeOf((*MockAuthentication)(nil).GetMobileIdSessionStatus), ctx, id)
 }

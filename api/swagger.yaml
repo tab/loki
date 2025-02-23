@@ -120,56 +120,48 @@ paths:
                 summary: "Successfully create a mobile-id session example"
                 description: "Example of requesting a Mobile-ID session creation"
                 value:
-                  locale: "ENG"
                   phone_number: "+37268000769"
                   personal_code: "60001017869"
               NOT_MID_CLIENT:
                 summary: "Create a mobile-id session example with user not being a MID client"
                 description: "Example of requesting a Mobile-ID session creation with user not being a MID client"
                 value:
-                  locale: "ENG"
                   phone_number: "+37200000266"
                   personal_code: "60001019939"
               DELIVERY_ERROR:
                 summary: "Create a mobile-id session example with delivery error"
                 description: "Example of requesting a Mobile-ID session creation with delivery error"
                 value:
-                  locale: "ENG"
                   phone_number: "+37207110066"
                   personal_code: "60001019947"
               USER_CANCELLED:
                 summary: "Create a mobile-id session example with user refusal"
                 description: "Example of requesting a Mobile-ID session creation with user refusal"
                 value:
-                  locale: "ENG"
                   phone_number: "+37201100266"
                   personal_code: "60001019950"
               SIGNATURE_HASH_MISMATCH:
                 summary: "Create a mobile-id session example with signature hash mismatch"
                 description: "Example of requesting a Mobile-ID session creation with signature hash mismatch"
                 value:
-                  locale: "ENG"
                   phone_number: "+37200000666"
                   personal_code: "60001019961"
               SIM_ERROR:
                 summary: "Create a mobile-id session example with SIM error"
                 description: "Example of requesting a Mobile-ID session creation with SIM error"
                 value:
-                  locale: "ENG"
                   phone_number: "+37201200266"
                   personal_code: "60001019972"
               PHONE_ABSENT:
                 summary: "Create a mobile-id session example with phone absent"
                 description: "Example of requesting a Mobile-ID session creation with phone absent"
                 value:
-                  locale: "ENG"
                   phone_number: "+37213100266"
                   personal_code: "60001019983"
               TIMEOUT:
                 summary: "Create a mobile-id session example with timeout"
                 description: "Example of requesting a Mobile-ID session creation with timeout"
                 value:
-                  locale: "ENG"
                   phone_number: "+37266000266"
                   personal_code: "50001018908"
       responses:
@@ -1299,9 +1291,6 @@ components:
         phone_number:
           type: string
           description: "User's phone number"
-        locale:
-          type: string
-          description: "Locale preference (e.g., 'ENG', 'EST')."
       required:
         - personal_code
         - phone_number

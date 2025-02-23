@@ -29,7 +29,10 @@ type MobileId struct {
 	RelyingPartyName string
 	RelyingPartyUUID string
 
-	Text string
+	Text       string
+	TextFormat string
+
+	Language string
 }
 
 type Config struct {
@@ -91,6 +94,8 @@ func LoadConfig() *Config {
 			RelyingPartyName: getEnvString("RELYING_PARTY_NAME"),
 			RelyingPartyUUID: getEnvString("RELYING_PARTY_UUID"),
 			Text:             getEnvString("MOBILE_ID_DISPLAY_TEXT"),
+			TextFormat:       getEnvString("MOBILE_ID_TEXT_FORMAT"),
+			Language:         getEnvString("MOBILE_ID_LANGUAGE"),
 		},
 
 		LogLevel: getEnvString("LOG_LEVEL"),

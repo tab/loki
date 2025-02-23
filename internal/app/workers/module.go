@@ -12,10 +12,12 @@ const (
 	Success = "SUCCESS"
 	Error   = "ERROR"
 
-	TraceName         = "authentication"
-	SmartIdWorkerName = "SmartId::Worker"
+	TraceName          = "authentication"
+	SmartIdWorkerName  = "SmartId::Worker"
+	MobileIdWorkerName = "MobileId::Worker"
 )
 
 var Module = fx.Options(
 	fx.Provide(NewSmartIdWorker),
+	fx.Provide(NewMobileIdWorker),
 )

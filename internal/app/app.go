@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/tab/smartid"
+	"github.com/tab/mobileid"
 	"go.uber.org/fx"
 
 	"loki/internal/app/controllers"
@@ -78,7 +79,7 @@ func registerWorkers(
 	lifecycle fx.Lifecycle,
 	cfg *config.Config,
 	smartId smartid.Worker,
-	mobileId services.MobileIdWorker,
+	mobileId mobileid.Worker,
 	log *logger.Logger,
 ) {
 	var ctx, cancel = context.WithCancel(context.Background())
