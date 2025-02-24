@@ -15,6 +15,7 @@ services:
       - APP_ADDRESS=0.0.0.0:8080
       - CLIENT_URL=http://localhost:3000
       - SECRET_KEY=jwt-secret-key
+      - CERT_PATH=/run/certs
       - SMART_ID_API_URL=https://sid.demo.sk.ee/smart-id-rp/v2
       - SMART_ID_DISPLAY_TEXT=Enter PIN1
       - MOBILE_ID_API_URL=https://tsp.demo.sk.ee/mid-api

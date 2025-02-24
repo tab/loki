@@ -41,6 +41,7 @@ type Config struct {
 	AppAddr      string
 	ClientURL    string
 	SecretKey    string
+	CertPath     string
 	DatabaseDSN  string
 	RedisURI     string
 	TelemetryURI string
@@ -67,6 +68,7 @@ func LoadConfig() *Config {
 	flagAppAddr := flag.String("b", AppAddr, "server address")
 	flagClientURL := flag.String("c", ClientURL, "client address")
 	flagSecretKey := flag.String("s", "", "JWT secret key")
+	flagCertPath := flag.String("p", "", "certificate path")
 	flagDatabaseDSN := flag.String("d", "", "database DSN")
 	flagRedisURI := flag.String("r", "", "Redis URI")
 	flagTelemetryURI := flag.String("t", "", "OpenTelemetry collector URI")
@@ -78,7 +80,9 @@ func LoadConfig() *Config {
 		AppAddr:   getFlagOrEnvString(*flagAppAddr, "APP_ADDRESS", AppAddr),
 		ClientURL: getFlagOrEnvString(*flagClientURL, "CLIENT_URL", ClientURL),
 
-		SecretKey:    getFlagOrEnvString(*flagSecretKey, "SECRET_KEY", ""),
+		SecretKey: getFlagOrEnvString(*flagSecretKey, "SECRET_KEY", ""),
+		CertPath:  getFlagOrEnvString(*flagCertPath, "CERT_PATH", ""),
+
 		DatabaseDSN:  getFlagOrEnvString(*flagDatabaseDSN, "DATABASE_DSN", ""),
 		RedisURI:     getFlagOrEnvString(*flagRedisURI, "REDIS_URI", ""),
 		TelemetryURI: getFlagOrEnvString(*flagTelemetryURI, "TELEMETRY_URI", ""),

@@ -16,5 +16,6 @@ FROM alpine:3.21
 WORKDIR /app
 
 COPY --from=builder /app/loki /app/loki
+COPY --from=builder /app/certs /run/certs
 
 CMD ["/app/loki"]

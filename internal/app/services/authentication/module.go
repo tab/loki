@@ -3,8 +3,8 @@ package authentication
 import (
 	"time"
 
-	"github.com/tab/smartid"
 	"github.com/tab/mobileid"
+	"github.com/tab/smartid"
 	"go.uber.org/fx"
 
 	"loki/internal/config"
@@ -19,6 +19,10 @@ const (
 var Module = fx.Options(
 	fx.Provide(
 		func(cfg *config.Config, log *logger.Logger) (smartid.Client, error) {
+			certManager, err := smartid.NewCertificateManager(cfg.CertPath)
+			if err != nil {
+				return nil, err
+			}
 			client := smartid.NewClient().
 				WithRelyingPartyName(cfg.SmartId.RelyingPartyName).
 				WithRelyingPartyUUID(cfg.SmartId.RelyingPartyUUID).
@@ -27,7 +31,8 @@ var Module = fx.Options(
 				WithInteractionType("displayTextAndPIN").
 				WithText(cfg.SmartId.Text).
 				WithURL(cfg.SmartId.BaseURL).
-				WithTimeout(60 * time.Second)
+				WithTimeout(60 * time.Second).
+				WithTLSConfig(certManager.TLSConfig())
 			if err := client.Validate(); err != nil {
 				return nil, err
 			}
