@@ -10,6 +10,7 @@ import (
 
 const (
 	AppAddr    = "0.0.0.0:8080"
+	GrpcAddr   = "0.0.0.0:50051"
 	ClientURL  = "http://localhost:3000"
 	DebugLevel = "debug"
 )
@@ -39,6 +40,7 @@ type Config struct {
 	AppEnv       string
 	AppName      string
 	AppAddr      string
+	GrpcAddr     string
 	ClientURL    string
 	SecretKey    string
 	CertPath     string
@@ -66,6 +68,7 @@ func LoadConfig() *Config {
 	}
 
 	flagAppAddr := flag.String("b", AppAddr, "server address")
+	flagGrpcAddr := flag.String("g", GrpcAddr, "gRPC server address")
 	flagClientURL := flag.String("c", ClientURL, "client address")
 	flagSecretKey := flag.String("s", "", "JWT secret key")
 	flagCertPath := flag.String("p", "", "certificate path")
@@ -78,6 +81,7 @@ func LoadConfig() *Config {
 		AppEnv:    env,
 		AppName:   getEnvString("APP_NAME"),
 		AppAddr:   getFlagOrEnvString(*flagAppAddr, "APP_ADDRESS", AppAddr),
+		GrpcAddr:  getFlagOrEnvString(*flagGrpcAddr, "GRPC_ADDRESS", GrpcAddr),
 		ClientURL: getFlagOrEnvString(*flagClientURL, "CLIENT_URL", ClientURL),
 
 		SecretKey: getFlagOrEnvString(*flagSecretKey, "SECRET_KEY", ""),
