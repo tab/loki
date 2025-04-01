@@ -37,6 +37,7 @@ func NewRouter(
 	r := chi.NewRouter()
 
 	r.Use(telemetry.Trace)
+	r.Use(middleware.RequestID)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Compress(5))
 	r.Use(middleware.Heartbeat("/health"))
@@ -44,7 +45,7 @@ func NewRouter(
 		cors.Handler(cors.Options{
 			AllowedOrigins: []string{"http://*", cfg.ClientURL},
 			AllowedMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-			AllowedHeaders: []string{"Accept", "Authorization", "Content-Type", "X-Trace-ID"},
+			AllowedHeaders: []string{"Accept", "Authorization", "Content-Type", "X-Request-ID", "X-Trace-ID"},
 			MaxAge:         300,
 		}),
 	)
