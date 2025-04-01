@@ -53,7 +53,7 @@ func Test_Backoffice_Scopes_List(t *testing.T) {
 						Name:        "self-service",
 						Description: "Self-service scope",
 					},
-				}, 2, nil)
+				}, uint64(2), nil)
 			},
 			expected: result{
 				response: serializers.PaginationResponse[serializers.ScopeSerializer]{
@@ -83,7 +83,7 @@ func Test_Backoffice_Scopes_List(t *testing.T) {
 		{
 			name: "Empty",
 			before: func() {
-				scopes.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, 0, nil)
+				scopes.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, uint64(0), nil)
 			},
 			expected: result{
 				response: serializers.PaginationResponse[serializers.ScopeSerializer]{
@@ -102,7 +102,7 @@ func Test_Backoffice_Scopes_List(t *testing.T) {
 		{
 			name: "Error",
 			before: func() {
-				scopes.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, 0, assert.AnError)
+				scopes.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, uint64(0), assert.AnError)
 			},
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: assert.AnError.Error()},

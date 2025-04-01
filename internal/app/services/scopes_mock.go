@@ -88,11 +88,11 @@ func (mr *MockScopesMockRecorder) FindById(ctx, id any) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MockScopes) List(ctx context.Context, pagination *Pagination) ([]models.Scope, int, error) {
+func (m *MockScopes) List(ctx context.Context, pagination *Pagination) ([]models.Scope, uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", ctx, pagination)
 	ret0, _ := ret[0].([]models.Scope)
-	ret1, _ := ret[1].(int)
+	ret1, _ := ret[1].(uint64)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }

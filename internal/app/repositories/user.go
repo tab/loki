@@ -11,7 +11,7 @@ import (
 )
 
 type UserRepository interface {
-	List(ctx context.Context, limit, offset int32) ([]models.User, int, error)
+	List(ctx context.Context, limit, offset uint64) ([]models.User, uint64, error)
 	Create(ctx context.Context, params db.CreateUserParams) (*models.User, error)
 	Update(ctx context.Context, params db.UpdateUserParams) (*models.User, error)
 	FindById(ctx context.Context, id uuid.UUID) (*models.User, error)
@@ -29,7 +29,7 @@ func NewUserRepository(client postgres.Postgres) UserRepository {
 	return &user{client: client}
 }
 
-func (u *user) List(ctx context.Context, limit, offset int32) ([]models.User, int, error) {
+func (u *user) List(ctx context.Context, limit, offset uint64) ([]models.User, uint64, error) {
 	rows, err := u.client.Queries().FindUsers(ctx, db.FindUsersParams{
 		Limit:  limit,
 		Offset: offset,
@@ -39,10 +39,10 @@ func (u *user) List(ctx context.Context, limit, offset int32) ([]models.User, in
 	}
 
 	users := make([]models.User, 0, len(rows))
-	var total int
+	var total uint64
 
 	if len(rows) > 0 {
-		total = int(rows[0].Total)
+		total = rows[0].Total
 	}
 
 	for _, row := range rows {

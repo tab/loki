@@ -27,9 +27,9 @@ func Test_RoleRepository_List(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		limit    int32
-		offset   int32
-		total    int
+		limit    uint64
+		offset   uint64
+		total    uint64
 		expected []models.Role
 	}{
 		{

@@ -53,7 +53,7 @@ func Test_Backoffice_Permissions_List(t *testing.T) {
 						Name:        "write:self",
 						Description: "Write own data",
 					},
-				}, 2, nil)
+				}, uint64(2), nil)
 			},
 			expected: result{
 				response: serializers.PaginationResponse[serializers.PermissionSerializer]{
@@ -72,7 +72,7 @@ func Test_Backoffice_Permissions_List(t *testing.T) {
 					Meta: serializers.PaginationMeta{
 						Page:  1,
 						Per:   25,
-						Total: 2,
+						Total: uint64(2),
 					},
 				},
 				status: "200 OK",
@@ -83,7 +83,7 @@ func Test_Backoffice_Permissions_List(t *testing.T) {
 		{
 			name: "Empty",
 			before: func() {
-				permissions.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, 0, nil)
+				permissions.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, uint64(0), nil)
 			},
 			expected: result{
 				response: serializers.PaginationResponse[serializers.PermissionSerializer]{
@@ -91,7 +91,7 @@ func Test_Backoffice_Permissions_List(t *testing.T) {
 					Meta: serializers.PaginationMeta{
 						Page:  1,
 						Per:   25,
-						Total: 0,
+						Total: uint64(0),
 					},
 				},
 				status: "200 OK",
@@ -102,7 +102,7 @@ func Test_Backoffice_Permissions_List(t *testing.T) {
 		{
 			name: "Error",
 			before: func() {
-				permissions.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, 0, assert.AnError)
+				permissions.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, uint64(0), assert.AnError)
 			},
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: assert.AnError.Error()},

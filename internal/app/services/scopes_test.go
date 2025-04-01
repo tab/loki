@@ -27,13 +27,13 @@ func Test_Scopes_List(t *testing.T) {
 		name     string
 		before   func()
 		expected []models.Scope
-		total    int
+		total    uint64
 		error    error
 	}{
 		{
 			name: "Success",
 			before: func() {
-				repository.EXPECT().List(ctx, int32(10), int32(0)).Return([]models.Scope{
+				repository.EXPECT().List(ctx, uint64(10), uint64(0)).Return([]models.Scope{
 					{
 						ID:          uuid.MustParse("10000000-1000-1000-2000-000000000001"),
 						Name:        models.SsoServiceType,
@@ -44,7 +44,7 @@ func Test_Scopes_List(t *testing.T) {
 						Name:        models.SelfServiceType,
 						Description: "Self-service scope",
 					},
-				}, 2, nil)
+				}, uint64(2), nil)
 			},
 			expected: []models.Scope{
 				{
@@ -58,7 +58,7 @@ func Test_Scopes_List(t *testing.T) {
 					Description: "Self-service scope",
 				},
 			},
-			total: 2,
+			total: uint64(2),
 		},
 	}
 
@@ -67,8 +67,8 @@ func Test_Scopes_List(t *testing.T) {
 			tt.before()
 
 			result, total, err := service.List(ctx, &Pagination{
-				Page:    int32(1),
-				PerPage: int32(10),
+				Page:    uint64(1),
+				PerPage: uint64(10),
 			})
 
 			if tt.error != nil {

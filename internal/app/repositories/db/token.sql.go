@@ -153,12 +153,12 @@ SELECT
 FROM tokens AS t
   JOIN users AS u ON t.user_id = u.id
   RIGHT JOIN counter ON TRUE
-ORDER BY t.created_at DESC LIMIT $1 OFFSET $2
+ORDER BY t.created_at DESC LIMIT $1::bigint OFFSET $2::bigint
 `
 
 type FindTokensParams struct {
-	Limit  int32
-	Offset int32
+	Limit uint64
+	Offset uint64
 }
 
 type FindTokensRow struct {
@@ -168,7 +168,7 @@ type FindTokensRow struct {
 	Value          string
 	ExpiresAt      pgtype.Timestamp
 	IdentityNumber string
-	Total          int64
+	Total          uint64
 }
 
 func (q *Queries) FindTokens(ctx context.Context, arg FindTokensParams) ([]FindTokensRow, error) {

@@ -14,7 +14,7 @@ import (
 )
 
 type Tokens interface {
-	List(ctx context.Context, pagination *Pagination) ([]models.Token, int, error)
+	List(ctx context.Context, pagination *Pagination) ([]models.Token, uint64, error)
 	Create(ctx context.Context, userId uuid.UUID) (*models.User, error)
 	Update(ctx context.Context, refreshToken string) (*models.User, error)
 	FindById(ctx context.Context, id uuid.UUID) (*models.Token, error)
@@ -51,7 +51,7 @@ func NewTokens(
 	}
 }
 
-func (t *tokens) List(ctx context.Context, pagination *Pagination) ([]models.Token, int, error) {
+func (t *tokens) List(ctx context.Context, pagination *Pagination) ([]models.Token, uint64, error) {
 	collection, total, err := t.token.List(ctx, pagination.Limit(), pagination.Offset())
 
 	if err != nil {

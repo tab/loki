@@ -11,7 +11,7 @@ import (
 )
 
 type PermissionRepository interface {
-	List(ctx context.Context, limit, offset int32) ([]models.Permission, int, error)
+	List(ctx context.Context, limit, offset uint64) ([]models.Permission, uint64, error)
 	Create(ctx context.Context, params db.CreatePermissionParams) (*models.Permission, error)
 	Update(ctx context.Context, params db.UpdatePermissionParams) (*models.Permission, error)
 	FindById(ctx context.Context, id uuid.UUID) (*models.Permission, error)
@@ -27,7 +27,7 @@ func NewPermissionRepository(client postgres.Postgres) PermissionRepository {
 	return &permission{client: client}
 }
 
-func (p *permission) List(ctx context.Context, limit, offset int32) ([]models.Permission, int, error) {
+func (p *permission) List(ctx context.Context, limit, offset uint64) ([]models.Permission, uint64, error) {
 	rows, err := p.client.Queries().FindPermissions(ctx, db.FindPermissionsParams{
 		Limit:  limit,
 		Offset: offset,
@@ -37,10 +37,10 @@ func (p *permission) List(ctx context.Context, limit, offset int32) ([]models.Pe
 	}
 
 	permissions := make([]models.Permission, 0, len(rows))
-	var total int
+	var total uint64
 
 	if len(rows) > 0 {
-		total = int(rows[0].Total)
+		total = rows[0].Total
 	}
 
 	for _, row := range rows {

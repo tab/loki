@@ -57,8 +57,8 @@ func (c *permissionsController) List(w http.ResponseWriter, r *http.Request) {
 	response := serializers.PaginationResponse[serializers.PermissionSerializer]{
 		Data: collection,
 		Meta: serializers.PaginationMeta{
-			Page:  int(pagination.Page),
-			Per:   int(pagination.PerPage),
+			Page:  pagination.Page,
+			Per:   pagination.PerPage,
 			Total: total,
 		},
 	}

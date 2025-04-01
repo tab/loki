@@ -13,7 +13,7 @@ import (
 )
 
 type Permissions interface {
-	List(ctx context.Context, pagination *Pagination) ([]models.Permission, int, error)
+	List(ctx context.Context, pagination *Pagination) ([]models.Permission, uint64, error)
 	Create(ctx context.Context, params *models.Permission) (*models.Permission, error)
 	Update(ctx context.Context, params *models.Permission) (*models.Permission, error)
 	FindById(ctx context.Context, id uuid.UUID) (*models.Permission, error)
@@ -32,7 +32,7 @@ func NewPermissions(repository repositories.PermissionRepository, log *logger.Lo
 	}
 }
 
-func (p *permissions) List(ctx context.Context, pagination *Pagination) ([]models.Permission, int, error) {
+func (p *permissions) List(ctx context.Context, pagination *Pagination) ([]models.Permission, uint64, error) {
 	collection, total, err := p.repository.List(ctx, pagination.Limit(), pagination.Offset())
 
 	if err != nil {

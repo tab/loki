@@ -10,7 +10,7 @@ SELECT
   counter.total
 FROM scopes AS s
 RIGHT JOIN counter ON TRUE
-ORDER BY s.created_at DESC LIMIT $1 OFFSET $2;
+ORDER BY s.created_at DESC LIMIT $1::bigint OFFSET $2::bigint;
 
 -- name: CreateScope :one
 INSERT INTO scopes (name, description)

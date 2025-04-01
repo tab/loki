@@ -13,7 +13,7 @@ import (
 )
 
 type TokenRepository interface {
-	List(ctx context.Context, limit, offset int32) ([]models.Token, int, error)
+	List(ctx context.Context, limit, offset uint64) ([]models.Token, uint64, error)
 	Create(ctx context.Context, params db.CreateTokensParams) ([]models.Token, error)
 	FindById(ctx context.Context, id uuid.UUID) (*models.Token, error)
 	Delete(ctx context.Context, id uuid.UUID) (bool, error)
@@ -27,7 +27,7 @@ func NewTokenRepository(client postgres.Postgres) TokenRepository {
 	return &token{client: client}
 }
 
-func (t *token) List(ctx context.Context, limit, offset int32) ([]models.Token, int, error) {
+func (t *token) List(ctx context.Context, limit, offset uint64) ([]models.Token, uint64, error) {
 	rows, err := t.client.Queries().FindTokens(ctx, db.FindTokensParams{
 		Limit:  limit,
 		Offset: offset,
@@ -37,10 +37,10 @@ func (t *token) List(ctx context.Context, limit, offset int32) ([]models.Token, 
 	}
 
 	tokens := make([]models.Token, 0, len(rows))
-	var total int
+	var total uint64
 
 	if len(rows) > 0 {
-		total = int(rows[0].Total)
+		total = rows[0].Total
 	}
 
 	for _, row := range rows {

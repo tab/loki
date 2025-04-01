@@ -11,7 +11,7 @@ import (
 )
 
 type ScopeRepository interface {
-	List(ctx context.Context, limit, offset int32) ([]models.Scope, int, error)
+	List(ctx context.Context, limit, offset uint64) ([]models.Scope, uint64, error)
 	Create(ctx context.Context, params db.CreateScopeParams) (*models.Scope, error)
 	Update(ctx context.Context, params db.UpdateScopeParams) (*models.Scope, error)
 	FindById(ctx context.Context, id uuid.UUID) (*models.Scope, error)
@@ -31,7 +31,7 @@ func NewScopeRepository(client postgres.Postgres) ScopeRepository {
 	return &scope{client: client}
 }
 
-func (s *scope) List(ctx context.Context, limit, offset int32) ([]models.Scope, int, error) {
+func (s *scope) List(ctx context.Context, limit, offset uint64) ([]models.Scope, uint64, error) {
 	rows, err := s.client.Queries().FindScopes(ctx, db.FindScopesParams{
 		Limit:  limit,
 		Offset: offset,
@@ -41,10 +41,10 @@ func (s *scope) List(ctx context.Context, limit, offset int32) ([]models.Scope, 
 	}
 
 	roles := make([]models.Scope, 0, len(rows))
-	var total int
+	var total uint64
 
 	if len(rows) > 0 {
-		total = int(rows[0].Total)
+		total = rows[0].Total
 	}
 
 	for _, row := range rows {

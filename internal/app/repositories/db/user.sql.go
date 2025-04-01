@@ -178,12 +178,12 @@ SELECT
   counter.total
 FROM users AS u
 RIGHT JOIN counter ON TRUE
-ORDER BY u.created_at DESC LIMIT $1 OFFSET $2
+ORDER BY u.created_at DESC LIMIT $1::bigint OFFSET $2::bigint
 `
 
 type FindUsersParams struct {
-	Limit  int32
-	Offset int32
+	Limit uint64
+	Offset uint64
 }
 
 type FindUsersRow struct {
@@ -192,7 +192,7 @@ type FindUsersRow struct {
 	PersonalCode   pgtype.Text
 	FirstName      pgtype.Text
 	LastName       pgtype.Text
-	Total          int64
+	Total          uint64
 }
 
 func (q *Queries) FindUsers(ctx context.Context, arg FindUsersParams) ([]FindUsersRow, error) {

@@ -13,7 +13,7 @@ import (
 )
 
 type Users interface {
-	List(ctx context.Context, pagination *Pagination) ([]models.User, int, error)
+	List(ctx context.Context, pagination *Pagination) ([]models.User, uint64, error)
 	Create(ctx context.Context, params *models.User) (*models.User, error)
 	Update(ctx context.Context, params *models.User) (*models.User, error)
 	FindById(ctx context.Context, id uuid.UUID) (*models.User, error)
@@ -35,7 +35,7 @@ func NewUsers(repository repositories.UserRepository, log *logger.Logger) Users 
 	}
 }
 
-func (u *users) List(ctx context.Context, pagination *Pagination) ([]models.User, int, error) {
+func (u *users) List(ctx context.Context, pagination *Pagination) ([]models.User, uint64, error) {
 	collection, total, err := u.repository.List(ctx, pagination.Limit(), pagination.Offset())
 
 	if err != nil {
