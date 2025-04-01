@@ -1,22 +1,15 @@
 package middlewares
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
 
-	"loki/internal/app/models"
 	"loki/internal/app/serializers"
 	"loki/internal/app/services"
 	"loki/pkg/jwt"
 	"loki/pkg/logger"
 )
-
-const bearerScheme = "Bearer "
-
-type CurrentUser struct{}
-type Claim struct{}
 
 type AuthenticationMiddleware interface {
 	Authenticate(next http.Handler) http.Handler
@@ -61,33 +54,16 @@ func (m *authenticationMiddleware) Authenticate(next http.Handler) http.Handler 
 			return
 		}
 
-		ctx := withCurrentUser(r.Context(), user)
+		ctx := NewContextModifier(r.Context()).
+			WithCurrentUser(user).
+			Context()
+
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-func CurrentUserFromContext(ctx context.Context) (*models.User, bool) {
-	u := ctx.Value(CurrentUser{})
-	if u == nil {
-		return nil, false
-	}
-
-	user, ok := u.(*models.User)
-	return user, ok
-}
-
-func CurrentClaimFromContext(ctx context.Context) (*jwt.Payload, bool) {
-	c, ok := ctx.Value(Claim{}).(*jwt.Payload)
-	return c, ok
-}
-
-func withCurrentUser(ctx context.Context, user *models.User) context.Context {
-	ctx = context.WithValue(ctx, CurrentUser{}, user)
-	return ctx
-}
-
 func extractBearerToken(r *http.Request) (string, bool) {
-	authHeader := r.Header.Get("Authorization")
+	authHeader := r.Header.Get(Authorization)
 	if authHeader == "" {
 		return "", false
 	}

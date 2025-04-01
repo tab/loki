@@ -1,12 +1,10 @@
 package middlewares
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 
 	"loki/internal/app/errors"
-	"loki/internal/app/models"
 	"loki/internal/app/serializers"
 	"loki/internal/app/services"
 	"loki/pkg/jwt"
@@ -64,7 +62,11 @@ func (m *authorizationMiddleware) Authorize(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := withCurrentUserAndClaim(r.Context(), user, claim)
+		ctx := NewContextModifier(r.Context()).
+			WithCurrentUser(user).
+			WithClaim(claim).
+			Context()
+
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -90,10 +92,4 @@ func (m *authorizationMiddleware) Check(permission string) func(http.Handler) ht
 			next.ServeHTTP(w, r)
 		})
 	}
-}
-
-func withCurrentUserAndClaim(ctx context.Context, user *models.User, claim *jwt.Payload) context.Context {
-	ctx = context.WithValue(ctx, CurrentUser{}, user)
-	ctx = context.WithValue(ctx, Claim{}, claim)
-	return ctx
 }
