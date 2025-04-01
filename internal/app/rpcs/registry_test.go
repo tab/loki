@@ -13,8 +13,15 @@ type permissionService struct {
 	proto.UnimplementedPermissionServiceServer
 }
 
+type scopeService struct {
+	proto.UnimplementedScopeServiceServer
+}
+
 func Test_Registry_RegisterAll(t *testing.T) {
-	registry := NewRegistry(&permissionService{})
+	registry := NewRegistry(
+		&permissionService{},
+		&scopeService{},
+	)
 	assert.NotNil(t, registry)
 
 	server := grpc.NewServer()

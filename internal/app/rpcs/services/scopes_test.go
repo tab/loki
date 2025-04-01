@@ -18,36 +18,36 @@ import (
 	"loki/pkg/logger"
 )
 
-func Test_Permissions_List(t *testing.T) {
+func Test_Scopes_List(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	ctx := context.Background()
-	permissions := services.NewMockPermissions(ctrl)
+	scopes := services.NewMockScopes(ctrl)
 	log := logger.NewLogger()
-	service := NewPermissions(permissions, log)
+	service := NewScopes(scopes, log)
 
 	tests := []struct {
 		name     string
 		before   func()
 		request  *proto.PaginatedListRequest
-		expected *proto.ListPermissionsResponse
+		expected *proto.ListScopesResponse
 		code     codes.Code
 		error    bool
 	}{
 		{
 			name: "Success",
 			before: func() {
-				permissions.EXPECT().List(ctx, gomock.Any()).Return([]models.Permission{
+				scopes.EXPECT().List(ctx, gomock.Any()).Return([]models.Scope{
 					{
-						ID:          uuid.MustParse("10000000-1000-1000-3000-000000000001"),
-						Name:        models.ReadSelfType,
-						Description: "Read own data",
+						ID:          uuid.MustParse("10000000-1000-1000-2000-000000000001"),
+						Name:        models.SsoServiceType,
+						Description: "SSO-service scope",
 					},
 					{
-						ID:          uuid.MustParse("10000000-1000-1000-3000-000000000002"),
-						Name:        models.WriteSelfType,
-						Description: "Write own data",
+						ID:          uuid.MustParse("10000000-1000-1000-2000-000000000002"),
+						Name:        models.SelfServiceType,
+						Description: "Self-service scope",
 					},
 				}, uint64(2), nil)
 			},
@@ -55,17 +55,17 @@ func Test_Permissions_List(t *testing.T) {
 				Limit:  1,
 				Offset: 10,
 			},
-			expected: &proto.ListPermissionsResponse{
-				Data: []*proto.Permission{
+			expected: &proto.ListScopesResponse{
+				Data: []*proto.Scope{
 					{
-						Id:          "10000000-1000-1000-3000-000000000001",
-						Name:        "read:self",
-						Description: "Read own data",
+						Id:          "10000000-1000-1000-2000-000000000001",
+						Name:        "sso-service",
+						Description: "SSO-service scope",
 					},
 					{
-						Id:          "10000000-1000-1000-3000-000000000002",
-						Name:        "write:self",
-						Description: "Write own data",
+						Id:          "10000000-1000-1000-2000-000000000002",
+						Name:        "self-service",
+						Description: "Self-service scope",
 					},
 				},
 				Meta: &proto.PaginationMeta{
@@ -79,7 +79,7 @@ func Test_Permissions_List(t *testing.T) {
 		{
 			name: "Error",
 			before: func() {
-				permissions.EXPECT().List(ctx, gomock.Any()).Return(nil, uint64(0), errors.ErrFailedToFetchResults)
+				scopes.EXPECT().List(ctx, gomock.Any()).Return(nil, uint64(0), errors.ErrFailedToFetchResults)
 			},
 			request: &proto.PaginatedListRequest{
 				Limit:  1,
@@ -104,52 +104,52 @@ func Test_Permissions_List(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, len(tt.expected.Data), len(result.Data))
 				assert.Equal(t, tt.expected.Meta.Total, result.Meta.Total)
-				for i, permission := range tt.expected.Data {
-					assert.Equal(t, permission.Id, result.Data[i].Id)
-					assert.Equal(t, permission.Name, result.Data[i].Name)
-					assert.Equal(t, permission.Description, result.Data[i].Description)
+				for i, scope := range tt.expected.Data {
+					assert.Equal(t, scope.Id, result.Data[i].Id)
+					assert.Equal(t, scope.Name, result.Data[i].Name)
+					assert.Equal(t, scope.Description, result.Data[i].Description)
 				}
 			}
 		})
 	}
 }
 
-func Test_Permissions_Get(t *testing.T) {
+func Test_Scopes_Get(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	ctx := context.Background()
-	permissions := services.NewMockPermissions(ctrl)
+	scopes := services.NewMockScopes(ctrl)
 	log := logger.NewLogger()
-	service := NewPermissions(permissions, log)
+	service := NewScopes(scopes, log)
 
-	id := uuid.MustParse("10000000-1000-1000-3000-000000000001")
+	id := uuid.MustParse("10000000-1000-1000-2000-000000000001")
 
 	tests := []struct {
 		name     string
 		before   func()
-		req      *proto.GetPermissionRequest
-		expected *proto.GetPermissionResponse
+		req      *proto.GetScopeRequest
+		expected *proto.GetScopeResponse
 		code     codes.Code
 		error    bool
 	}{
 		{
 			name: "Success",
 			before: func() {
-				permissions.EXPECT().FindById(ctx, id).Return(&models.Permission{
+				scopes.EXPECT().FindById(ctx, id).Return(&models.Scope{
 					ID:          id,
-					Name:        models.ReadSelfType,
-					Description: "Read own data",
+					Name:        models.SsoServiceType,
+					Description: "SSO-service scope",
 				}, nil)
 			},
-			req: &proto.GetPermissionRequest{
+			req: &proto.GetScopeRequest{
 				Id: id.String(),
 			},
-			expected: &proto.GetPermissionResponse{
-				Data: &proto.Permission{
+			expected: &proto.GetScopeResponse{
+				Data: &proto.Scope{
 					Id:          id.String(),
-					Name:        "read:self",
-					Description: "Read own data",
+					Name:        "sso-service",
+					Description: "SSO-service scope",
 				},
 			},
 			error: false,
@@ -157,9 +157,9 @@ func Test_Permissions_Get(t *testing.T) {
 		{
 			name: "Not Found",
 			before: func() {
-				permissions.EXPECT().FindById(ctx, id).Return(nil, errors.ErrPermissionNotFound)
+				scopes.EXPECT().FindById(ctx, id).Return(nil, errors.ErrScopeNotFound)
 			},
-			req: &proto.GetPermissionRequest{
+			req: &proto.GetScopeRequest{
 				Id: id.String(),
 			},
 			expected: nil,
@@ -168,7 +168,7 @@ func Test_Permissions_Get(t *testing.T) {
 		},
 		{
 			name: "Invalid ID Format",
-			req: &proto.GetPermissionRequest{
+			req: &proto.GetScopeRequest{
 				Id: "invalid-uuid",
 			},
 			expected: nil,
@@ -198,43 +198,43 @@ func Test_Permissions_Get(t *testing.T) {
 	}
 }
 
-func Test_Permissions_Create(t *testing.T) {
+func Test_Scopes_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	ctx := context.Background()
-	permissions := services.NewMockPermissions(ctrl)
+	scopes := services.NewMockScopes(ctrl)
 	log := logger.NewLogger()
-	service := NewPermissions(permissions, log)
+	service := NewScopes(scopes, log)
 
-	id := uuid.MustParse("10000000-1000-1000-3000-000000000001")
+	id := uuid.MustParse("10000000-1000-1000-2000-000000000001")
 
 	tests := []struct {
 		name     string
 		before   func()
-		req      *proto.CreatePermissionRequest
-		expected *proto.CreatePermissionResponse
+		req      *proto.CreateScopeRequest
+		expected *proto.CreateScopeResponse
 		code     codes.Code
 		error    bool
 	}{
 		{
 			name: "Success",
 			before: func() {
-				permissions.EXPECT().Create(ctx, gomock.Any()).Return(&models.Permission{
+				scopes.EXPECT().Create(ctx, gomock.Any()).Return(&models.Scope{
 					ID:          id,
-					Name:        models.ReadSelfType,
-					Description: "Read own data",
+					Name:        models.SsoServiceType,
+					Description: "SSO-service scope",
 				}, nil)
 			},
-			req: &proto.CreatePermissionRequest{
-				Name:        "read:self",
-				Description: "Read own data",
+			req: &proto.CreateScopeRequest{
+				Name:        "sso-service",
+				Description: "SSO-service scope",
 			},
-			expected: &proto.CreatePermissionResponse{
-				Data: &proto.Permission{
+			expected: &proto.CreateScopeResponse{
+				Data: &proto.Scope{
 					Id:          id.String(),
-					Name:        "read:self",
-					Description: "Read own data",
+					Name:        "sso-service",
+					Description: "SSO-service scope",
 				},
 			},
 			error: false,
@@ -242,11 +242,11 @@ func Test_Permissions_Create(t *testing.T) {
 		{
 			name: "Internal Error",
 			before: func() {
-				permissions.EXPECT().Create(ctx, gomock.Any()).Return(nil, assert.AnError)
+				scopes.EXPECT().Create(ctx, gomock.Any()).Return(nil, assert.AnError)
 			},
-			req: &proto.CreatePermissionRequest{
-				Name:        "read:self",
-				Description: "Read own data",
+			req: &proto.CreateScopeRequest{
+				Name:        "sso-service",
+				Description: "SSO-service scope",
 			},
 			expected: nil,
 			code:     codes.Internal,
@@ -254,9 +254,9 @@ func Test_Permissions_Create(t *testing.T) {
 		},
 		{
 			name: "Validation Error",
-			req: &proto.CreatePermissionRequest{
+			req: &proto.CreateScopeRequest{
 				Name:        "",
-				Description: "Read own data",
+				Description: "SSO-service scope",
 			},
 			expected: nil,
 			code:     codes.InvalidArgument,
@@ -285,44 +285,44 @@ func Test_Permissions_Create(t *testing.T) {
 	}
 }
 
-func Test_Permissions_Update(t *testing.T) {
+func Test_Scopes_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	ctx := context.Background()
-	permissions := services.NewMockPermissions(ctrl)
+	scopes := services.NewMockScopes(ctrl)
 	log := logger.NewLogger()
-	service := NewPermissions(permissions, log)
+	service := NewScopes(scopes, log)
 
-	id := uuid.MustParse("10000000-1000-1000-3000-000000000001")
+	id := uuid.MustParse("10000000-1000-1000-2000-000000000001")
 
 	tests := []struct {
 		name     string
 		before   func()
-		req      *proto.UpdatePermissionRequest
-		expected *proto.UpdatePermissionResponse
+		req      *proto.UpdateScopeRequest
+		expected *proto.UpdateScopeResponse
 		code     codes.Code
 		error    bool
 	}{
 		{
 			name: "Success",
 			before: func() {
-				permissions.EXPECT().Update(ctx, gomock.Any()).Return(&models.Permission{
+				scopes.EXPECT().Update(ctx, gomock.Any()).Return(&models.Scope{
 					ID:          id,
-					Name:        models.ReadSelfType,
-					Description: "Read own data updated",
+					Name:        models.SsoServiceType,
+					Description: "SSO-service scope updated",
 				}, nil)
 			},
-			req: &proto.UpdatePermissionRequest{
+			req: &proto.UpdateScopeRequest{
 				Id:          id.String(),
-				Name:        "read:self",
-				Description: "Read own data updated",
+				Name:        "sso-service",
+				Description: "SSO-service scope updated",
 			},
-			expected: &proto.UpdatePermissionResponse{
-				Data: &proto.Permission{
+			expected: &proto.UpdateScopeResponse{
+				Data: &proto.Scope{
 					Id:          id.String(),
-					Name:        "read:self",
-					Description: "Read own data updated",
+					Name:        "sso-service",
+					Description: "SSO-service scope updated",
 				},
 			},
 			error: false,
@@ -330,12 +330,12 @@ func Test_Permissions_Update(t *testing.T) {
 		{
 			name: "Not Found",
 			before: func() {
-				permissions.EXPECT().Update(ctx, gomock.Any()).Return(nil, errors.ErrPermissionNotFound)
+				scopes.EXPECT().Update(ctx, gomock.Any()).Return(nil, errors.ErrScopeNotFound)
 			},
-			req: &proto.UpdatePermissionRequest{
+			req: &proto.UpdateScopeRequest{
 				Id:          id.String(),
-				Name:        "read:self",
-				Description: "Read own data updated",
+				Name:        "sso-service",
+				Description: "SSO-service scope updated",
 			},
 			expected: nil,
 			code:     codes.NotFound,
@@ -344,12 +344,12 @@ func Test_Permissions_Update(t *testing.T) {
 		{
 			name: "Internal Error",
 			before: func() {
-				permissions.EXPECT().Update(ctx, gomock.Any()).Return(nil, assert.AnError)
+				scopes.EXPECT().Update(ctx, gomock.Any()).Return(nil, assert.AnError)
 			},
-			req: &proto.UpdatePermissionRequest{
+			req: &proto.UpdateScopeRequest{
 				Id:          id.String(),
-				Name:        "read:self",
-				Description: "Read own data updated",
+				Name:        "sso-service",
+				Description: "SSO-service scope updated",
 			},
 			expected: nil,
 			code:     codes.Internal,
@@ -357,10 +357,10 @@ func Test_Permissions_Update(t *testing.T) {
 		},
 		{
 			name: "Invalid ID Format",
-			req: &proto.UpdatePermissionRequest{
+			req: &proto.UpdateScopeRequest{
 				Id:          "invalid-uuid",
-				Name:        "read:self",
-				Description: "Read own data updated",
+				Name:        "sso-service",
+				Description: "SSO-service scope updated",
 			},
 			expected: nil,
 			code:     codes.InvalidArgument,
@@ -389,21 +389,21 @@ func Test_Permissions_Update(t *testing.T) {
 	}
 }
 
-func Test_Permissions_Delete(t *testing.T) {
+func Test_Scopes_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	ctx := context.Background()
-	permissions := services.NewMockPermissions(ctrl)
+	scopes := services.NewMockScopes(ctrl)
 	log := logger.NewLogger()
-	service := NewPermissions(permissions, log)
+	service := NewScopes(scopes, log)
 
-	id := uuid.MustParse("10000000-1000-1000-3000-000000000001")
+	id := uuid.MustParse("10000000-1000-1000-2000-000000000001")
 
 	tests := []struct {
 		name     string
 		before   func()
-		req      *proto.DeletePermissionRequest
+		req      *proto.DeleteScopeRequest
 		expected *emptypb.Empty
 		code     codes.Code
 		error    bool
@@ -411,9 +411,9 @@ func Test_Permissions_Delete(t *testing.T) {
 		{
 			name: "Success",
 			before: func() {
-				permissions.EXPECT().Delete(ctx, id).Return(true, nil)
+				scopes.EXPECT().Delete(ctx, id).Return(true, nil)
 			},
-			req: &proto.DeletePermissionRequest{
+			req: &proto.DeleteScopeRequest{
 				Id: id.String(),
 			},
 			expected: &emptypb.Empty{},
@@ -422,9 +422,9 @@ func Test_Permissions_Delete(t *testing.T) {
 		{
 			name: "Not Found",
 			before: func() {
-				permissions.EXPECT().Delete(ctx, id).Return(false, errors.ErrPermissionNotFound)
+				scopes.EXPECT().Delete(ctx, id).Return(false, errors.ErrScopeNotFound)
 			},
-			req: &proto.DeletePermissionRequest{
+			req: &proto.DeleteScopeRequest{
 				Id: id.String(),
 			},
 			expected: nil,
@@ -434,9 +434,9 @@ func Test_Permissions_Delete(t *testing.T) {
 		{
 			name: "Internal Error",
 			before: func() {
-				permissions.EXPECT().Delete(ctx, id).Return(false, assert.AnError)
+				scopes.EXPECT().Delete(ctx, id).Return(false, assert.AnError)
 			},
-			req: &proto.DeletePermissionRequest{
+			req: &proto.DeleteScopeRequest{
 				Id: id.String(),
 			},
 			expected: nil,
@@ -445,7 +445,7 @@ func Test_Permissions_Delete(t *testing.T) {
 		},
 		{
 			name: "Invalid ID Format",
-			req: &proto.DeletePermissionRequest{
+			req: &proto.DeleteScopeRequest{
 				Id: "invalid-uuid",
 			},
 			expected: nil,

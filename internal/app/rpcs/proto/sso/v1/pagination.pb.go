@@ -22,6 +22,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// PaginatedListRequest is the request for the List method
 type PaginatedListRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Limit         uint64                 `protobuf:"varint,1,opt,name=limit,proto3" json:"limit,omitempty"`
@@ -74,6 +75,7 @@ func (x *PaginatedListRequest) GetOffset() uint64 {
 	return 0
 }
 
+// PaginationMeta pagination metadata
 type PaginationMeta struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Page          uint64                 `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
