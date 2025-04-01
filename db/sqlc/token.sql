@@ -14,7 +14,7 @@ SELECT
 FROM tokens AS t
   JOIN users AS u ON t.user_id = u.id
   RIGHT JOIN counter ON TRUE
-ORDER BY t.created_at DESC LIMIT $1 OFFSET $2;
+ORDER BY t.created_at DESC LIMIT $1::bigint OFFSET $2::bigint;
 
 -- name: CreateToken :one
 INSERT INTO tokens (user_id, type, value, expires_at)

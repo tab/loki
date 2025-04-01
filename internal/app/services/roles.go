@@ -13,7 +13,7 @@ import (
 )
 
 type Roles interface {
-	List(ctx context.Context, pagination *Pagination) ([]models.Role, int, error)
+	List(ctx context.Context, pagination *Pagination) ([]models.Role, uint64, error)
 	Create(ctx context.Context, params *models.Role) (*models.Role, error)
 	Update(ctx context.Context, params *models.Role) (*models.Role, error)
 	FindById(ctx context.Context, id uuid.UUID) (*models.Role, error)
@@ -34,7 +34,7 @@ func NewRoles(repository repositories.RoleRepository, log *logger.Logger) Roles 
 	}
 }
 
-func (r *roles) List(ctx context.Context, pagination *Pagination) ([]models.Role, int, error) {
+func (r *roles) List(ctx context.Context, pagination *Pagination) ([]models.Role, uint64, error) {
 	collection, total, err := r.repository.List(ctx, pagination.Limit(), pagination.Offset())
 
 	if err != nil {

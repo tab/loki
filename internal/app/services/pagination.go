@@ -6,14 +6,14 @@ import (
 )
 
 const (
-	DefaultPage    int32 = 1
-	DefaultPerPage int32 = 25
-	MaxPerPage     int32 = 1000
+	DefaultPage    uint64 = 1
+	DefaultPerPage uint64 = 25
+	MaxPerPage     uint64 = 1000
 )
 
 type Pagination struct {
-	Page    int32
-	PerPage int32
+	Page    uint64
+	PerPage uint64
 }
 
 func NewPagination(r *http.Request) *Pagination {
@@ -38,25 +38,24 @@ func NewPagination(r *http.Request) *Pagination {
 	}
 }
 
-func parseQueryParam(r *http.Request, key string, defaultValue int32) int32 {
+func parseQueryParam(r *http.Request, key string, defaultValue uint64) uint64 {
 	param := r.URL.Query().Get(key)
 	if param == "" {
 		return defaultValue
 	}
 
-	value, err := strconv.ParseInt(param, 10, 32)
+	value, err := strconv.ParseUint(param, 10, 64)
 	if err != nil {
 		return defaultValue
 	}
 
-	// NOTE: Safe to convert because ParseInt with bitSize 32 ensures the value fits in int32
-	return int32(value) // #nosec G115
+	return value
 }
 
-func (p *Pagination) Limit() int32 {
+func (p *Pagination) Limit() uint64 {
 	return p.PerPage
 }
 
-func (p *Pagination) Offset() int32 {
+func (p *Pagination) Offset() uint64 {
 	return (p.Page - 1) * p.PerPage
 }

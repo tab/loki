@@ -104,11 +104,11 @@ func (mr *MockPermissionRepositoryMockRecorder) FindByUserId(ctx, id any) *gomoc
 }
 
 // List mocks base method.
-func (m *MockPermissionRepository) List(ctx context.Context, limit, offset int32) ([]models.Permission, int, error) {
+func (m *MockPermissionRepository) List(ctx context.Context, limit, offset uint64) ([]models.Permission, uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", ctx, limit, offset)
 	ret0, _ := ret[0].([]models.Permission)
-	ret1, _ := ret[1].(int)
+	ret1, _ := ret[1].(uint64)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }

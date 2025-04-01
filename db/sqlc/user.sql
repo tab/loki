@@ -12,7 +12,7 @@ SELECT
   counter.total
 FROM users AS u
 RIGHT JOIN counter ON TRUE
-ORDER BY u.created_at DESC LIMIT $1 OFFSET $2;
+ORDER BY u.created_at DESC LIMIT $1::bigint OFFSET $2::bigint;
 
 -- name: CreateUser :one
 INSERT INTO users (identity_number, personal_code, first_name, last_name)

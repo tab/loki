@@ -10,7 +10,7 @@ SELECT
   counter.total
 FROM permissions AS p
 RIGHT JOIN counter ON TRUE
-ORDER BY p.created_at DESC LIMIT $1 OFFSET $2;
+ORDER BY p.created_at DESC LIMIT $1::bigint OFFSET $2::bigint;
 
 -- name: CreatePermission :one
 INSERT INTO permissions (name, description)

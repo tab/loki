@@ -57,7 +57,7 @@ func Test_Backoffice_Users_List(t *testing.T) {
 						FirstName:      "Jane",
 						LastName:       "Doe",
 					},
-				}, 2, nil)
+				}, uint64(2), nil)
 			},
 			expected: result{
 				response: serializers.PaginationResponse[serializers.UserSerializer]{
@@ -91,7 +91,7 @@ func Test_Backoffice_Users_List(t *testing.T) {
 		{
 			name: "Empty",
 			before: func() {
-				users.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, 0, nil)
+				users.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, uint64(0), nil)
 			},
 			expected: result{
 				response: serializers.PaginationResponse[serializers.UserSerializer]{
@@ -110,7 +110,7 @@ func Test_Backoffice_Users_List(t *testing.T) {
 		{
 			name: "Error",
 			before: func() {
-				users.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, 0, assert.AnError)
+				users.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, uint64(0), assert.AnError)
 			},
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: assert.AnError.Error()},

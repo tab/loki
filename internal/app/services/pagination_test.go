@@ -77,7 +77,7 @@ func Test_Pagination_Offset(t *testing.T) {
 	tests := []struct {
 		name     string
 		path     string
-		expected int32
+		expected uint64
 	}{
 		{
 			name:     "Empty params",

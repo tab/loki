@@ -27,13 +27,13 @@ func Test_Users_List(t *testing.T) {
 		name     string
 		before   func()
 		expected []models.User
-		total    int
+		total    uint64
 		error    error
 	}{
 		{
 			name: "Success",
 			before: func() {
-				repository.EXPECT().List(ctx, int32(10), int32(0)).Return([]models.User{
+				repository.EXPECT().List(ctx, uint64(10), uint64(0)).Return([]models.User{
 					{
 						ID:             uuid.MustParse("10000000-1000-1000-1000-000000000001"),
 						IdentityNumber: "PNOEE-123456789",
@@ -48,7 +48,7 @@ func Test_Users_List(t *testing.T) {
 						FirstName:      "Jane",
 						LastName:       "Doe",
 					},
-				}, 2, nil)
+				}, uint64(2), nil)
 			},
 			expected: []models.User{
 				{
@@ -66,15 +66,15 @@ func Test_Users_List(t *testing.T) {
 					LastName:       "Doe",
 				},
 			},
-			total: 2,
+			total: uint64(2),
 		},
 		{
 			name: "Error",
 			before: func() {
-				repository.EXPECT().List(ctx, int32(10), int32(0)).Return(nil, 0, assert.AnError)
+				repository.EXPECT().List(ctx, uint64(10), uint64(0)).Return(nil, uint64(0), assert.AnError)
 			},
 			expected: nil,
-			total:    0,
+			total:    uint64(0),
 			error:    assert.AnError,
 		},
 	}
@@ -84,8 +84,8 @@ func Test_Users_List(t *testing.T) {
 			tt.before()
 
 			result, total, err := service.List(ctx, &Pagination{
-				Page:    int32(1),
-				PerPage: int32(10),
+				Page:    uint64(1),
+				PerPage: uint64(10),
 			})
 
 			if tt.error != nil {

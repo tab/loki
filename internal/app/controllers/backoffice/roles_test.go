@@ -58,7 +58,7 @@ func Test_Backoffice_Roles_List(t *testing.T) {
 						Name:        models.UserRoleType,
 						Description: "User role",
 					},
-				}, 3, nil)
+				}, uint64(3), nil)
 			},
 			expected: result{
 				response: serializers.PaginationResponse[serializers.RoleSerializer]{
@@ -82,7 +82,7 @@ func Test_Backoffice_Roles_List(t *testing.T) {
 					Meta: serializers.PaginationMeta{
 						Page:  1,
 						Per:   25,
-						Total: 3,
+						Total: uint64(3),
 					},
 				},
 				status: "200 OK",
@@ -93,7 +93,7 @@ func Test_Backoffice_Roles_List(t *testing.T) {
 		{
 			name: "Empty",
 			before: func() {
-				rolesService.EXPECT().List(gomock.Any(), gomock.Any()).Return([]models.Role{}, 0, nil)
+				rolesService.EXPECT().List(gomock.Any(), gomock.Any()).Return([]models.Role{}, uint64(0), nil)
 			},
 			expected: result{
 				response: serializers.PaginationResponse[serializers.RoleSerializer]{
@@ -101,7 +101,7 @@ func Test_Backoffice_Roles_List(t *testing.T) {
 					Meta: serializers.PaginationMeta{
 						Page:  1,
 						Per:   25,
-						Total: 0,
+						Total: uint64(0),
 					},
 				},
 				status: "200 OK",
@@ -112,7 +112,7 @@ func Test_Backoffice_Roles_List(t *testing.T) {
 		{
 			name: "Error",
 			before: func() {
-				rolesService.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, 0, assert.AnError)
+				rolesService.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, uint64(0), assert.AnError)
 			},
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: assert.AnError.Error()},

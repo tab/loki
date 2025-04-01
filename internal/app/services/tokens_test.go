@@ -42,25 +42,25 @@ func Test_Tokens_List(t *testing.T) {
 		name     string
 		before   func()
 		expected []models.Token
-		total    int
+		total    uint64
 		error    error
 	}{
 		{
 			name: "Success",
 			before: func() {
-				tokenRepository.EXPECT().List(ctx, int32(10), int32(0)).Return([]models.Token{}, 0, nil)
+				tokenRepository.EXPECT().List(ctx, uint64(10), uint64(0)).Return([]models.Token{}, uint64(0), nil)
 			},
 			expected: []models.Token{},
-			total:    0,
+			total:    uint64(0),
 			error:    nil,
 		},
 		{
 			name: "Failed to fetch results",
 			before: func() {
-				tokenRepository.EXPECT().List(ctx, int32(10), int32(0)).Return(nil, 0, assert.AnError)
+				tokenRepository.EXPECT().List(ctx, uint64(10), uint64(0)).Return(nil, uint64(0), assert.AnError)
 			},
 			expected: nil,
-			total:    0,
+			total:    uint64(0),
 			error:    errors.ErrFailedToFetchResults,
 		},
 	}
@@ -70,8 +70,8 @@ func Test_Tokens_List(t *testing.T) {
 			tt.before()
 
 			result, total, err := service.List(ctx, &Pagination{
-				Page:    int32(1),
-				PerPage: int32(10),
+				Page:    uint64(1),
+				PerPage: uint64(10),
 			})
 
 			if tt.error != nil {

@@ -57,8 +57,8 @@ func (c *scopesController) List(w http.ResponseWriter, r *http.Request) {
 	response := serializers.PaginationResponse[serializers.ScopeSerializer]{
 		Data: collection,
 		Meta: serializers.PaginationMeta{
-			Page:  int(paginator.Page),
-			Per:   int(paginator.PerPage),
+			Page:  paginator.Page,
+			Per:   paginator.PerPage,
 			Total: total,
 		},
 	}

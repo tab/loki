@@ -11,7 +11,7 @@ import (
 )
 
 type RoleRepository interface {
-	List(ctx context.Context, limit, offset int32) ([]models.Role, int, error)
+	List(ctx context.Context, limit, offset uint64) ([]models.Role, uint64, error)
 	Create(ctx context.Context, params db.CreateRoleParams) (*models.Role, error)
 	Update(ctx context.Context, params db.UpdateRoleParams) (*models.Role, error)
 	FindById(ctx context.Context, id uuid.UUID) (*models.Role, error)
@@ -33,7 +33,7 @@ func NewRoleRepository(client postgres.Postgres) RoleRepository {
 	return &role{client: client}
 }
 
-func (r *role) List(ctx context.Context, limit, offset int32) ([]models.Role, int, error) {
+func (r *role) List(ctx context.Context, limit, offset uint64) ([]models.Role, uint64, error) {
 	rows, err := r.client.Queries().FindRoles(ctx, db.FindRolesParams{
 		Limit:  limit,
 		Offset: offset,
@@ -43,10 +43,10 @@ func (r *role) List(ctx context.Context, limit, offset int32) ([]models.Role, in
 	}
 
 	roles := make([]models.Role, 0, len(rows))
-	var total int
+	var total uint64
 
 	if len(rows) > 0 {
-		total = int(rows[0].Total)
+		total = rows[0].Total
 	}
 
 	for _, row := range rows {

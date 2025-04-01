@@ -133,11 +133,11 @@ func (mr *MockScopeRepositoryMockRecorder) FindByUserId(ctx, id any) *gomock.Cal
 }
 
 // List mocks base method.
-func (m *MockScopeRepository) List(ctx context.Context, limit, offset int32) ([]models.Scope, int, error) {
+func (m *MockScopeRepository) List(ctx context.Context, limit, offset uint64) ([]models.Scope, uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", ctx, limit, offset)
 	ret0, _ := ret[0].([]models.Scope)
-	ret1, _ := ret[1].(int)
+	ret1, _ := ret[1].(uint64)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }

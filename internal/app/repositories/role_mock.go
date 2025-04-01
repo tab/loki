@@ -148,11 +148,11 @@ func (mr *MockRoleRepositoryMockRecorder) FindRoleDetailsById(ctx, id any) *gomo
 }
 
 // List mocks base method.
-func (m *MockRoleRepository) List(ctx context.Context, limit, offset int32) ([]models.Role, int, error) {
+func (m *MockRoleRepository) List(ctx context.Context, limit, offset uint64) ([]models.Role, uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", ctx, limit, offset)
 	ret0, _ := ret[0].([]models.Role)
-	ret1, _ := ret[1].(int)
+	ret1, _ := ret[1].(uint64)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }

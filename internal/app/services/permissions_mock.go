@@ -88,11 +88,11 @@ func (mr *MockPermissionsMockRecorder) FindById(ctx, id any) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MockPermissions) List(ctx context.Context, pagination *Pagination) ([]models.Permission, int, error) {
+func (m *MockPermissions) List(ctx context.Context, pagination *Pagination) ([]models.Permission, uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", ctx, pagination)
 	ret0, _ := ret[0].([]models.Permission)
-	ret1, _ := ret[1].(int)
+	ret1, _ := ret[1].(uint64)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }

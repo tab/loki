@@ -160,19 +160,19 @@ SELECT
   counter.total
 FROM scopes AS s
 RIGHT JOIN counter ON TRUE
-ORDER BY s.created_at DESC LIMIT $1 OFFSET $2
+ORDER BY s.created_at DESC LIMIT $1::bigint OFFSET $2::bigint
 `
 
 type FindScopesParams struct {
-	Limit  int32
-	Offset int32
+	Limit uint64
+	Offset uint64
 }
 
 type FindScopesRow struct {
 	ID          uuid.UUID
 	Name        pgtype.Text
 	Description pgtype.Text
-	Total       int64
+	Total       uint64
 }
 
 func (q *Queries) FindScopes(ctx context.Context, arg FindScopesParams) ([]FindScopesRow, error) {

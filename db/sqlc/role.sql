@@ -10,7 +10,7 @@ SELECT
   counter.total
 FROM roles AS r
 RIGHT JOIN counter ON TRUE
-ORDER BY r.created_at DESC LIMIT $1 OFFSET $2;
+ORDER BY r.created_at DESC LIMIT $1::bigint OFFSET $2::bigint;
 
 -- name: CreateRole :one
 INSERT INTO roles (name, description)

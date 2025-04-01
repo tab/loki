@@ -13,7 +13,7 @@ import (
 )
 
 type Scopes interface {
-	List(ctx context.Context, pagination *Pagination) ([]models.Scope, int, error)
+	List(ctx context.Context, pagination *Pagination) ([]models.Scope, uint64, error)
 	Create(ctx context.Context, params *models.Scope) (*models.Scope, error)
 	Update(ctx context.Context, params *models.Scope) (*models.Scope, error)
 	FindById(ctx context.Context, id uuid.UUID) (*models.Scope, error)
@@ -32,7 +32,7 @@ func NewScopes(repository repositories.ScopeRepository, log *logger.Logger) Scop
 	}
 }
 
-func (s *scopes) List(ctx context.Context, pagination *Pagination) ([]models.Scope, int, error) {
+func (s *scopes) List(ctx context.Context, pagination *Pagination) ([]models.Scope, uint64, error) {
 	collection, total, err := s.repository.List(ctx, pagination.Limit(), pagination.Offset())
 
 	if err != nil {

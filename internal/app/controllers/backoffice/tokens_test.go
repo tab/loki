@@ -52,7 +52,7 @@ func Test_Backoffice_Tokens_List(t *testing.T) {
 						Type:   models.RefreshTokenType,
 						Value:  "refresh-token-value",
 					},
-				}, 2, nil)
+				}, uint64(2), nil)
 			},
 			expected: result{
 				response: serializers.PaginationResponse[serializers.TokenSerializer]{
@@ -82,9 +82,28 @@ func Test_Backoffice_Tokens_List(t *testing.T) {
 			error: false,
 		},
 		{
+			name: "Empty",
+			before: func() {
+				tokens.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, uint64(0), nil)
+			},
+			expected: result{
+				response: serializers.PaginationResponse[serializers.TokenSerializer]{
+					Data: []serializers.TokenSerializer{},
+					Meta: serializers.PaginationMeta{
+						Page:  1,
+						Per:   25,
+						Total: 0,
+					},
+				},
+				status: "200 OK",
+				code:   http.StatusOK,
+			},
+			error: false,
+		},
+		{
 			name: "Error",
 			before: func() {
-				tokens.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, 0, assert.AnError)
+				tokens.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, uint64(0), assert.AnError)
 			},
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: assert.AnError.Error()},
