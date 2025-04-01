@@ -8,17 +8,17 @@ import (
 	"loki/internal/config"
 )
 
-type Server interface {
+type WebServer interface {
 	Run() error
 	Shutdown(ctx context.Context) error
 }
 
-type server struct {
+type webServer struct {
 	httpServer *http.Server
 }
 
-func NewServer(cfg *config.Config, appRouter http.Handler) Server {
-	return &server{
+func NewWebServer(cfg *config.Config, appRouter http.Handler) WebServer {
+	return &webServer{
 		httpServer: &http.Server{
 			Addr:         cfg.AppAddr,
 			Handler:      appRouter,
@@ -29,10 +29,10 @@ func NewServer(cfg *config.Config, appRouter http.Handler) Server {
 	}
 }
 
-func (s *server) Run() error {
+func (s *webServer) Run() error {
 	return s.httpServer.ListenAndServe()
 }
 
-func (s *server) Shutdown(ctx context.Context) error {
+func (s *webServer) Shutdown(ctx context.Context) error {
 	return s.httpServer.Shutdown(ctx)
 }

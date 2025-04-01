@@ -16,7 +16,7 @@ import (
 	"loki/internal/config/router"
 )
 
-func Test_NewServer(t *testing.T) {
+func Test_NewWebServer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -87,10 +87,10 @@ func Test_NewServer(t *testing.T) {
 		mockBackofficeUsersController,
 	)
 
-	srv := NewServer(cfg, appRouter)
+	srv := NewWebServer(cfg, appRouter)
 	assert.NotNil(t, srv)
 
-	s, ok := srv.(*server)
+	s, ok := srv.(*webServer)
 	assert.True(t, ok)
 
 	assert.Equal(t, cfg.AppAddr, s.httpServer.Addr)
@@ -100,13 +100,13 @@ func Test_NewServer(t *testing.T) {
 	assert.Equal(t, 120*time.Second, s.httpServer.IdleTimeout)
 }
 
-func Test_Server_RunAndShutdown(t *testing.T) {
+func Test_WebServer_RunAndShutdown(t *testing.T) {
 	cfg := &config.Config{
 		AppEnv:  "test",
 		AppAddr: "localhost:5000",
 	}
 	handler := http.NewServeMux()
-	srv := NewServer(cfg, handler)
+	srv := NewWebServer(cfg, handler)
 
 	runErrCh := make(chan error, 1)
 	go func() {
