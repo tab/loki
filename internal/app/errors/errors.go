@@ -36,6 +36,9 @@ var (
 	// ErrEmptyDescription indicates that the description is empty or invalid
 	ErrEmptyDescription = errors.New("empty description")
 
+	// ErrInvalidAttributes indicates that the provided attributes are invalid
+	ErrInvalidAttributes = errors.New("invalid attributes")
+
 	// ErrInvalidIdentityNumber indicates that the provided identity number is invalid
 	ErrInvalidIdentityNumber = errors.New("invalid identity number")
 

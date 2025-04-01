@@ -38,6 +38,7 @@ func Test_LoadConfig(t *testing.T) {
 			expected: &Config{
 				AppEnv:      "test",
 				AppAddr:     "0.0.0.0:8080",
+				GrpcAddr:    "0.0.0.0:50051",
 				ClientURL:   "http://localhost:3000",
 				SecretKey:   "jwt-secret-key",
 				CertPath:    "./certs",
@@ -72,6 +73,7 @@ func Test_LoadConfig(t *testing.T) {
 
 			assert.Equal(t, tt.expected.AppEnv, result.AppEnv)
 			assert.Equal(t, tt.expected.AppAddr, result.AppAddr)
+			assert.Equal(t, tt.expected.GrpcAddr, result.GrpcAddr)
 			assert.Equal(t, tt.expected.ClientURL, result.ClientURL)
 			assert.Equal(t, tt.expected.SecretKey, result.SecretKey)
 			assert.Equal(t, tt.expected.CertPath, result.CertPath)
