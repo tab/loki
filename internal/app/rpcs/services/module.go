@@ -7,4 +7,5 @@ var Module = fx.Options(
 	fx.Provide(NewRoles),
 	fx.Provide(NewScopes),
 	fx.Provide(NewTokens),
+	fx.Provide(NewUsers),
 )
