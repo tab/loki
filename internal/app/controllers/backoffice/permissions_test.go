@@ -275,7 +275,7 @@ func Test_Backoffice_Permissions_Create(t *testing.T) {
 					Description: "Read own data",
 				}, nil)
 			},
-			body: strings.NewReader(`{"name":"read:self","description":"Read own data"}`),
+			body: strings.NewReader(`{"name": "read:self", "description": "Read own data"}`),
 			expected: result{
 				response: serializers.PermissionSerializer{
 					ID:          uuid.MustParse("10000000-1000-1000-3000-000000000001"),
@@ -292,7 +292,7 @@ func Test_Backoffice_Permissions_Create(t *testing.T) {
 			before: func() {
 				permissions.EXPECT().Create(gomock.Any(), gomock.Any()).Times(0)
 			},
-			body: strings.NewReader(`{"name":"read:self"}`),
+			body: strings.NewReader(`{"name": "read:self"}`),
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: "empty description"},
 				status: "400 Bad Request",
@@ -308,7 +308,7 @@ func Test_Backoffice_Permissions_Create(t *testing.T) {
 					Description: "Read own data",
 				}).Return(&models.Permission{}, assert.AnError)
 			},
-			body: strings.NewReader(`{"name":"read:self","description":"Read own data"}`),
+			body: strings.NewReader(`{"name": "read:self", "description": "Read own data"}`),
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: assert.AnError.Error()},
 				status: "422 Unprocessable Entity",
@@ -384,7 +384,7 @@ func Test_Backoffice_Permissions_Update(t *testing.T) {
 					Description: "Read own data",
 				}, nil)
 			},
-			body: strings.NewReader(`{"name":"read:self","description":"Read own data"}`),
+			body: strings.NewReader(`{"name": "read:self", "description": "Read own data"}`),
 			expected: result{
 				response: serializers.PermissionSerializer{
 					ID:          uuid.MustParse("10000000-1000-1000-3000-000000000001"),
@@ -401,7 +401,7 @@ func Test_Backoffice_Permissions_Update(t *testing.T) {
 			before: func() {
 				permissions.EXPECT().Update(gomock.Any(), gomock.Any()).Times(0)
 			},
-			body: strings.NewReader(`{"name":"read:self"}`),
+			body: strings.NewReader(`{"name": "read:self"}`),
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: "empty description"},
 				status: "400 Bad Request",
@@ -418,7 +418,7 @@ func Test_Backoffice_Permissions_Update(t *testing.T) {
 					Description: "Read own data",
 				}).Return(&models.Permission{}, assert.AnError)
 			},
-			body: strings.NewReader(`{"name":"read:self","description":"Read own data"}`),
+			body: strings.NewReader(`{"name": "read:self", "description": "Read own data"}`),
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: assert.AnError.Error()},
 				status: "422 Unprocessable Entity",

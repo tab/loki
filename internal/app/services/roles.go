@@ -46,8 +46,9 @@ func (r *roles) List(ctx context.Context, pagination *Pagination) ([]models.Role
 
 func (r *roles) Create(ctx context.Context, params *models.Role) (*models.Role, error) {
 	role, err := r.repository.Create(ctx, db.CreateRoleParams{
-		Name:        params.Name,
-		Description: params.Description,
+		Name:          params.Name,
+		Description:   params.Description,
+		PermissionIDs: params.PermissionIDs,
 	})
 	if err != nil {
 		return nil, err

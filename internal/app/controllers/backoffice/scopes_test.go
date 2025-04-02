@@ -275,7 +275,7 @@ func Test_Backoffice_Scopes_Create(t *testing.T) {
 					Description: "SSO-service scope",
 				}, nil)
 			},
-			body: strings.NewReader(`{"name":"sso-service","description":"SSO-service scope"}`),
+			body: strings.NewReader(`{"name": "sso-service", "description": "SSO-service scope"}`),
 			expected: result{
 				response: serializers.ScopeSerializer{
 					ID:          uuid.MustParse("10000000-1000-1000-2000-000000000001"),
@@ -292,7 +292,7 @@ func Test_Backoffice_Scopes_Create(t *testing.T) {
 			before: func() {
 				scopes.EXPECT().Create(gomock.Any(), gomock.Any()).Times(0)
 			},
-			body: strings.NewReader(`{"name":"sso-service"}`),
+			body: strings.NewReader(`{"name": "sso-service"}`),
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: "empty description"},
 				status: "400 Bad Request",
@@ -308,7 +308,7 @@ func Test_Backoffice_Scopes_Create(t *testing.T) {
 					Description: "SSO-service scope",
 				}).Return(&models.Scope{}, assert.AnError)
 			},
-			body: strings.NewReader(`{"name":"sso-service","description":"SSO-service scope"}`),
+			body: strings.NewReader(`{"name": "sso-service", "description": "SSO-service scope"}`),
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: assert.AnError.Error()},
 				status: "422 Unprocessable Entity",
@@ -384,7 +384,7 @@ func Test_Backoffice_Scopes_Update(t *testing.T) {
 					Description: "SSO-service scope",
 				}, nil)
 			},
-			body: strings.NewReader(`{"name":"sso-service","description":"SSO-service scope"}`),
+			body: strings.NewReader(`{"name": "sso-service", "description": "SSO-service scope"}`),
 			expected: result{
 				response: serializers.ScopeSerializer{
 					ID:          uuid.MustParse("10000000-1000-1000-2000-000000000001"),
@@ -401,7 +401,7 @@ func Test_Backoffice_Scopes_Update(t *testing.T) {
 			before: func() {
 				scopes.EXPECT().Update(gomock.Any(), gomock.Any()).Times(0)
 			},
-			body: strings.NewReader(`{"name":"sso-service"}`),
+			body: strings.NewReader(`{"name": "sso-service"}`),
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: "empty description"},
 				status: "400 Bad Request",
@@ -418,7 +418,7 @@ func Test_Backoffice_Scopes_Update(t *testing.T) {
 					Description: "SSO-service scope",
 				}).Return(&models.Scope{}, assert.AnError)
 			},
-			body: strings.NewReader(`{"name":"sso-service","description":"SSO-service scope"}`),
+			body: strings.NewReader(`{"name": "sso-service", "description": "SSO-service scope"}`),
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: assert.AnError.Error()},
 				status: "422 Unprocessable Entity",
