@@ -291,7 +291,7 @@ func Test_Backoffice_Users_Create(t *testing.T) {
 					LastName:       "Doe",
 				}, nil)
 			},
-			body: strings.NewReader(`{"identity_number":"PNOEE-123456789","personal_code":"123456789","first_name":"John","last_name":"Doe"}`),
+			body: strings.NewReader(`{"identity_number": "PNOEE-123456789", "personal_code": "123456789", "first_name": "John", "last_name": "Doe"}`),
 			expected: result{
 				response: serializers.UserSerializer{
 					ID:             uuid.MustParse("10000000-1000-1000-1000-000000000001"),
@@ -310,7 +310,7 @@ func Test_Backoffice_Users_Create(t *testing.T) {
 			before: func() {
 				users.EXPECT().Create(gomock.Any(), gomock.Any()).Times(0)
 			},
-			body: strings.NewReader(`{"identity_number":"PNOEE-123456789"}`),
+			body: strings.NewReader(`{"identity_number": "PNOEE-123456789"}`),
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: "empty personal code"},
 				status: "400 Bad Request",
@@ -328,7 +328,7 @@ func Test_Backoffice_Users_Create(t *testing.T) {
 					LastName:       "Doe",
 				}).Return(&models.User{}, assert.AnError)
 			},
-			body: strings.NewReader(`{"identity_number":"PNOEE-123456789","personal_code":"123456789","first_name":"John","last_name":"Doe"}`),
+			body: strings.NewReader(`{"identity_number": "PNOEE-123456789", "personal_code": "123456789", "first_name": "John", "last_name": "Doe"}`),
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: assert.AnError.Error()},
 				status: "422 Unprocessable Entity",
@@ -408,7 +408,7 @@ func Test_Backoffice_Users_Update(t *testing.T) {
 					LastName:       "DOE",
 				}, nil)
 			},
-			body: strings.NewReader(`{"identity_number":"PNOEE-123456789","personal_code":"123456789","first_name":"JOHN","last_name":"DOE"}`),
+			body: strings.NewReader(`{"identity_number": "PNOEE-123456789", "personal_code": "123456789", "first_name": "JOHN", "last_name":"DOE"}`),
 			expected: result{
 				response: serializers.UserSerializer{
 					ID:             uuid.MustParse("10000000-1000-1000-1000-000000000001"),
@@ -427,7 +427,7 @@ func Test_Backoffice_Users_Update(t *testing.T) {
 			before: func() {
 				users.EXPECT().Update(gomock.Any(), gomock.Any()).Times(0)
 			},
-			body: strings.NewReader(`{"identity_number":"PNOEE-123456789"}`),
+			body: strings.NewReader(`{"identity_number": "PNOEE-123456789"}`),
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: "empty personal code"},
 				status: "400 Bad Request",
@@ -446,7 +446,7 @@ func Test_Backoffice_Users_Update(t *testing.T) {
 					LastName:       "Doe",
 				}).Return(&models.User{}, assert.AnError)
 			},
-			body: strings.NewReader(`{"identity_number":"PNOEE-123456789","personal_code":"123456789","first_name":"John","last_name":"Doe"}`),
+			body: strings.NewReader(`{"identity_number": "PNOEE-123456789", "personal_code": "123456789", "first_name": "John", "last_name": "Doe"}`),
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: assert.AnError.Error()},
 				status: "422 Unprocessable Entity",

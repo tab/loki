@@ -288,13 +288,21 @@ func Test_Backoffice_Roles_Create(t *testing.T) {
 				rolesService.EXPECT().Create(gomock.Any(), &models.Role{
 					Name:        models.AdminRoleType,
 					Description: "Admin role",
+					PermissionIDs: []uuid.UUID{
+						uuid.MustParse("10000000-1000-1000-3000-000000000001"),
+						uuid.MustParse("10000000-1000-1000-3000-000000000002"),
+					},
 				}).Return(&models.Role{
 					ID:          uuid.MustParse("10000000-1000-1000-1000-000000000001"),
 					Name:        models.AdminRoleType,
 					Description: "Admin role",
+					PermissionIDs: []uuid.UUID{
+						uuid.MustParse("10000000-1000-1000-3000-000000000001"),
+						uuid.MustParse("10000000-1000-1000-3000-000000000002"),
+					},
 				}, nil)
 			},
-			body: strings.NewReader(`{"name":"admin","description":"Admin role"}`),
+			body: strings.NewReader(`{"name": "admin", "description": "Admin role", "permission_ids": ["10000000-1000-1000-3000-000000000001", "10000000-1000-1000-3000-000000000002"]}`),
 			expected: result{
 				response: serializers.RoleSerializer{
 					ID:          uuid.MustParse("10000000-1000-1000-1000-000000000001"),
@@ -311,7 +319,7 @@ func Test_Backoffice_Roles_Create(t *testing.T) {
 			before: func() {
 				rolesService.EXPECT().Create(gomock.Any(), gomock.Any()).Times(0)
 			},
-			body: strings.NewReader(`{"name":"admin"}`),
+			body: strings.NewReader(`{"name": "admin"}`),
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: "empty description"},
 				status: "400 Bad Request",
@@ -327,7 +335,7 @@ func Test_Backoffice_Roles_Create(t *testing.T) {
 					Description: "Admin role",
 				}).Return(&models.Role{}, assert.AnError)
 			},
-			body: strings.NewReader(`{"name":"admin","description":"Admin role"}`),
+			body: strings.NewReader(`{"name": "admin", "description": "Admin role"}`),
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: assert.AnError.Error()},
 				status: "422 Unprocessable Entity",
@@ -411,7 +419,7 @@ func Test_Backoffice_Roles_Update(t *testing.T) {
 					},
 				}, nil)
 			},
-			body: strings.NewReader(`{"name":"admin","description":"Administrator role updated","permission_ids":["10000000-1000-1000-3000-000000000001","10000000-1000-1000-3000-000000000002"]}`),
+			body: strings.NewReader(`{"name": "admin", "description": "Administrator role updated", "permission_ids": ["10000000-1000-1000-3000-000000000001", "10000000-1000-1000-3000-000000000002"]}`),
 			expected: result{
 				response: serializers.RoleSerializer{
 					ID:          uuid.MustParse("10000000-1000-1000-1000-000000000001"),
@@ -428,7 +436,7 @@ func Test_Backoffice_Roles_Update(t *testing.T) {
 			before: func() {
 				rolesService.EXPECT().Update(gomock.Any(), gomock.Any()).Times(0)
 			},
-			body: strings.NewReader(`{"name":"admin"}`),
+			body: strings.NewReader(`{"name": "admin"}`),
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: "empty description"},
 				status: "400 Bad Request",
@@ -449,7 +457,7 @@ func Test_Backoffice_Roles_Update(t *testing.T) {
 					},
 				}).Return(&models.Role{}, assert.AnError)
 			},
-			body: strings.NewReader(`{"name":"admin","description":"Administrator role updated","permission_ids":["10000000-1000-1000-3000-000000000001","10000000-1000-1000-3000-000000000002"]}`),
+			body: strings.NewReader(`{"name": "admin", "description": "Administrator role updated", "permission_ids": ["10000000-1000-1000-3000-000000000001", "10000000-1000-1000-3000-000000000002"]}`),
 			expected: result{
 				error:  serializers.ErrorSerializer{Error: assert.AnError.Error()},
 				status: "422 Unprocessable Entity",
