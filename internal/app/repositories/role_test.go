@@ -110,7 +110,7 @@ func Test_RoleRepository_Create(t *testing.T) {
 		error  bool
 	}{
 		{
-			name: "Create valid role",
+			name: "Success",
 			params: db.CreateRoleParams{
 				Name:        "Developer",
 				Description: "Developer role",
@@ -166,7 +166,7 @@ func Test_RoleRepository_Update(t *testing.T) {
 		error  bool
 	}{
 		{
-			name: "Update existing role",
+			name: "Success",
 			params: db.UpdateRoleParams{
 				ID:          existingRole.ID,
 				Name:        "Tester Updated",

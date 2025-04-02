@@ -21,6 +21,7 @@ VALUES ($1, $2)
 type CreateRoleParams struct {
 	Name        string
 	Description string
+	PermissionIDs []uuid.UUID
 }
 
 type CreateRoleRow struct {

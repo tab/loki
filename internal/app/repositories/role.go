@@ -61,16 +61,34 @@ func (r *role) List(ctx context.Context, limit, offset uint64) ([]models.Role, u
 }
 
 func (r *role) Create(ctx context.Context, params db.CreateRoleParams) (*models.Role, error) {
-	result, err := r.client.Queries().CreateRole(ctx, params)
+	tx, err := r.client.Db().Begin(ctx)
 	if err != nil {
 		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	q := r.client.Queries().WithTx(tx)
+
+	result, err := q.CreateRole(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(params.PermissionIDs) > 0 {
+		_, err = q.CreateRolePermissions(ctx, db.CreateRolePermissionsParams{
+			RoleID:        result.ID,
+			PermissionIds: params.PermissionIDs,
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &models.Role{
 		ID:          result.ID,
 		Name:        result.Name,
 		Description: result.Description,
-	}, nil
+	}, tx.Commit(ctx)
 }
 
 func (r *role) Update(ctx context.Context, params db.UpdateRoleParams) (*models.Role, error) {
@@ -87,12 +105,14 @@ func (r *role) Update(ctx context.Context, params db.UpdateRoleParams) (*models.
 		return nil, err
 	}
 
-	_, err = q.CreateRolePermissions(ctx, db.CreateRolePermissionsParams{
-		RoleID:        result.ID,
-		PermissionIds: params.PermissionIDs,
-	})
-	if err != nil {
-		return nil, err
+	if len(params.PermissionIDs) > 0 {
+		_, err = q.CreateRolePermissions(ctx, db.CreateRolePermissionsParams{
+			RoleID:        result.ID,
+			PermissionIds: params.PermissionIDs,
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &models.Role{

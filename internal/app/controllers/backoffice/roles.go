@@ -109,8 +109,9 @@ func (c *rolesController) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	record, err := c.roles.Create(r.Context(), &models.Role{
-		Name:        params.Name,
-		Description: params.Description,
+		Name:          params.Name,
+		Description:   params.Description,
+		PermissionIDs: params.PermissionIDs,
 	})
 	if err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
