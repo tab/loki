@@ -25,12 +25,17 @@ type tokenService struct {
 	proto.UnimplementedTokenServiceServer
 }
 
+type userService struct {
+	proto.UnimplementedUserServiceServer
+}
+
 func Test_Registry_RegisterAll(t *testing.T) {
 	registry := NewRegistry(
 		&permissionService{},
 		&roleService{},
 		&scopeService{},
 		&tokenService{},
+		&userService{},
 	)
 	assert.NotNil(t, registry)
 
@@ -39,4 +44,8 @@ func Test_Registry_RegisterAll(t *testing.T) {
 
 	serviceInfo := server.GetServiceInfo()
 	assert.Contains(t, serviceInfo, "sso.v1.PermissionService")
+	assert.Contains(t, serviceInfo, "sso.v1.RoleService")
+	assert.Contains(t, serviceInfo, "sso.v1.ScopeService")
+	assert.Contains(t, serviceInfo, "sso.v1.TokenService")
+	assert.Contains(t, serviceInfo, "sso.v1.UserService")
 }

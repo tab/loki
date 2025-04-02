@@ -11,6 +11,7 @@ type Registry struct {
 	roles       proto.RoleServiceServer
 	scopes      proto.ScopeServiceServer
 	tokens      proto.TokenServiceServer
+	users       proto.UserServiceServer
 }
 
 func NewRegistry(
@@ -18,12 +19,14 @@ func NewRegistry(
 	roles proto.RoleServiceServer,
 	scopes proto.ScopeServiceServer,
 	tokens proto.TokenServiceServer,
+	users proto.UserServiceServer,
 ) *Registry {
 	return &Registry{
 		permissions: permissions,
 		roles:       roles,
 		scopes:      scopes,
 		tokens:      tokens,
+		users:       users,
 	}
 }
 
@@ -32,4 +35,5 @@ func (r *Registry) RegisterAll(server *grpc.Server) {
 	proto.RegisterRoleServiceServer(server, r.roles)
 	proto.RegisterScopeServiceServer(server, r.scopes)
 	proto.RegisterTokenServiceServer(server, r.tokens)
+	proto.RegisterUserServiceServer(server, r.users)
 }
