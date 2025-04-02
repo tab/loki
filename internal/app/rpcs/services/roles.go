@@ -29,6 +29,7 @@ func NewRoles(roles services.Roles, log *logger.Logger) proto.RoleServiceServer 
 	}
 }
 
+//nolint:dupl
 func (p *rolesService) List(ctx context.Context, req *proto.PaginatedListRequest) (*proto.ListRolesResponse, error) {
 	if err := protovalidate.Validate(req); err != nil {
 		return nil, status.Error(codes.InvalidArgument, errors.ErrFailedToFetchResults.Error())
@@ -175,6 +176,7 @@ func (p *rolesService) Update(ctx context.Context, req *proto.UpdateRoleRequest)
 	}, nil
 }
 
+//nolint:dupl
 func (p *rolesService) Delete(ctx context.Context, req *proto.DeleteRoleRequest) (*emptypb.Empty, error) {
 	if err := protovalidate.Validate(req); err != nil {
 		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidAttributes.Error())

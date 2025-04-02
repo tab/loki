@@ -60,6 +60,9 @@ var (
 	// ErrScopeNotFound indicates that the requested scope could not be found
 	ErrScopeNotFound = errors.New("scope not found")
 
+	// ErrTokenNotFound indicates that the requested JSON web token could not be found
+	ErrTokenNotFound = errors.New("token not found")
+
 	// ErrUserNotFound indicates that the requested user could not be found
 	ErrUserNotFound = errors.New("user not found")
 

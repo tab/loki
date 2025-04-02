@@ -29,6 +29,7 @@ func NewScopes(scopes services.Scopes, log *logger.Logger) proto.ScopeServiceSer
 	}
 }
 
+//nolint:dupl
 func (p *scopesService) List(ctx context.Context, req *proto.PaginatedListRequest) (*proto.ListScopesResponse, error) {
 	if err := protovalidate.Validate(req); err != nil {
 		return nil, status.Error(codes.InvalidArgument, errors.ErrFailedToFetchResults.Error())
@@ -152,6 +153,7 @@ func (p *scopesService) Update(ctx context.Context, req *proto.UpdateScopeReques
 	}, nil
 }
 
+//nolint:dupl
 func (p *scopesService) Delete(ctx context.Context, req *proto.DeleteScopeRequest) (*emptypb.Empty, error) {
 	if err := protovalidate.Validate(req); err != nil {
 		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidAttributes.Error())
