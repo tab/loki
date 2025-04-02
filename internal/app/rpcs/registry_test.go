@@ -21,11 +21,16 @@ type scopeService struct {
 	proto.UnimplementedScopeServiceServer
 }
 
+type tokenService struct {
+	proto.UnimplementedTokenServiceServer
+}
+
 func Test_Registry_RegisterAll(t *testing.T) {
 	registry := NewRegistry(
 		&permissionService{},
 		&roleService{},
 		&scopeService{},
+		&tokenService{},
 	)
 	assert.NotNil(t, registry)
 

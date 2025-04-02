@@ -29,6 +29,7 @@ func NewPermissions(permissions services.Permissions, log *logger.Logger) proto.
 	}
 }
 
+//nolint:dupl
 func (p *permissionsService) List(ctx context.Context, req *proto.PaginatedListRequest) (*proto.ListPermissionsResponse, error) {
 	if err := protovalidate.Validate(req); err != nil {
 		return nil, status.Error(codes.InvalidArgument, errors.ErrFailedToFetchResults.Error())
@@ -152,6 +153,7 @@ func (p *permissionsService) Update(ctx context.Context, req *proto.UpdatePermis
 	}, nil
 }
 
+//nolint:dupl
 func (p *permissionsService) Delete(ctx context.Context, req *proto.DeletePermissionRequest) (*emptypb.Empty, error) {
 	if err := protovalidate.Validate(req); err != nil {
 		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidAttributes.Error())
