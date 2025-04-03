@@ -55,6 +55,7 @@ func (t *tokens) List(ctx context.Context, pagination *Pagination) ([]models.Tok
 	collection, total, err := t.token.List(ctx, pagination.Limit(), pagination.Offset())
 
 	if err != nil {
+		t.log.Error().Err(err).Msg("Failed to fetch tokens")
 		return nil, 0, errors.ErrFailedToFetchResults
 	}
 
@@ -64,7 +65,8 @@ func (t *tokens) List(ctx context.Context, pagination *Pagination) ([]models.Tok
 func (t *tokens) Create(ctx context.Context, userId uuid.UUID) (*models.User, error) {
 	user, err := t.user.FindById(ctx, userId)
 	if err != nil {
-		return nil, err
+		t.log.Error().Err(err).Msg("Failed to find user")
+		return nil, errors.ErrRecordNotFound
 	}
 
 	accessToken, refreshToken, err := t.generate(ctx, user)
@@ -172,7 +174,8 @@ func (t *tokens) generate(ctx context.Context, user *models.User) (string, strin
 func (t *tokens) FindById(ctx context.Context, id uuid.UUID) (*models.Token, error) {
 	token, err := t.token.FindById(ctx, id)
 	if err != nil {
-		return nil, err
+		t.log.Error().Err(err).Msg("Failed to find token by id")
+		return nil, errors.ErrRecordNotFound
 	}
 
 	return token, nil
@@ -181,7 +184,8 @@ func (t *tokens) FindById(ctx context.Context, id uuid.UUID) (*models.Token, err
 func (t *tokens) Delete(ctx context.Context, id uuid.UUID) (bool, error) {
 	ok, err := t.token.Delete(ctx, id)
 	if err != nil {
-		return false, err
+		t.log.Error().Err(err).Msg("Failed to delete token")
+		return false, errors.ErrFailedToDeleteRecord
 	}
 
 	return ok, nil
