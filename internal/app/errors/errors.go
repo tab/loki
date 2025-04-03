@@ -51,6 +51,18 @@ var (
 	// ErrFailedToFetchResults indicates that failed to fetch results
 	ErrFailedToFetchResults = errors.New("failed to fetch results")
 
+	// ErrRecordNotFound indicates that the requested record could not be found
+	ErrRecordNotFound = errors.New("record not found")
+
+	// ErrFailedToCreateRecord indicates that failed to create record
+	ErrFailedToCreateRecord = errors.New("failed to create record")
+
+	// ErrFailedToUpdateRecord indicates that failed to update record
+	ErrFailedToUpdateRecord = errors.New("failed to update record")
+
+	// ErrFailedToDeleteRecord indicates that failed to delete record
+	ErrFailedToDeleteRecord = errors.New("failed to delete record")
+
 	// ErrPermissionNotFound indicates that the requested permission could not be found
 	ErrPermissionNotFound = errors.New("permission not found")
 
