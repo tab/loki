@@ -36,9 +36,6 @@ var (
 	// ErrEmptyDescription indicates that the description is empty or invalid
 	ErrEmptyDescription = errors.New("empty description")
 
-	// ErrInvalidAttributes indicates that the provided attributes are invalid
-	ErrInvalidAttributes = errors.New("invalid attributes")
-
 	// ErrInvalidIdentityNumber indicates that the provided identity number is invalid
 	ErrInvalidIdentityNumber = errors.New("invalid identity number")
 
@@ -47,6 +44,9 @@ var (
 
 	// ErrSessionNotFound indicates that the requested session could not be found
 	ErrSessionNotFound = errors.New("session not found")
+
+	// ErrInvalidArguments indicates that the provided request arguments are invalid
+	ErrInvalidArguments = errors.New("invalid arguments")
 
 	// ErrFailedToFetchResults indicates that failed to fetch results
 	ErrFailedToFetchResults = errors.New("failed to fetch results")
@@ -71,9 +71,6 @@ var (
 
 	// ErrScopeNotFound indicates that the requested scope could not be found
 	ErrScopeNotFound = errors.New("scope not found")
-
-	// ErrTokenNotFound indicates that the requested JSON web token could not be found
-	ErrTokenNotFound = errors.New("token not found")
 
 	// ErrUserNotFound indicates that the requested user could not be found
 	ErrUserNotFound = errors.New("user not found")

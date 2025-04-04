@@ -32,7 +32,7 @@ func NewPermissions(permissions services.Permissions, log *logger.Logger) proto.
 //nolint:dupl
 func (p *permissionsService) List(ctx context.Context, req *proto.PaginatedListRequest) (*proto.ListPermissionsResponse, error) {
 	if err := protovalidate.Validate(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, errors.ErrFailedToFetchResults.Error())
+		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidArguments.Error())
 	}
 
 	pagination := &services.Pagination{
@@ -43,7 +43,13 @@ func (p *permissionsService) List(ctx context.Context, req *proto.PaginatedListR
 	rows, total, err := p.permissions.List(ctx, pagination)
 	if err != nil {
 		p.log.Error().Err(err).Msg("Failed to fetch permissions")
-		return nil, status.Error(codes.Internal, "failed to fetch permissions")
+
+		switch {
+		case errors.Is(err, errors.ErrFailedToFetchResults):
+			return nil, status.Error(codes.Unavailable, err.Error())
+		default:
+			return nil, status.Error(codes.Internal, "failed to fetch permissions")
+		}
 	}
 
 	collection := make([]*proto.Permission, 0, len(rows))
@@ -67,7 +73,7 @@ func (p *permissionsService) List(ctx context.Context, req *proto.PaginatedListR
 
 func (p *permissionsService) Get(ctx context.Context, req *proto.GetPermissionRequest) (*proto.GetPermissionResponse, error) {
 	if err := protovalidate.Validate(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidAttributes.Error())
+		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidArguments.Error())
 	}
 
 	id, err := uuid.Parse(req.Id)
@@ -79,10 +85,13 @@ func (p *permissionsService) Get(ctx context.Context, req *proto.GetPermissionRe
 	permission, err := p.permissions.FindById(ctx, id)
 	if err != nil {
 		p.log.Error().Err(err).Str("id", req.Id).Msg("Failed to get permission")
-		if errors.Is(err, errors.ErrPermissionNotFound) {
-			return nil, status.Error(codes.NotFound, "permission not found")
+
+		switch {
+		case errors.Is(err, errors.ErrRecordNotFound):
+			return nil, status.Error(codes.NotFound, err.Error())
+		default:
+			return nil, status.Error(codes.Internal, "failed to get permission")
 		}
-		return nil, status.Error(codes.Internal, "failed to get permission")
 	}
 
 	return &proto.GetPermissionResponse{
@@ -96,7 +105,7 @@ func (p *permissionsService) Get(ctx context.Context, req *proto.GetPermissionRe
 
 func (p *permissionsService) Create(ctx context.Context, req *proto.CreatePermissionRequest) (*proto.CreatePermissionResponse, error) {
 	if err := protovalidate.Validate(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidAttributes.Error())
+		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidArguments.Error())
 	}
 
 	permission, err := p.permissions.Create(ctx, &models.Permission{
@@ -105,7 +114,13 @@ func (p *permissionsService) Create(ctx context.Context, req *proto.CreatePermis
 	})
 	if err != nil {
 		p.log.Error().Err(err).Str("name", req.Name).Msg("Failed to create permission")
-		return nil, status.Error(codes.Internal, err.Error())
+
+		switch {
+		case errors.Is(err, errors.ErrFailedToCreateRecord):
+			return nil, status.Error(codes.Internal, err.Error())
+		default:
+			return nil, status.Error(codes.Internal, "failed to create permission")
+		}
 	}
 
 	return &proto.CreatePermissionResponse{
@@ -119,7 +134,7 @@ func (p *permissionsService) Create(ctx context.Context, req *proto.CreatePermis
 
 func (p *permissionsService) Update(ctx context.Context, req *proto.UpdatePermissionRequest) (*proto.UpdatePermissionResponse, error) {
 	if err := protovalidate.Validate(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidAttributes.Error())
+		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidArguments.Error())
 	}
 
 	id, err := uuid.Parse(req.Id)
@@ -137,8 +152,10 @@ func (p *permissionsService) Update(ctx context.Context, req *proto.UpdatePermis
 		p.log.Error().Err(err).Str("id", req.Id).Msg("Failed to update permission")
 
 		switch {
-		case errors.Is(err, errors.ErrPermissionNotFound):
+		case errors.Is(err, errors.ErrRecordNotFound):
 			return nil, status.Error(codes.NotFound, err.Error())
+		case errors.Is(err, errors.ErrFailedToUpdateRecord):
+			return nil, status.Error(codes.Internal, err.Error())
 		default:
 			return nil, status.Error(codes.Internal, "failed to update permission")
 		}
@@ -156,7 +173,7 @@ func (p *permissionsService) Update(ctx context.Context, req *proto.UpdatePermis
 //nolint:dupl
 func (p *permissionsService) Delete(ctx context.Context, req *proto.DeletePermissionRequest) (*emptypb.Empty, error) {
 	if err := protovalidate.Validate(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidAttributes.Error())
+		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidArguments.Error())
 	}
 
 	id, err := uuid.Parse(req.Id)
@@ -170,7 +187,7 @@ func (p *permissionsService) Delete(ctx context.Context, req *proto.DeletePermis
 		p.log.Error().Err(err).Str("id", req.Id).Msg("Failed to delete permission")
 
 		switch {
-		case errors.Is(err, errors.ErrPermissionNotFound):
+		case errors.Is(err, errors.ErrRecordNotFound):
 			return nil, status.Error(codes.NotFound, err.Error())
 		default:
 			return nil, status.Error(codes.Internal, "failed to delete permission")

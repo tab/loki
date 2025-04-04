@@ -77,9 +77,35 @@ func Test_Permissions_List(t *testing.T) {
 			error: false,
 		},
 		{
-			name: "Error",
+			name: "Invalid Request",
+			before: func() {
+				permissions.EXPECT().List(ctx, gomock.Any()).Times(0)
+			},
+			request: &proto.PaginatedListRequest{
+				Limit:  0,
+				Offset: 10,
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
+			name: "Failed to fetch results",
 			before: func() {
 				permissions.EXPECT().List(ctx, gomock.Any()).Return(nil, uint64(0), errors.ErrFailedToFetchResults)
+			},
+			request: &proto.PaginatedListRequest{
+				Limit:  1,
+				Offset: 10,
+			},
+			expected: nil,
+			code:     codes.Unavailable,
+			error:    true,
+		},
+		{
+			name: "Error",
+			before: func() {
+				permissions.EXPECT().List(ctx, gomock.Any()).Return(nil, uint64(0), assert.AnError)
 			},
 			request: &proto.PaginatedListRequest{
 				Limit:  1,
@@ -155,9 +181,19 @@ func Test_Permissions_Get(t *testing.T) {
 			error: false,
 		},
 		{
+			name:   "Invalid ID format",
+			before: func() {},
+			req: &proto.GetPermissionRequest{
+				Id: "invalid-uuid",
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
 			name: "Not Found",
 			before: func() {
-				permissions.EXPECT().FindById(ctx, id).Return(nil, errors.ErrPermissionNotFound)
+				permissions.EXPECT().FindById(ctx, id).Return(nil, errors.ErrRecordNotFound)
 			},
 			req: &proto.GetPermissionRequest{
 				Id: id.String(),
@@ -167,21 +203,22 @@ func Test_Permissions_Get(t *testing.T) {
 			error:    true,
 		},
 		{
-			name: "Invalid ID Format",
+			name: "Error",
+			before: func() {
+				permissions.EXPECT().FindById(ctx, id).Return(nil, assert.AnError)
+			},
 			req: &proto.GetPermissionRequest{
-				Id: "invalid-uuid",
+				Id: id.String(),
 			},
 			expected: nil,
-			code:     codes.InvalidArgument,
+			code:     codes.Internal,
 			error:    true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.before != nil {
-				tt.before()
-			}
+			tt.before()
 
 			result, err := service.Get(ctx, tt.req)
 
@@ -240,7 +277,31 @@ func Test_Permissions_Create(t *testing.T) {
 			error: false,
 		},
 		{
-			name: "Internal Error",
+			name:   "Validation error",
+			before: func() {},
+			req: &proto.CreatePermissionRequest{
+				Name:        "",
+				Description: "Read own data",
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
+			name: "Error",
+			before: func() {
+				permissions.EXPECT().Create(ctx, gomock.Any()).Return(nil, errors.ErrFailedToCreateRecord)
+			},
+			req: &proto.CreatePermissionRequest{
+				Name:        "read:self",
+				Description: "Read own data",
+			},
+			expected: nil,
+			code:     codes.Internal,
+			error:    true,
+		},
+		{
+			name: "Internal error",
 			before: func() {
 				permissions.EXPECT().Create(ctx, gomock.Any()).Return(nil, assert.AnError)
 			},
@@ -252,23 +313,11 @@ func Test_Permissions_Create(t *testing.T) {
 			code:     codes.Internal,
 			error:    true,
 		},
-		{
-			name: "Validation Error",
-			req: &proto.CreatePermissionRequest{
-				Name:        "",
-				Description: "Read own data",
-			},
-			expected: nil,
-			code:     codes.InvalidArgument,
-			error:    true,
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.before != nil {
-				tt.before()
-			}
+			tt.before()
 
 			result, err := service.Create(ctx, tt.req)
 
@@ -328,9 +377,32 @@ func Test_Permissions_Update(t *testing.T) {
 			error: false,
 		},
 		{
+			name:   "Validation error",
+			before: func() {},
+			req: &proto.UpdatePermissionRequest{
+				Id:   id.String(),
+				Name: "",
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
+			name:   "Invalid ID format",
+			before: func() {},
+			req: &proto.UpdatePermissionRequest{
+				Id:          "invalid-uuid",
+				Name:        "read:self",
+				Description: "Read own data updated",
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
 			name: "Not Found",
 			before: func() {
-				permissions.EXPECT().Update(ctx, gomock.Any()).Return(nil, errors.ErrPermissionNotFound)
+				permissions.EXPECT().Update(ctx, gomock.Any()).Return(nil, errors.ErrRecordNotFound)
 			},
 			req: &proto.UpdatePermissionRequest{
 				Id:          id.String(),
@@ -342,7 +414,21 @@ func Test_Permissions_Update(t *testing.T) {
 			error:    true,
 		},
 		{
-			name: "Internal Error",
+			name: "Error",
+			before: func() {
+				permissions.EXPECT().Update(ctx, gomock.Any()).Return(nil, errors.ErrFailedToUpdateRecord)
+			},
+			req: &proto.UpdatePermissionRequest{
+				Id:          id.String(),
+				Name:        "read:self",
+				Description: "Read own data updated",
+			},
+			expected: nil,
+			code:     codes.Internal,
+			error:    true,
+		},
+		{
+			name: "Internal error",
 			before: func() {
 				permissions.EXPECT().Update(ctx, gomock.Any()).Return(nil, assert.AnError)
 			},
@@ -355,24 +441,11 @@ func Test_Permissions_Update(t *testing.T) {
 			code:     codes.Internal,
 			error:    true,
 		},
-		{
-			name: "Invalid ID Format",
-			req: &proto.UpdatePermissionRequest{
-				Id:          "invalid-uuid",
-				Name:        "read:self",
-				Description: "Read own data updated",
-			},
-			expected: nil,
-			code:     codes.InvalidArgument,
-			error:    true,
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.before != nil {
-				tt.before()
-			}
+			tt.before()
 
 			result, err := service.Update(ctx, tt.req)
 
@@ -420,9 +493,19 @@ func Test_Permissions_Delete(t *testing.T) {
 			error:    false,
 		},
 		{
+			name:   "Invalid ID format",
+			before: func() {},
+			req: &proto.DeletePermissionRequest{
+				Id: "invalid-uuid",
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
 			name: "Not Found",
 			before: func() {
-				permissions.EXPECT().Delete(ctx, id).Return(false, errors.ErrPermissionNotFound)
+				permissions.EXPECT().Delete(ctx, id).Return(false, errors.ErrRecordNotFound)
 			},
 			req: &proto.DeletePermissionRequest{
 				Id: id.String(),
@@ -432,7 +515,7 @@ func Test_Permissions_Delete(t *testing.T) {
 			error:    true,
 		},
 		{
-			name: "Internal Error",
+			name: "Internal error",
 			before: func() {
 				permissions.EXPECT().Delete(ctx, id).Return(false, assert.AnError)
 			},
@@ -443,22 +526,11 @@ func Test_Permissions_Delete(t *testing.T) {
 			code:     codes.Internal,
 			error:    true,
 		},
-		{
-			name: "Invalid ID Format",
-			req: &proto.DeletePermissionRequest{
-				Id: "invalid-uuid",
-			},
-			expected: nil,
-			code:     codes.InvalidArgument,
-			error:    true,
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.before != nil {
-				tt.before()
-			}
+			tt.before()
 
 			result, err := service.Delete(ctx, tt.req)
 

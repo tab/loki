@@ -87,9 +87,35 @@ func Test_Roles_List(t *testing.T) {
 			error: false,
 		},
 		{
-			name: "Error",
+			name: "Invalid Request",
+			before: func() {
+				roles.EXPECT().List(ctx, gomock.Any()).Times(0)
+			},
+			request: &proto.PaginatedListRequest{
+				Limit:  0,
+				Offset: 10,
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
+			name: "Failed to fetch results",
 			before: func() {
 				roles.EXPECT().List(ctx, gomock.Any()).Return(nil, uint64(0), errors.ErrFailedToFetchResults)
+			},
+			request: &proto.PaginatedListRequest{
+				Limit:  1,
+				Offset: 10,
+			},
+			expected: nil,
+			code:     codes.Unavailable,
+			error:    true,
+		},
+		{
+			name: "Error",
+			before: func() {
+				roles.EXPECT().List(ctx, gomock.Any()).Return(nil, uint64(0), assert.AnError)
 			},
 			request: &proto.PaginatedListRequest{
 				Limit:  1,
@@ -167,7 +193,7 @@ func Test_Roles_Get(t *testing.T) {
 		{
 			name: "Not Found",
 			before: func() {
-				roles.EXPECT().FindById(ctx, id).Return(nil, errors.ErrRoleNotFound)
+				roles.EXPECT().FindById(ctx, id).Return(nil, errors.ErrRecordNotFound)
 			},
 			req: &proto.GetRoleRequest{
 				Id: id.String(),
@@ -177,7 +203,8 @@ func Test_Roles_Get(t *testing.T) {
 			error:    true,
 		},
 		{
-			name: "Invalid ID Format",
+			name:   "Invalid ID format",
+			before: func() {},
 			req: &proto.GetRoleRequest{
 				Id: "invalid-uuid",
 			},
@@ -185,13 +212,23 @@ func Test_Roles_Get(t *testing.T) {
 			code:     codes.InvalidArgument,
 			error:    true,
 		},
+		{
+			name: "Error",
+			before: func() {
+				roles.EXPECT().FindById(ctx, id).Return(nil, assert.AnError)
+			},
+			req: &proto.GetRoleRequest{
+				Id: id.String(),
+			},
+			expected: nil,
+			code:     codes.Internal,
+			error:    true,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.before != nil {
-				tt.before()
-			}
+			tt.before()
 
 			result, err := service.Get(ctx, tt.req)
 
@@ -250,7 +287,31 @@ func Test_Roles_Create(t *testing.T) {
 			error: false,
 		},
 		{
-			name: "Internal Error",
+			name:   "Validation error",
+			before: func() {},
+			req: &proto.CreateRoleRequest{
+				Name:        "",
+				Description: "Admin role",
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
+			name: "Error",
+			before: func() {
+				roles.EXPECT().Create(ctx, gomock.Any()).Return(nil, errors.ErrFailedToCreateRecord)
+			},
+			req: &proto.CreateRoleRequest{
+				Name:        "admin",
+				Description: "Admin role",
+			},
+			expected: nil,
+			code:     codes.Internal,
+			error:    true,
+		},
+		{
+			name: "Internal error",
 			before: func() {
 				roles.EXPECT().Create(ctx, gomock.Any()).Return(nil, assert.AnError)
 			},
@@ -262,23 +323,11 @@ func Test_Roles_Create(t *testing.T) {
 			code:     codes.Internal,
 			error:    true,
 		},
-		{
-			name: "Validation Error",
-			req: &proto.CreateRoleRequest{
-				Name:        "",
-				Description: "Admin role",
-			},
-			expected: nil,
-			code:     codes.InvalidArgument,
-			error:    true,
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.before != nil {
-				tt.before()
-			}
+			tt.before()
 
 			result, err := service.Create(ctx, tt.req)
 
@@ -338,9 +387,32 @@ func Test_Roles_Update(t *testing.T) {
 			error: false,
 		},
 		{
+			name:   "Validation error",
+			before: func() {},
+			req: &proto.UpdateRoleRequest{
+				Id:   id.String(),
+				Name: "",
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
+			name:   "Invalid ID format",
+			before: func() {},
+			req: &proto.UpdateRoleRequest{
+				Id:          "invalid-uuid",
+				Name:        "admin",
+				Description: "Admin role updated",
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
 			name: "Not Found",
 			before: func() {
-				roles.EXPECT().Update(ctx, gomock.Any()).Return(nil, errors.ErrRoleNotFound)
+				roles.EXPECT().Update(ctx, gomock.Any()).Return(nil, errors.ErrRecordNotFound)
 			},
 			req: &proto.UpdateRoleRequest{
 				Id:          id.String(),
@@ -352,7 +424,21 @@ func Test_Roles_Update(t *testing.T) {
 			error:    true,
 		},
 		{
-			name: "Internal Error",
+			name: "Error",
+			before: func() {
+				roles.EXPECT().Update(ctx, gomock.Any()).Return(nil, errors.ErrFailedToUpdateRecord)
+			},
+			req: &proto.UpdateRoleRequest{
+				Id:          id.String(),
+				Name:        "admin",
+				Description: "Admin role updated",
+			},
+			expected: nil,
+			code:     codes.Internal,
+			error:    true,
+		},
+		{
+			name: "Internal error",
 			before: func() {
 				roles.EXPECT().Update(ctx, gomock.Any()).Return(nil, assert.AnError)
 			},
@@ -365,24 +451,11 @@ func Test_Roles_Update(t *testing.T) {
 			code:     codes.Internal,
 			error:    true,
 		},
-		{
-			name: "Invalid ID Format",
-			req: &proto.UpdateRoleRequest{
-				Id:          "invalid-uuid",
-				Name:        "admin",
-				Description: "Admin role updated",
-			},
-			expected: nil,
-			code:     codes.InvalidArgument,
-			error:    true,
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.before != nil {
-				tt.before()
-			}
+			tt.before()
 
 			result, err := service.Update(ctx, tt.req)
 
@@ -430,9 +503,19 @@ func Test_Roles_Delete(t *testing.T) {
 			error:    false,
 		},
 		{
+			name:   "Invalid ID format",
+			before: func() {},
+			req: &proto.DeleteRoleRequest{
+				Id: "invalid-uuid",
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
 			name: "Not Found",
 			before: func() {
-				roles.EXPECT().Delete(ctx, id).Return(false, errors.ErrRoleNotFound)
+				roles.EXPECT().Delete(ctx, id).Return(false, errors.ErrRecordNotFound)
 			},
 			req: &proto.DeleteRoleRequest{
 				Id: id.String(),
@@ -442,7 +525,7 @@ func Test_Roles_Delete(t *testing.T) {
 			error:    true,
 		},
 		{
-			name: "Internal Error",
+			name: "Internal error",
 			before: func() {
 				roles.EXPECT().Delete(ctx, id).Return(false, assert.AnError)
 			},
@@ -453,22 +536,11 @@ func Test_Roles_Delete(t *testing.T) {
 			code:     codes.Internal,
 			error:    true,
 		},
-		{
-			name: "Invalid ID Format",
-			req: &proto.DeleteRoleRequest{
-				Id: "invalid-uuid",
-			},
-			expected: nil,
-			code:     codes.InvalidArgument,
-			error:    true,
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.before != nil {
-				tt.before()
-			}
+			tt.before()
 
 			result, err := service.Delete(ctx, tt.req)
 

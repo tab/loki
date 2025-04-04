@@ -32,7 +32,7 @@ func NewScopes(scopes services.Scopes, log *logger.Logger) proto.ScopeServiceSer
 //nolint:dupl
 func (p *scopesService) List(ctx context.Context, req *proto.PaginatedListRequest) (*proto.ListScopesResponse, error) {
 	if err := protovalidate.Validate(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, errors.ErrFailedToFetchResults.Error())
+		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidArguments.Error())
 	}
 
 	pagination := &services.Pagination{
@@ -43,7 +43,13 @@ func (p *scopesService) List(ctx context.Context, req *proto.PaginatedListReques
 	rows, total, err := p.scopes.List(ctx, pagination)
 	if err != nil {
 		p.log.Error().Err(err).Msg("Failed to fetch scopes")
-		return nil, status.Error(codes.Internal, "failed to fetch scopes")
+
+		switch {
+		case errors.Is(err, errors.ErrFailedToFetchResults):
+			return nil, status.Error(codes.Unavailable, err.Error())
+		default:
+			return nil, status.Error(codes.Internal, "failed to fetch scopes")
+		}
 	}
 
 	collection := make([]*proto.Scope, 0, len(rows))
@@ -67,7 +73,7 @@ func (p *scopesService) List(ctx context.Context, req *proto.PaginatedListReques
 
 func (p *scopesService) Get(ctx context.Context, req *proto.GetScopeRequest) (*proto.GetScopeResponse, error) {
 	if err := protovalidate.Validate(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidAttributes.Error())
+		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidArguments.Error())
 	}
 
 	id, err := uuid.Parse(req.Id)
@@ -79,10 +85,13 @@ func (p *scopesService) Get(ctx context.Context, req *proto.GetScopeRequest) (*p
 	scope, err := p.scopes.FindById(ctx, id)
 	if err != nil {
 		p.log.Error().Err(err).Str("id", req.Id).Msg("Failed to get scope")
-		if errors.Is(err, errors.ErrScopeNotFound) {
-			return nil, status.Error(codes.NotFound, "scope not found")
+
+		switch {
+		case errors.Is(err, errors.ErrRecordNotFound):
+			return nil, status.Error(codes.NotFound, err.Error())
+		default:
+			return nil, status.Error(codes.Internal, "failed to get scope")
 		}
-		return nil, status.Error(codes.Internal, "failed to get scope")
 	}
 
 	return &proto.GetScopeResponse{
@@ -96,7 +105,7 @@ func (p *scopesService) Get(ctx context.Context, req *proto.GetScopeRequest) (*p
 
 func (p *scopesService) Create(ctx context.Context, req *proto.CreateScopeRequest) (*proto.CreateScopeResponse, error) {
 	if err := protovalidate.Validate(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidAttributes.Error())
+		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidArguments.Error())
 	}
 
 	scope, err := p.scopes.Create(ctx, &models.Scope{
@@ -105,7 +114,13 @@ func (p *scopesService) Create(ctx context.Context, req *proto.CreateScopeReques
 	})
 	if err != nil {
 		p.log.Error().Err(err).Str("name", req.Name).Msg("Failed to create scope")
-		return nil, status.Error(codes.Internal, err.Error())
+
+		switch {
+		case errors.Is(err, errors.ErrFailedToCreateRecord):
+			return nil, status.Error(codes.Internal, err.Error())
+		default:
+			return nil, status.Error(codes.Internal, "failed to create scope")
+		}
 	}
 
 	return &proto.CreateScopeResponse{
@@ -119,7 +134,7 @@ func (p *scopesService) Create(ctx context.Context, req *proto.CreateScopeReques
 
 func (p *scopesService) Update(ctx context.Context, req *proto.UpdateScopeRequest) (*proto.UpdateScopeResponse, error) {
 	if err := protovalidate.Validate(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidAttributes.Error())
+		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidArguments.Error())
 	}
 
 	id, err := uuid.Parse(req.Id)
@@ -137,8 +152,10 @@ func (p *scopesService) Update(ctx context.Context, req *proto.UpdateScopeReques
 		p.log.Error().Err(err).Str("id", req.Id).Msg("Failed to update scope")
 
 		switch {
-		case errors.Is(err, errors.ErrScopeNotFound):
+		case errors.Is(err, errors.ErrRecordNotFound):
 			return nil, status.Error(codes.NotFound, err.Error())
+		case errors.Is(err, errors.ErrFailedToUpdateRecord):
+			return nil, status.Error(codes.Internal, err.Error())
 		default:
 			return nil, status.Error(codes.Internal, "failed to update scope")
 		}
@@ -156,7 +173,7 @@ func (p *scopesService) Update(ctx context.Context, req *proto.UpdateScopeReques
 //nolint:dupl
 func (p *scopesService) Delete(ctx context.Context, req *proto.DeleteScopeRequest) (*emptypb.Empty, error) {
 	if err := protovalidate.Validate(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidAttributes.Error())
+		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidArguments.Error())
 	}
 
 	id, err := uuid.Parse(req.Id)
@@ -170,7 +187,7 @@ func (p *scopesService) Delete(ctx context.Context, req *proto.DeleteScopeReques
 		p.log.Error().Err(err).Str("id", req.Id).Msg("Failed to delete scope")
 
 		switch {
-		case errors.Is(err, errors.ErrScopeNotFound):
+		case errors.Is(err, errors.ErrRecordNotFound):
 			return nil, status.Error(codes.NotFound, err.Error())
 		default:
 			return nil, status.Error(codes.Internal, "failed to delete scope")
