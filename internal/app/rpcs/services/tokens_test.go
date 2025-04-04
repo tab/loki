@@ -81,9 +81,35 @@ func Test_Tokens_List(t *testing.T) {
 			error: false,
 		},
 		{
-			name: "Error",
+			name: "Invalid Request",
+			before: func() {
+				tokens.EXPECT().List(ctx, gomock.Any()).Times(0)
+			},
+			request: &proto.PaginatedListRequest{
+				Limit:  0,
+				Offset: 10,
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
+			name: "Failed to fetch results",
 			before: func() {
 				tokens.EXPECT().List(ctx, gomock.Any()).Return(nil, uint64(0), errors.ErrFailedToFetchResults)
+			},
+			request: &proto.PaginatedListRequest{
+				Limit:  1,
+				Offset: 10,
+			},
+			expected: nil,
+			code:     codes.Unavailable,
+			error:    true,
+		},
+		{
+			name: "Error",
+			before: func() {
+				tokens.EXPECT().List(ctx, gomock.Any()).Return(nil, uint64(0), assert.AnError)
 			},
 			request: &proto.PaginatedListRequest{
 				Limit:  1,
@@ -150,9 +176,19 @@ func Test_Tokens_Delete(t *testing.T) {
 			error:    false,
 		},
 		{
+			name:   "Invalid ID format",
+			before: func() {},
+			req: &proto.DeleteTokenRequest{
+				Id: "invalid-uuid",
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
 			name: "Not Found",
 			before: func() {
-				tokens.EXPECT().Delete(ctx, id).Return(false, errors.ErrTokenNotFound)
+				tokens.EXPECT().Delete(ctx, id).Return(false, errors.ErrRecordNotFound)
 			},
 			req: &proto.DeleteTokenRequest{
 				Id: id.String(),
@@ -162,7 +198,7 @@ func Test_Tokens_Delete(t *testing.T) {
 			error:    true,
 		},
 		{
-			name: "Internal Error",
+			name: "Internal error",
 			before: func() {
 				tokens.EXPECT().Delete(ctx, id).Return(false, assert.AnError)
 			},
@@ -173,22 +209,11 @@ func Test_Tokens_Delete(t *testing.T) {
 			code:     codes.Internal,
 			error:    true,
 		},
-		{
-			name: "Invalid ID Format",
-			req: &proto.DeleteTokenRequest{
-				Id: "invalid-uuid",
-			},
-			expected: nil,
-			code:     codes.InvalidArgument,
-			error:    true,
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.before != nil {
-				tt.before()
-			}
+			tt.before()
 
 			result, err := service.Delete(ctx, tt.req)
 

@@ -85,9 +85,35 @@ func Test_Users_List(t *testing.T) {
 			error: false,
 		},
 		{
-			name: "Error",
+			name: "Invalid Request",
+			before: func() {
+				users.EXPECT().List(ctx, gomock.Any()).Times(0)
+			},
+			request: &proto.PaginatedListRequest{
+				Limit:  0,
+				Offset: 10,
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
+			name: "Failed to fetch results",
 			before: func() {
 				users.EXPECT().List(ctx, gomock.Any()).Return(nil, uint64(0), errors.ErrFailedToFetchResults)
+			},
+			request: &proto.PaginatedListRequest{
+				Limit:  1,
+				Offset: 10,
+			},
+			expected: nil,
+			code:     codes.Unavailable,
+			error:    true,
+		},
+		{
+			name: "Error",
+			before: func() {
+				users.EXPECT().List(ctx, gomock.Any()).Return(nil, uint64(0), assert.AnError)
 			},
 			request: &proto.PaginatedListRequest{
 				Limit:  1,
@@ -169,9 +195,19 @@ func Test_Users_Get(t *testing.T) {
 			error: false,
 		},
 		{
+			name:   "Invalid ID format",
+			before: func() {},
+			req: &proto.GetUserRequest{
+				Id: "invalid-uuid",
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
 			name: "Not Found",
 			before: func() {
-				users.EXPECT().FindById(ctx, id).Return(nil, errors.ErrUserNotFound)
+				users.EXPECT().FindById(ctx, id).Return(nil, errors.ErrRecordNotFound)
 			},
 			req: &proto.GetUserRequest{
 				Id: id.String(),
@@ -181,21 +217,22 @@ func Test_Users_Get(t *testing.T) {
 			error:    true,
 		},
 		{
-			name: "Invalid ID Format",
+			name: "Error",
+			before: func() {
+				users.EXPECT().FindById(ctx, id).Return(nil, assert.AnError)
+			},
 			req: &proto.GetUserRequest{
-				Id: "invalid-uuid",
+				Id: id.String(),
 			},
 			expected: nil,
-			code:     codes.InvalidArgument,
+			code:     codes.Internal,
 			error:    true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.before != nil {
-				tt.before()
-			}
+			tt.before()
 
 			result, err := service.Get(ctx, tt.req)
 
@@ -267,7 +304,35 @@ func Test_Users_Create(t *testing.T) {
 			error: false,
 		},
 		{
-			name: "Internal Error",
+			name:   "Validation error",
+			before: func() {},
+			req: &proto.CreateUserRequest{
+				IdentityNumber: "",
+				PersonalCode:   "60001017869",
+				FirstName:      "EID2016",
+				LastName:       "TESTNUMBER",
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
+			name: "Error",
+			before: func() {
+				users.EXPECT().Create(ctx, gomock.Any()).Return(nil, errors.ErrFailedToCreateRecord)
+			},
+			req: &proto.CreateUserRequest{
+				IdentityNumber: "PNOEE-60001017869",
+				PersonalCode:   "60001017869",
+				FirstName:      "EID2016",
+				LastName:       "TESTNUMBER",
+			},
+			expected: nil,
+			code:     codes.Internal,
+			error:    true,
+		},
+		{
+			name: "Internal error",
 			before: func() {
 				users.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, assert.AnError)
 			},
@@ -285,9 +350,7 @@ func Test_Users_Create(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.before != nil {
-				tt.before()
-			}
+			tt.before()
 
 			result, err := service.Create(ctx, tt.req)
 
@@ -355,9 +418,23 @@ func Test_Users_Update(t *testing.T) {
 			error: false,
 		},
 		{
+			name:   "Invalid ID format",
+			before: func() {},
+			req: &proto.UpdateUserRequest{
+				Id:             "invalid-uuid",
+				IdentityNumber: "PNOEE-60001017869",
+				PersonalCode:   "60001017869",
+				FirstName:      "JOHN",
+				LastName:       "DOE",
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
 			name: "Not Found",
 			before: func() {
-				users.EXPECT().Update(ctx, gomock.Any()).Return(nil, errors.ErrUserNotFound)
+				users.EXPECT().Update(ctx, gomock.Any()).Return(nil, errors.ErrRecordNotFound)
 			},
 			req: &proto.UpdateUserRequest{
 				Id:             id.String(),
@@ -371,7 +448,23 @@ func Test_Users_Update(t *testing.T) {
 			error:    true,
 		},
 		{
-			name: "Internal Error",
+			name: "Error",
+			before: func() {
+				users.EXPECT().Update(ctx, gomock.Any()).Return(nil, errors.ErrFailedToUpdateRecord)
+			},
+			req: &proto.UpdateUserRequest{
+				Id:             id.String(),
+				IdentityNumber: "PNOEE-60001017869",
+				PersonalCode:   "60001017869",
+				FirstName:      "JOHN",
+				LastName:       "DOE",
+			},
+			expected: nil,
+			code:     codes.Internal,
+			error:    true,
+		},
+		{
+			name: "Internal error",
 			before: func() {
 				users.EXPECT().Update(ctx, gomock.Any()).Return(nil, assert.AnError)
 			},
@@ -386,26 +479,11 @@ func Test_Users_Update(t *testing.T) {
 			code:     codes.Internal,
 			error:    true,
 		},
-		{
-			name: "Invalid ID Format",
-			req: &proto.UpdateUserRequest{
-				Id:             "invalid-uuid",
-				IdentityNumber: "PNOEE-60001017869",
-				PersonalCode:   "60001017869",
-				FirstName:      "JOHN",
-				LastName:       "DOE",
-			},
-			expected: nil,
-			code:     codes.InvalidArgument,
-			error:    true,
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.before != nil {
-				tt.before()
-			}
+			tt.before()
 
 			result, err := service.Update(ctx, tt.req)
 
@@ -455,9 +533,19 @@ func Test_Users_Delete(t *testing.T) {
 			error:    false,
 		},
 		{
+			name:   "Invalid ID format",
+			before: func() {},
+			req: &proto.DeleteUserRequest{
+				Id: "invalid-uuid",
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
 			name: "Not Found",
 			before: func() {
-				users.EXPECT().Delete(ctx, id).Return(false, errors.ErrUserNotFound)
+				users.EXPECT().Delete(ctx, id).Return(false, errors.ErrRecordNotFound)
 			},
 			req: &proto.DeleteUserRequest{
 				Id: id.String(),
@@ -467,7 +555,7 @@ func Test_Users_Delete(t *testing.T) {
 			error:    true,
 		},
 		{
-			name: "Internal Error",
+			name: "Internal error",
 			before: func() {
 				users.EXPECT().Delete(ctx, id).Return(false, assert.AnError)
 			},
@@ -478,22 +566,11 @@ func Test_Users_Delete(t *testing.T) {
 			code:     codes.Internal,
 			error:    true,
 		},
-		{
-			name: "Invalid ID Format",
-			req: &proto.DeleteUserRequest{
-				Id: "invalid-uuid",
-			},
-			expected: nil,
-			code:     codes.InvalidArgument,
-			error:    true,
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.before != nil {
-				tt.before()
-			}
+			tt.before()
 
 			result, err := service.Delete(ctx, tt.req)
 

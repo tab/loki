@@ -32,7 +32,7 @@ func NewTokens(tokens services.Tokens, log *logger.Logger) proto.TokenServiceSer
 //nolint:dupl
 func (p *tokensService) List(ctx context.Context, req *proto.PaginatedListRequest) (*proto.ListTokensResponse, error) {
 	if err := protovalidate.Validate(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, errors.ErrFailedToFetchResults.Error())
+		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidArguments.Error())
 	}
 
 	pagination := &services.Pagination{
@@ -43,7 +43,13 @@ func (p *tokensService) List(ctx context.Context, req *proto.PaginatedListReques
 	rows, total, err := p.tokens.List(ctx, pagination)
 	if err != nil {
 		p.log.Error().Err(err).Msg("Failed to fetch tokens")
-		return nil, status.Error(codes.Internal, "failed to fetch tokens")
+
+		switch {
+		case errors.Is(err, errors.ErrFailedToFetchResults):
+			return nil, status.Error(codes.Unavailable, err.Error())
+		default:
+			return nil, status.Error(codes.Internal, "failed to fetch tokens")
+		}
 	}
 
 	collection := make([]*proto.Token, 0, len(rows))
@@ -70,7 +76,7 @@ func (p *tokensService) List(ctx context.Context, req *proto.PaginatedListReques
 //nolint:dupl
 func (p *tokensService) Delete(ctx context.Context, req *proto.DeleteTokenRequest) (*emptypb.Empty, error) {
 	if err := protovalidate.Validate(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidAttributes.Error())
+		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidArguments.Error())
 	}
 
 	id, err := uuid.Parse(req.Id)
@@ -84,7 +90,7 @@ func (p *tokensService) Delete(ctx context.Context, req *proto.DeleteTokenReques
 		p.log.Error().Err(err).Str("id", req.Id).Msg("Failed to delete token")
 
 		switch {
-		case errors.Is(err, errors.ErrTokenNotFound):
+		case errors.Is(err, errors.ErrRecordNotFound):
 			return nil, status.Error(codes.NotFound, err.Error())
 		default:
 			return nil, status.Error(codes.Internal, "failed to delete token")

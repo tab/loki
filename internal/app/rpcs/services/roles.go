@@ -32,7 +32,7 @@ func NewRoles(roles services.Roles, log *logger.Logger) proto.RoleServiceServer 
 //nolint:dupl
 func (p *rolesService) List(ctx context.Context, req *proto.PaginatedListRequest) (*proto.ListRolesResponse, error) {
 	if err := protovalidate.Validate(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, errors.ErrFailedToFetchResults.Error())
+		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidArguments.Error())
 	}
 
 	pagination := &services.Pagination{
@@ -43,7 +43,13 @@ func (p *rolesService) List(ctx context.Context, req *proto.PaginatedListRequest
 	rows, total, err := p.roles.List(ctx, pagination)
 	if err != nil {
 		p.log.Error().Err(err).Msg("Failed to fetch roles")
-		return nil, status.Error(codes.Internal, "failed to fetch roles")
+
+		switch {
+		case errors.Is(err, errors.ErrFailedToFetchResults):
+			return nil, status.Error(codes.Unavailable, err.Error())
+		default:
+			return nil, status.Error(codes.Internal, "failed to fetch roles")
+		}
 	}
 
 	collection := make([]*proto.Role, 0, len(rows))
@@ -67,7 +73,7 @@ func (p *rolesService) List(ctx context.Context, req *proto.PaginatedListRequest
 
 func (p *rolesService) Get(ctx context.Context, req *proto.GetRoleRequest) (*proto.GetRoleResponse, error) {
 	if err := protovalidate.Validate(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidAttributes.Error())
+		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidArguments.Error())
 	}
 
 	id, err := uuid.Parse(req.Id)
@@ -79,10 +85,13 @@ func (p *rolesService) Get(ctx context.Context, req *proto.GetRoleRequest) (*pro
 	role, err := p.roles.FindById(ctx, id)
 	if err != nil {
 		p.log.Error().Err(err).Str("id", req.Id).Msg("Failed to get role")
-		if errors.Is(err, errors.ErrRoleNotFound) {
-			return nil, status.Error(codes.NotFound, "role not found")
+
+		switch {
+		case errors.Is(err, errors.ErrRecordNotFound):
+			return nil, status.Error(codes.NotFound, err.Error())
+		default:
+			return nil, status.Error(codes.Internal, "failed to get role")
 		}
-		return nil, status.Error(codes.Internal, "failed to get role")
 	}
 
 	return &proto.GetRoleResponse{
@@ -97,7 +106,7 @@ func (p *rolesService) Get(ctx context.Context, req *proto.GetRoleRequest) (*pro
 
 func (p *rolesService) Create(ctx context.Context, req *proto.CreateRoleRequest) (*proto.CreateRoleResponse, error) {
 	if err := protovalidate.Validate(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidAttributes.Error())
+		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidArguments.Error())
 	}
 
 	permissionIDs := make([]uuid.UUID, 0, len(req.PermissionIds))
@@ -117,7 +126,13 @@ func (p *rolesService) Create(ctx context.Context, req *proto.CreateRoleRequest)
 	})
 	if err != nil {
 		p.log.Error().Err(err).Str("name", req.Name).Msg("Failed to create role")
-		return nil, status.Error(codes.Internal, err.Error())
+
+		switch {
+		case errors.Is(err, errors.ErrFailedToCreateRecord):
+			return nil, status.Error(codes.Internal, err.Error())
+		default:
+			return nil, status.Error(codes.Internal, "failed to create role")
+		}
 	}
 
 	return &proto.CreateRoleResponse{
@@ -131,7 +146,7 @@ func (p *rolesService) Create(ctx context.Context, req *proto.CreateRoleRequest)
 
 func (p *rolesService) Update(ctx context.Context, req *proto.UpdateRoleRequest) (*proto.UpdateRoleResponse, error) {
 	if err := protovalidate.Validate(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidAttributes.Error())
+		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidArguments.Error())
 	}
 
 	permissionIDs := make([]uuid.UUID, 0, len(req.PermissionIds))
@@ -160,8 +175,10 @@ func (p *rolesService) Update(ctx context.Context, req *proto.UpdateRoleRequest)
 		p.log.Error().Err(err).Str("id", req.Id).Msg("Failed to update role")
 
 		switch {
-		case errors.Is(err, errors.ErrRoleNotFound):
+		case errors.Is(err, errors.ErrRecordNotFound):
 			return nil, status.Error(codes.NotFound, err.Error())
+		case errors.Is(err, errors.ErrFailedToUpdateRecord):
+			return nil, status.Error(codes.Internal, err.Error())
 		default:
 			return nil, status.Error(codes.Internal, "failed to update role")
 		}
@@ -179,7 +196,7 @@ func (p *rolesService) Update(ctx context.Context, req *proto.UpdateRoleRequest)
 //nolint:dupl
 func (p *rolesService) Delete(ctx context.Context, req *proto.DeleteRoleRequest) (*emptypb.Empty, error) {
 	if err := protovalidate.Validate(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidAttributes.Error())
+		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidArguments.Error())
 	}
 
 	id, err := uuid.Parse(req.Id)
@@ -193,7 +210,7 @@ func (p *rolesService) Delete(ctx context.Context, req *proto.DeleteRoleRequest)
 		p.log.Error().Err(err).Str("id", req.Id).Msg("Failed to delete role")
 
 		switch {
-		case errors.Is(err, errors.ErrRoleNotFound):
+		case errors.Is(err, errors.ErrRecordNotFound):
 			return nil, status.Error(codes.NotFound, err.Error())
 		default:
 			return nil, status.Error(codes.Internal, "failed to delete role")

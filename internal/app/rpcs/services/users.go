@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/bufbuild/protovalidate-go"
 	"github.com/google/uuid"
@@ -33,7 +32,7 @@ func NewUsers(users services.Users, log *logger.Logger) proto.UserServiceServer 
 //nolint:dupl
 func (p *usersService) List(ctx context.Context, req *proto.PaginatedListRequest) (*proto.ListUsersResponse, error) {
 	if err := protovalidate.Validate(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, errors.ErrFailedToFetchResults.Error())
+		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidArguments.Error())
 	}
 
 	pagination := &services.Pagination{
@@ -44,7 +43,13 @@ func (p *usersService) List(ctx context.Context, req *proto.PaginatedListRequest
 	rows, total, err := p.users.List(ctx, pagination)
 	if err != nil {
 		p.log.Error().Err(err).Msg("Failed to fetch users")
-		return nil, status.Error(codes.Internal, "failed to fetch users")
+
+		switch {
+		case errors.Is(err, errors.ErrFailedToFetchResults):
+			return nil, status.Error(codes.Unavailable, err.Error())
+		default:
+			return nil, status.Error(codes.Internal, "failed to fetch users")
+		}
 	}
 
 	collection := make([]*proto.User, 0, len(rows))
@@ -70,7 +75,7 @@ func (p *usersService) List(ctx context.Context, req *proto.PaginatedListRequest
 
 func (p *usersService) Get(ctx context.Context, req *proto.GetUserRequest) (*proto.GetUserResponse, error) {
 	if err := protovalidate.Validate(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidAttributes.Error())
+		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidArguments.Error())
 	}
 
 	id, err := uuid.Parse(req.Id)
@@ -82,10 +87,13 @@ func (p *usersService) Get(ctx context.Context, req *proto.GetUserRequest) (*pro
 	user, err := p.users.FindById(ctx, id)
 	if err != nil {
 		p.log.Error().Err(err).Str("id", req.Id).Msg("Failed to get user")
-		if errors.Is(err, errors.ErrUserNotFound) {
-			return nil, status.Error(codes.NotFound, "user not found")
+
+		switch {
+		case errors.Is(err, errors.ErrRecordNotFound):
+			return nil, status.Error(codes.NotFound, err.Error())
+		default:
+			return nil, status.Error(codes.Internal, "failed to get user")
 		}
-		return nil, status.Error(codes.Internal, "failed to get user")
 	}
 
 	roleIds := make([]string, 0, len(user.RoleIDs))
@@ -112,11 +120,8 @@ func (p *usersService) Get(ctx context.Context, req *proto.GetUserRequest) (*pro
 }
 
 func (p *usersService) Create(ctx context.Context, req *proto.CreateUserRequest) (*proto.CreateUserResponse, error) {
-	fmt.Println("--- create ---")
-	fmt.Println(req)
-
 	if err := protovalidate.Validate(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidAttributes.Error())
+		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidArguments.Error())
 	}
 
 	user, err := p.users.Create(ctx, &models.User{
@@ -127,7 +132,13 @@ func (p *usersService) Create(ctx context.Context, req *proto.CreateUserRequest)
 	})
 	if err != nil {
 		p.log.Error().Err(err).Str("identity_number", req.IdentityNumber).Msg("Failed to create user")
-		return nil, status.Error(codes.Internal, err.Error())
+
+		switch {
+		case errors.Is(err, errors.ErrFailedToCreateRecord):
+			return nil, status.Error(codes.Internal, err.Error())
+		default:
+			return nil, status.Error(codes.Internal, "failed to create user")
+		}
 	}
 
 	return &proto.CreateUserResponse{
@@ -143,7 +154,7 @@ func (p *usersService) Create(ctx context.Context, req *proto.CreateUserRequest)
 
 func (p *usersService) Update(ctx context.Context, req *proto.UpdateUserRequest) (*proto.UpdateUserResponse, error) {
 	if err := protovalidate.Validate(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidAttributes.Error())
+		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidArguments.Error())
 	}
 
 	id, err := uuid.Parse(req.Id)
@@ -185,8 +196,10 @@ func (p *usersService) Update(ctx context.Context, req *proto.UpdateUserRequest)
 		p.log.Error().Err(err).Str("id", req.Id).Msg("Failed to update user")
 
 		switch {
-		case errors.Is(err, errors.ErrUserNotFound):
+		case errors.Is(err, errors.ErrRecordNotFound):
 			return nil, status.Error(codes.NotFound, err.Error())
+		case errors.Is(err, errors.ErrFailedToUpdateRecord):
+			return nil, status.Error(codes.Internal, err.Error())
 		default:
 			return nil, status.Error(codes.Internal, "failed to update user")
 		}
@@ -206,7 +219,7 @@ func (p *usersService) Update(ctx context.Context, req *proto.UpdateUserRequest)
 //nolint:dupl
 func (p *usersService) Delete(ctx context.Context, req *proto.DeleteUserRequest) (*emptypb.Empty, error) {
 	if err := protovalidate.Validate(req); err != nil {
-		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidAttributes.Error())
+		return nil, status.Error(codes.InvalidArgument, errors.ErrInvalidArguments.Error())
 	}
 
 	id, err := uuid.Parse(req.Id)
@@ -220,7 +233,7 @@ func (p *usersService) Delete(ctx context.Context, req *proto.DeleteUserRequest)
 		p.log.Error().Err(err).Str("id", req.Id).Msg("Failed to delete user")
 
 		switch {
-		case errors.Is(err, errors.ErrUserNotFound):
+		case errors.Is(err, errors.ErrRecordNotFound):
 			return nil, status.Error(codes.NotFound, err.Error())
 		default:
 			return nil, status.Error(codes.Internal, "failed to delete user")

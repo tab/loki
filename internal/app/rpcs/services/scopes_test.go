@@ -77,9 +77,35 @@ func Test_Scopes_List(t *testing.T) {
 			error: false,
 		},
 		{
-			name: "Error",
+			name: "Invalid Request",
+			before: func() {
+				scopes.EXPECT().List(ctx, gomock.Any()).Times(0)
+			},
+			request: &proto.PaginatedListRequest{
+				Limit:  0,
+				Offset: 10,
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
+			name: "Failed to fetch results",
 			before: func() {
 				scopes.EXPECT().List(ctx, gomock.Any()).Return(nil, uint64(0), errors.ErrFailedToFetchResults)
+			},
+			request: &proto.PaginatedListRequest{
+				Limit:  1,
+				Offset: 10,
+			},
+			expected: nil,
+			code:     codes.Unavailable,
+			error:    true,
+		},
+		{
+			name: "Error",
+			before: func() {
+				scopes.EXPECT().List(ctx, gomock.Any()).Return(nil, uint64(0), assert.AnError)
 			},
 			request: &proto.PaginatedListRequest{
 				Limit:  1,
@@ -155,9 +181,19 @@ func Test_Scopes_Get(t *testing.T) {
 			error: false,
 		},
 		{
+			name:   "Invalid ID format",
+			before: func() {},
+			req: &proto.GetScopeRequest{
+				Id: "invalid-uuid",
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
 			name: "Not Found",
 			before: func() {
-				scopes.EXPECT().FindById(ctx, id).Return(nil, errors.ErrScopeNotFound)
+				scopes.EXPECT().FindById(ctx, id).Return(nil, errors.ErrRecordNotFound)
 			},
 			req: &proto.GetScopeRequest{
 				Id: id.String(),
@@ -167,21 +203,22 @@ func Test_Scopes_Get(t *testing.T) {
 			error:    true,
 		},
 		{
-			name: "Invalid ID Format",
+			name: "Error",
+			before: func() {
+				scopes.EXPECT().FindById(ctx, id).Return(nil, assert.AnError)
+			},
 			req: &proto.GetScopeRequest{
-				Id: "invalid-uuid",
+				Id: id.String(),
 			},
 			expected: nil,
-			code:     codes.InvalidArgument,
+			code:     codes.Internal,
 			error:    true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.before != nil {
-				tt.before()
-			}
+			tt.before()
 
 			result, err := service.Get(ctx, tt.req)
 
@@ -240,7 +277,31 @@ func Test_Scopes_Create(t *testing.T) {
 			error: false,
 		},
 		{
-			name: "Internal Error",
+			name:   "Validation error",
+			before: func() {},
+			req: &proto.CreateScopeRequest{
+				Name:        "",
+				Description: "SSO-service scope",
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
+			name: "Error",
+			before: func() {
+				scopes.EXPECT().Create(ctx, gomock.Any()).Return(nil, errors.ErrFailedToCreateRecord)
+			},
+			req: &proto.CreateScopeRequest{
+				Name:        "sso-service",
+				Description: "SSO-service scope",
+			},
+			expected: nil,
+			code:     codes.Internal,
+			error:    true,
+		},
+		{
+			name: "Internal error",
 			before: func() {
 				scopes.EXPECT().Create(ctx, gomock.Any()).Return(nil, assert.AnError)
 			},
@@ -252,23 +313,11 @@ func Test_Scopes_Create(t *testing.T) {
 			code:     codes.Internal,
 			error:    true,
 		},
-		{
-			name: "Validation Error",
-			req: &proto.CreateScopeRequest{
-				Name:        "",
-				Description: "SSO-service scope",
-			},
-			expected: nil,
-			code:     codes.InvalidArgument,
-			error:    true,
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.before != nil {
-				tt.before()
-			}
+			tt.before()
 
 			result, err := service.Create(ctx, tt.req)
 
@@ -328,9 +377,21 @@ func Test_Scopes_Update(t *testing.T) {
 			error: false,
 		},
 		{
+			name:   "Invalid ID format",
+			before: func() {},
+			req: &proto.UpdateScopeRequest{
+				Id:          "invalid-uuid",
+				Name:        "sso-service",
+				Description: "SSO-service scope updated",
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
 			name: "Not Found",
 			before: func() {
-				scopes.EXPECT().Update(ctx, gomock.Any()).Return(nil, errors.ErrScopeNotFound)
+				scopes.EXPECT().Update(ctx, gomock.Any()).Return(nil, errors.ErrRecordNotFound)
 			},
 			req: &proto.UpdateScopeRequest{
 				Id:          id.String(),
@@ -342,7 +403,21 @@ func Test_Scopes_Update(t *testing.T) {
 			error:    true,
 		},
 		{
-			name: "Internal Error",
+			name: "Error",
+			before: func() {
+				scopes.EXPECT().Update(ctx, gomock.Any()).Return(nil, errors.ErrFailedToUpdateRecord)
+			},
+			req: &proto.UpdateScopeRequest{
+				Id:          id.String(),
+				Name:        "sso-service",
+				Description: "SSO-service scope updated",
+			},
+			expected: nil,
+			code:     codes.Internal,
+			error:    true,
+		},
+		{
+			name: "Internal error",
 			before: func() {
 				scopes.EXPECT().Update(ctx, gomock.Any()).Return(nil, assert.AnError)
 			},
@@ -355,24 +430,11 @@ func Test_Scopes_Update(t *testing.T) {
 			code:     codes.Internal,
 			error:    true,
 		},
-		{
-			name: "Invalid ID Format",
-			req: &proto.UpdateScopeRequest{
-				Id:          "invalid-uuid",
-				Name:        "sso-service",
-				Description: "SSO-service scope updated",
-			},
-			expected: nil,
-			code:     codes.InvalidArgument,
-			error:    true,
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.before != nil {
-				tt.before()
-			}
+			tt.before()
 
 			result, err := service.Update(ctx, tt.req)
 
@@ -420,9 +482,19 @@ func Test_Scopes_Delete(t *testing.T) {
 			error:    false,
 		},
 		{
+			name:   "Invalid ID format",
+			before: func() {},
+			req: &proto.DeleteScopeRequest{
+				Id: "invalid-uuid",
+			},
+			expected: nil,
+			code:     codes.InvalidArgument,
+			error:    true,
+		},
+		{
 			name: "Not Found",
 			before: func() {
-				scopes.EXPECT().Delete(ctx, id).Return(false, errors.ErrScopeNotFound)
+				scopes.EXPECT().Delete(ctx, id).Return(false, errors.ErrRecordNotFound)
 			},
 			req: &proto.DeleteScopeRequest{
 				Id: id.String(),
@@ -432,7 +504,7 @@ func Test_Scopes_Delete(t *testing.T) {
 			error:    true,
 		},
 		{
-			name: "Internal Error",
+			name: "Internal error",
 			before: func() {
 				scopes.EXPECT().Delete(ctx, id).Return(false, assert.AnError)
 			},
@@ -443,22 +515,11 @@ func Test_Scopes_Delete(t *testing.T) {
 			code:     codes.Internal,
 			error:    true,
 		},
-		{
-			name: "Invalid ID Format",
-			req: &proto.DeleteScopeRequest{
-				Id: "invalid-uuid",
-			},
-			expected: nil,
-			code:     codes.InvalidArgument,
-			error:    true,
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.before != nil {
-				tt.before()
-			}
+			tt.before()
 
 			result, err := service.Delete(ctx, tt.req)
 
