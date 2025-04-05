@@ -6,6 +6,12 @@ var (
 	// ErrInvalidToken indicates that the provided token is invalid
 	ErrInvalidToken = errors.New("invalid token")
 
+	// ErrPrivateKeyNotFound indicates that the private key for signing JWT tokens could not be found
+	ErrPrivateKeyNotFound = errors.New("failed to load JWT private key")
+
+	// ErrPublicKeyNotFound indicates that the public key for verifying JWT tokens could not be found
+	ErrPublicKeyNotFound = errors.New("failed to load JWT public key")
+
 	// ErrInvalidSigningMethod indicates that an unsupported signing method was used
 	ErrInvalidSigningMethod = errors.New("invalid signing method")
 
