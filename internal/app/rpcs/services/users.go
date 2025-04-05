@@ -84,7 +84,7 @@ func (p *usersService) Get(ctx context.Context, req *proto.GetUserRequest) (*pro
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	user, err := p.users.FindById(ctx, id)
+	user, err := p.users.FindUserDetailsById(ctx, id)
 	if err != nil {
 		p.log.Error().Err(err).Str("id", req.Id).Msg("Failed to get user")
 

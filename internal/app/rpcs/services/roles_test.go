@@ -160,6 +160,10 @@ func Test_Roles_Get(t *testing.T) {
 	service := NewRoles(roles, log)
 
 	id := uuid.MustParse("10000000-1000-1000-1000-000000000001")
+	permissionIds := []uuid.UUID{
+		uuid.MustParse("10000000-1000-1000-3000-000000000001"),
+		uuid.MustParse("10000000-1000-1000-3000-000000000002"),
+	}
 
 	tests := []struct {
 		name     string
@@ -172,10 +176,11 @@ func Test_Roles_Get(t *testing.T) {
 		{
 			name: "Success",
 			before: func() {
-				roles.EXPECT().FindById(ctx, id).Return(&models.Role{
-					ID:          id,
-					Name:        models.AdminRoleType,
-					Description: "Admin role",
+				roles.EXPECT().FindRoleDetailsById(ctx, id).Return(&models.Role{
+					ID:            id,
+					Name:          models.AdminRoleType,
+					Description:   "Admin role",
+					PermissionIDs: permissionIds,
 				}, nil)
 			},
 			req: &proto.GetRoleRequest{
@@ -183,9 +188,10 @@ func Test_Roles_Get(t *testing.T) {
 			},
 			expected: &proto.GetRoleResponse{
 				Data: &proto.Role{
-					Id:          id.String(),
-					Name:        "admin",
-					Description: "Admin role",
+					Id:            id.String(),
+					Name:          "admin",
+					Description:   "Admin role",
+					PermissionIds: []string{"10000000-1000-1000-3000-000000000001", "10000000-1000-1000-3000-000000000002"},
 				},
 			},
 			error: false,
@@ -193,7 +199,7 @@ func Test_Roles_Get(t *testing.T) {
 		{
 			name: "Not Found",
 			before: func() {
-				roles.EXPECT().FindById(ctx, id).Return(nil, errors.ErrRecordNotFound)
+				roles.EXPECT().FindRoleDetailsById(ctx, id).Return(nil, errors.ErrRecordNotFound)
 			},
 			req: &proto.GetRoleRequest{
 				Id: id.String(),
@@ -215,7 +221,7 @@ func Test_Roles_Get(t *testing.T) {
 		{
 			name: "Error",
 			before: func() {
-				roles.EXPECT().FindById(ctx, id).Return(nil, assert.AnError)
+				roles.EXPECT().FindRoleDetailsById(ctx, id).Return(nil, assert.AnError)
 			},
 			req: &proto.GetRoleRequest{
 				Id: id.String(),
@@ -237,9 +243,7 @@ func Test_Roles_Get(t *testing.T) {
 				assert.Equal(t, tt.code, st.Code())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expected.Data.Id, result.Data.Id)
-				assert.Equal(t, tt.expected.Data.Name, result.Data.Name)
-				assert.Equal(t, tt.expected.Data.Description, result.Data.Description)
+				assert.Equal(t, tt.expected, result)
 			}
 		})
 	}
@@ -336,9 +340,7 @@ func Test_Roles_Create(t *testing.T) {
 				assert.Equal(t, tt.code, st.Code())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expected.Data.Id, result.Data.Id)
-				assert.Equal(t, tt.expected.Data.Name, result.Data.Name)
-				assert.Equal(t, tt.expected.Data.Description, result.Data.Description)
+				assert.Equal(t, tt.expected, result)
 			}
 		})
 	}
@@ -464,9 +466,7 @@ func Test_Roles_Update(t *testing.T) {
 				assert.Equal(t, tt.code, st.Code())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expected.Data.Id, result.Data.Id)
-				assert.Equal(t, tt.expected.Data.Name, result.Data.Name)
-				assert.Equal(t, tt.expected.Data.Description, result.Data.Description)
+				assert.Equal(t, tt.expected, result)
 			}
 		})
 	}

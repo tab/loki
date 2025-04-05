@@ -266,6 +266,8 @@ type CreateUserRequest struct {
 	PersonalCode   string                 `protobuf:"bytes,2,opt,name=personal_code,json=personalCode,proto3" json:"personal_code,omitempty"`
 	FirstName      string                 `protobuf:"bytes,3,opt,name=first_name,json=firstName,proto3" json:"first_name,omitempty"`
 	LastName       string                 `protobuf:"bytes,4,opt,name=last_name,json=lastName,proto3" json:"last_name,omitempty"`
+	RoleIds        []string               `protobuf:"bytes,5,rep,name=role_ids,json=roleIds,proto3" json:"role_ids,omitempty"`
+	ScopeIds       []string               `protobuf:"bytes,6,rep,name=scope_ids,json=scopeIds,proto3" json:"scope_ids,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -326,6 +328,20 @@ func (x *CreateUserRequest) GetLastName() string {
 		return x.LastName
 	}
 	return ""
+}
+
+func (x *CreateUserRequest) GetRoleIds() []string {
+	if x != nil {
+		return x.RoleIds
+	}
+	return nil
+}
+
+func (x *CreateUserRequest) GetScopeIds() []string {
+	if x != nil {
+		return x.ScopeIds
+	}
+	return nil
 }
 
 // CreateUserResponse is the response for the Create method
@@ -578,13 +594,17 @@ const file_sso_v1_user_proto_rawDesc = "" +
 	"\x0eGetUserRequest\x12\x18\n" +
 	"\x02id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x02id\"3\n" +
 	"\x0fGetUserResponse\x12 \n" +
-	"\x04data\x18\x01 \x01(\v2\f.sso.v1.UserR\x04data\"\xc9\x01\n" +
+	"\x04data\x18\x01 \x01(\v2\f.sso.v1.UserR\x04data\"\x9f\x02\n" +
 	"\x11CreateUserRequest\x122\n" +
 	"\x0fidentity_number\x18\x01 \x01(\tB\t\xbaH\x06r\x04\x10\x0f\x18\x14R\x0eidentityNumber\x12.\n" +
 	"\rpersonal_code\x18\x02 \x01(\tB\t\xbaH\x06r\x04\x10\v\x18\x14R\fpersonalCode\x12(\n" +
 	"\n" +
 	"first_name\x18\x03 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x182R\tfirstName\x12&\n" +
-	"\tlast_name\x18\x04 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x182R\blastName\"6\n" +
+	"\tlast_name\x18\x04 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x182R\blastName\x12(\n" +
+	"\brole_ids\x18\x05 \x03(\tB\r\xbaH\n" +
+	"\x92\x01\a\"\x05r\x03\xb0\x01\x01R\aroleIds\x12*\n" +
+	"\tscope_ids\x18\x06 \x03(\tB\r\xbaH\n" +
+	"\x92\x01\a\"\x05r\x03\xb0\x01\x01R\bscopeIds\"6\n" +
 	"\x12CreateUserResponse\x12 \n" +
 	"\x04data\x18\x01 \x01(\v2\f.sso.v1.UserR\x04data\"\xb9\x02\n" +
 	"\x11UpdateUserRequest\x12\x18\n" +
