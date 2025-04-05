@@ -172,7 +172,7 @@ func Test_Roles_Get(t *testing.T) {
 		{
 			name: "Success",
 			before: func() {
-				roles.EXPECT().FindById(ctx, id).Return(&models.Role{
+				roles.EXPECT().FindRoleDetailsById(ctx, id).Return(&models.Role{
 					ID:          id,
 					Name:        models.AdminRoleType,
 					Description: "Admin role",
@@ -193,7 +193,7 @@ func Test_Roles_Get(t *testing.T) {
 		{
 			name: "Not Found",
 			before: func() {
-				roles.EXPECT().FindById(ctx, id).Return(nil, errors.ErrRecordNotFound)
+				roles.EXPECT().FindRoleDetailsById(ctx, id).Return(nil, errors.ErrRecordNotFound)
 			},
 			req: &proto.GetRoleRequest{
 				Id: id.String(),
@@ -215,7 +215,7 @@ func Test_Roles_Get(t *testing.T) {
 		{
 			name: "Error",
 			before: func() {
-				roles.EXPECT().FindById(ctx, id).Return(nil, assert.AnError)
+				roles.EXPECT().FindRoleDetailsById(ctx, id).Return(nil, assert.AnError)
 			},
 			req: &proto.GetRoleRequest{
 				Id: id.String(),
@@ -240,6 +240,7 @@ func Test_Roles_Get(t *testing.T) {
 				assert.Equal(t, tt.expected.Data.Id, result.Data.Id)
 				assert.Equal(t, tt.expected.Data.Name, result.Data.Name)
 				assert.Equal(t, tt.expected.Data.Description, result.Data.Description)
+				assert.Equal(t, len(tt.expected.Data.PermissionIds), len(result.Data.PermissionIds))
 			}
 		})
 	}

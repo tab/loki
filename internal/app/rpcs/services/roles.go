@@ -82,7 +82,7 @@ func (p *rolesService) Get(ctx context.Context, req *proto.GetRoleRequest) (*pro
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	role, err := p.roles.FindById(ctx, id)
+	role, err := p.roles.FindRoleDetailsById(ctx, id)
 	if err != nil {
 		p.log.Error().Err(err).Str("id", req.Id).Msg("Failed to get role")
 
@@ -94,12 +94,17 @@ func (p *rolesService) Get(ctx context.Context, req *proto.GetRoleRequest) (*pro
 		}
 	}
 
+	permissionIds := make([]string, 0, len(role.PermissionIDs))
+	for _, permissionId := range role.PermissionIDs {
+		permissionIds = append(permissionIds, permissionId.String())
+	}
+
 	return &proto.GetRoleResponse{
 		Data: &proto.Role{
 			Id:            role.ID.String(),
 			Name:          role.Name,
 			Description:   role.Description,
-			PermissionIds: []string{},
+			PermissionIds: permissionIds,
 		},
 	}, nil
 }
