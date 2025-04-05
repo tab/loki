@@ -39,6 +39,7 @@ func (u *users) List(ctx context.Context, pagination *Pagination) ([]models.User
 	collection, total, err := u.repository.List(ctx, pagination.Limit(), pagination.Offset())
 
 	if err != nil {
+		u.log.Error().Err(err).Msg("Failed to fetch users")
 		return nil, 0, errors.ErrFailedToFetchResults
 	}
 
@@ -53,7 +54,8 @@ func (u *users) Create(ctx context.Context, params *models.User) (*models.User, 
 		LastName:       params.LastName,
 	})
 	if err != nil {
-		return nil, err
+		u.log.Error().Err(err).Msg("Failed to create user")
+		return nil, errors.ErrFailedToCreateRecord
 	}
 
 	return user, nil
@@ -70,7 +72,8 @@ func (u *users) Update(ctx context.Context, params *models.User) (*models.User, 
 		ScopeIDs:       params.ScopeIDs,
 	})
 	if err != nil {
-		return nil, err
+		u.log.Error().Err(err).Msg("Failed to update user")
+		return nil, errors.ErrFailedToUpdateRecord
 	}
 
 	return user, nil
@@ -79,7 +82,8 @@ func (u *users) Update(ctx context.Context, params *models.User) (*models.User, 
 func (u *users) FindById(ctx context.Context, id uuid.UUID) (*models.User, error) {
 	user, err := u.repository.FindById(ctx, id)
 	if err != nil {
-		return nil, err
+		u.log.Error().Err(err).Msg("Failed to find user by id")
+		return nil, errors.ErrRecordNotFound
 	}
 
 	return user, nil
@@ -88,7 +92,8 @@ func (u *users) FindById(ctx context.Context, id uuid.UUID) (*models.User, error
 func (u *users) Delete(ctx context.Context, id uuid.UUID) (bool, error) {
 	ok, err := u.repository.Delete(ctx, id)
 	if err != nil {
-		return false, err
+		u.log.Error().Err(err).Msg("Failed to delete user")
+		return false, errors.ErrFailedToDeleteRecord
 	}
 
 	return ok, nil
@@ -97,7 +102,8 @@ func (u *users) Delete(ctx context.Context, id uuid.UUID) (bool, error) {
 func (u *users) FindByIdentityNumber(ctx context.Context, identityNumber string) (*models.User, error) {
 	user, err := u.repository.FindByIdentityNumber(ctx, identityNumber)
 	if err != nil {
-		return nil, err
+		u.log.Error().Err(err).Msg("Failed to find user by identity number")
+		return nil, errors.ErrRecordNotFound
 	}
 
 	return user, nil
@@ -106,7 +112,8 @@ func (u *users) FindByIdentityNumber(ctx context.Context, identityNumber string)
 func (u *users) FindUserDetailsById(ctx context.Context, id uuid.UUID) (*models.User, error) {
 	user, err := u.repository.FindUserDetailsById(ctx, id)
 	if err != nil {
-		return nil, err
+		u.log.Error().Err(err).Msg("Failed to find user details by id")
+		return nil, errors.ErrRecordNotFound
 	}
 
 	return user, nil

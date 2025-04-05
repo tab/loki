@@ -36,6 +36,7 @@ func (p *permissions) List(ctx context.Context, pagination *Pagination) ([]model
 	collection, total, err := p.repository.List(ctx, pagination.Limit(), pagination.Offset())
 
 	if err != nil {
+		p.log.Error().Err(err).Msg("Failed to fetch permissions")
 		return nil, 0, errors.ErrFailedToFetchResults
 	}
 
@@ -48,7 +49,8 @@ func (p *permissions) Create(ctx context.Context, params *models.Permission) (*m
 		Description: params.Description,
 	})
 	if err != nil {
-		return nil, err
+		p.log.Error().Err(err).Msg("Failed to create permission")
+		return nil, errors.ErrFailedToCreateRecord
 	}
 
 	return permission, nil
@@ -61,7 +63,8 @@ func (p *permissions) Update(ctx context.Context, params *models.Permission) (*m
 		Description: params.Description,
 	})
 	if err != nil {
-		return nil, err
+		p.log.Error().Err(err).Msg("Failed to update permission")
+		return nil, errors.ErrFailedToUpdateRecord
 	}
 
 	return permission, nil
@@ -70,7 +73,8 @@ func (p *permissions) Update(ctx context.Context, params *models.Permission) (*m
 func (p *permissions) FindById(ctx context.Context, id uuid.UUID) (*models.Permission, error) {
 	permission, err := p.repository.FindById(ctx, id)
 	if err != nil {
-		return nil, err
+		p.log.Error().Err(err).Msg("Failed to find permission by ID")
+		return nil, errors.ErrRecordNotFound
 	}
 
 	return permission, nil
@@ -79,7 +83,8 @@ func (p *permissions) FindById(ctx context.Context, id uuid.UUID) (*models.Permi
 func (p *permissions) Delete(ctx context.Context, id uuid.UUID) (bool, error) {
 	ok, err := p.repository.Delete(ctx, id)
 	if err != nil {
-		return false, err
+		p.log.Error().Err(err).Msg("Failed to delete permission")
+		return false, errors.ErrFailedToDeleteRecord
 	}
 
 	return ok, nil

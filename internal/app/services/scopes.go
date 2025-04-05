@@ -36,6 +36,7 @@ func (s *scopes) List(ctx context.Context, pagination *Pagination) ([]models.Sco
 	collection, total, err := s.repository.List(ctx, pagination.Limit(), pagination.Offset())
 
 	if err != nil {
+		s.log.Error().Err(err).Msg("Failed to fetch scopes")
 		return nil, 0, errors.ErrFailedToFetchResults
 	}
 
@@ -48,7 +49,8 @@ func (s *scopes) Create(ctx context.Context, params *models.Scope) (*models.Scop
 		Description: params.Description,
 	})
 	if err != nil {
-		return nil, err
+		s.log.Error().Err(err).Msg("Failed to create scope")
+		return nil, errors.ErrFailedToCreateRecord
 	}
 
 	return scope, nil
@@ -61,7 +63,8 @@ func (s *scopes) Update(ctx context.Context, params *models.Scope) (*models.Scop
 		Description: params.Description,
 	})
 	if err != nil {
-		return nil, err
+		s.log.Error().Err(err).Msg("Failed to update scope")
+		return nil, errors.ErrFailedToUpdateRecord
 	}
 
 	return scope, nil
@@ -70,7 +73,8 @@ func (s *scopes) Update(ctx context.Context, params *models.Scope) (*models.Scop
 func (s *scopes) FindById(ctx context.Context, id uuid.UUID) (*models.Scope, error) {
 	scope, err := s.repository.FindById(ctx, id)
 	if err != nil {
-		return nil, err
+		s.log.Error().Err(err).Msg("Failed to find scope by id")
+		return nil, errors.ErrRecordNotFound
 	}
 
 	return scope, nil
@@ -79,7 +83,8 @@ func (s *scopes) FindById(ctx context.Context, id uuid.UUID) (*models.Scope, err
 func (s *scopes) Delete(ctx context.Context, id uuid.UUID) (bool, error) {
 	ok, err := s.repository.Delete(ctx, id)
 	if err != nil {
-		return false, err
+		s.log.Error().Err(err).Msg("Failed to delete scope")
+		return false, errors.ErrFailedToDeleteRecord
 	}
 
 	return ok, nil

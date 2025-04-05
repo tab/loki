@@ -32,7 +32,6 @@ docker-compose up
 
 Use `.env` files (e.g., `.env.development`) or provide environment variables for:
 
-- `SECRET_KEY` for JWT signing
 - `DATABASE_DSN` for PostgreSQL
 - `REDIS_URI` for Redis
 - `SMART_ID_API_URL`, `MOBILE_ID_API_URL` and corresponding relying on party credentials

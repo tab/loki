@@ -16,32 +16,32 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockServer is a mock of Server interface.
-type MockServer struct {
+// MockWebServer is a mock of WebServer interface.
+type MockWebServer struct {
 	ctrl     *gomock.Controller
-	recorder *MockServerMockRecorder
+	recorder *MockWebServerMockRecorder
 	isgomock struct{}
 }
 
-// MockServerMockRecorder is the mock recorder for MockServer.
-type MockServerMockRecorder struct {
-	mock *MockServer
+// MockWebServerMockRecorder is the mock recorder for MockWebServer.
+type MockWebServerMockRecorder struct {
+	mock *MockWebServer
 }
 
-// NewMockServer creates a new mock instance.
-func NewMockServer(ctrl *gomock.Controller) *MockServer {
-	mock := &MockServer{ctrl: ctrl}
-	mock.recorder = &MockServerMockRecorder{mock}
+// NewMockWebServer creates a new mock instance.
+func NewMockWebServer(ctrl *gomock.Controller) *MockWebServer {
+	mock := &MockWebServer{ctrl: ctrl}
+	mock.recorder = &MockWebServerMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockServer) EXPECT() *MockServerMockRecorder {
+func (m *MockWebServer) EXPECT() *MockWebServerMockRecorder {
 	return m.recorder
 }
 
 // Run mocks base method.
-func (m *MockServer) Run() error {
+func (m *MockWebServer) Run() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Run")
 	ret0, _ := ret[0].(error)
@@ -49,13 +49,13 @@ func (m *MockServer) Run() error {
 }
 
 // Run indicates an expected call of Run.
-func (mr *MockServerMockRecorder) Run() *gomock.Call {
+func (mr *MockWebServerMockRecorder) Run() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockServer)(nil).Run))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockWebServer)(nil).Run))
 }
 
 // Shutdown mocks base method.
-func (m *MockServer) Shutdown(ctx context.Context) error {
+func (m *MockWebServer) Shutdown(ctx context.Context) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Shutdown", ctx)
 	ret0, _ := ret[0].(error)
@@ -63,7 +63,7 @@ func (m *MockServer) Shutdown(ctx context.Context) error {
 }
 
 // Shutdown indicates an expected call of Shutdown.
-func (mr *MockServerMockRecorder) Shutdown(ctx any) *gomock.Call {
+func (mr *MockWebServerMockRecorder) Shutdown(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Shutdown", reflect.TypeOf((*MockServer)(nil).Shutdown), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Shutdown", reflect.TypeOf((*MockWebServer)(nil).Shutdown), ctx)
 }

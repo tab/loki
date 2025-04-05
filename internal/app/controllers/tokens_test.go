@@ -100,9 +100,7 @@ func Test_TokensController_Refresh(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.before != nil {
-				tt.before()
-			}
+			tt.before()
 
 			req := httptest.NewRequest(http.MethodPost, "/api/tokens/refresh", tt.body)
 			w := httptest.NewRecorder()
