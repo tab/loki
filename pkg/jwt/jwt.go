@@ -1,12 +1,21 @@
 package jwt
 
 import (
+	"crypto/rsa"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 
 	"loki/internal/app/errors"
 	"loki/internal/config"
+)
+
+const (
+	Dir            = "jwt"
+	PrivateKeyFile = "private.key"
+	PublicKeyFile  = "public.key"
 )
 
 type Payload struct {
@@ -23,7 +32,9 @@ type Jwt interface {
 }
 
 type jwtService struct {
-	cfg *config.Config
+	cfg        *config.Config
+	privateKey *rsa.PrivateKey
+	publicKey  *rsa.PublicKey
 }
 
 type Claims struct {
@@ -33,8 +44,17 @@ type Claims struct {
 	Scope       []string `json:"scope,omitempty"`
 }
 
-func NewJWT(cfg *config.Config) Jwt {
-	return &jwtService{cfg: cfg}
+func NewJWT(cfg *config.Config) (Jwt, error) {
+	privateKey, publicKey, err := loadKeys(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return &jwtService{
+		cfg:        cfg,
+		privateKey: privateKey,
+		publicKey:  publicKey,
+	}, nil
 }
 
 func (j *jwtService) Generate(payload Payload, duration time.Duration) (string, error) {
@@ -48,9 +68,9 @@ func (j *jwtService) Generate(payload Payload, duration time.Duration) (string, 
 		Scope:       payload.Scope,
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 
-	signedToken, err := token.SignedString([]byte(j.cfg.SecretKey))
+	signedToken, err := token.SignedString(j.privateKey)
 	if err != nil {
 		return "", err
 	}
@@ -63,10 +83,10 @@ func (j *jwtService) Verify(token string) (bool, error) {
 
 	result, err := jwt.ParseWithClaims(token, claims,
 		func(t *jwt.Token) (interface{}, error) {
-			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
 				return false, errors.ErrInvalidSigningMethod
 			}
-			return []byte(j.cfg.SecretKey), nil
+			return j.publicKey, nil
 		})
 
 	if err != nil {
@@ -85,10 +105,10 @@ func (j *jwtService) Decode(token string) (*Payload, error) {
 
 	result, err := jwt.ParseWithClaims(token, claims,
 		func(t *jwt.Token) (interface{}, error) {
-			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
 				return false, errors.ErrInvalidSigningMethod
 			}
-			return []byte(j.cfg.SecretKey), nil
+			return j.publicKey, nil
 		})
 
 	if err != nil {
@@ -105,4 +125,48 @@ func (j *jwtService) Decode(token string) (*Payload, error) {
 		Permissions: claims.Permissions,
 		Scope:       claims.Scope,
 	}, nil
+}
+
+func loadKeys(cfg *config.Config) (*rsa.PrivateKey, *rsa.PublicKey, error) {
+	privateKey, err := loadPrivateKey(cfg)
+	if err != nil {
+		return nil, nil, errors.ErrPrivateKeyNotFound
+	}
+
+	publicKey, err := loadPublicKey(cfg)
+	if err != nil {
+		return nil, nil, errors.ErrPublicKeyNotFound
+	}
+
+	return privateKey, publicKey, nil
+}
+
+func loadPrivateKey(cfg *config.Config) (*rsa.PrivateKey, error) {
+	filePath := filepath.Join(cfg.CertPath, Dir, PrivateKeyFile)
+	bytes, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	key, err := jwt.ParseRSAPrivateKeyFromPEM(bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return key, nil
+}
+
+func loadPublicKey(cfg *config.Config) (*rsa.PublicKey, error) {
+	filePath := filepath.Join(cfg.CertPath, Dir, PublicKeyFile)
+	bytes, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	key, err := jwt.ParseRSAPublicKeyFromPEM(bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return key, nil
 }

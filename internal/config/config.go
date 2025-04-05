@@ -42,7 +42,6 @@ type Config struct {
 	AppAddr      string
 	GrpcAddr     string
 	ClientURL    string
-	SecretKey    string
 	CertPath     string
 	DatabaseDSN  string
 	RedisURI     string
@@ -70,7 +69,6 @@ func LoadConfig() *Config {
 	flagAppAddr := flag.String("b", AppAddr, "server address")
 	flagGrpcAddr := flag.String("g", GrpcAddr, "gRPC server address")
 	flagClientURL := flag.String("c", ClientURL, "client address")
-	flagSecretKey := flag.String("s", "", "JWT secret key")
 	flagCertPath := flag.String("p", "", "certificate path")
 	flagDatabaseDSN := flag.String("d", "", "database DSN")
 	flagRedisURI := flag.String("r", "", "Redis URI")
@@ -84,8 +82,7 @@ func LoadConfig() *Config {
 		GrpcAddr:  getFlagOrEnvString(*flagGrpcAddr, "GRPC_ADDRESS", GrpcAddr),
 		ClientURL: getFlagOrEnvString(*flagClientURL, "CLIENT_URL", ClientURL),
 
-		SecretKey: getFlagOrEnvString(*flagSecretKey, "SECRET_KEY", ""),
-		CertPath:  getFlagOrEnvString(*flagCertPath, "CERT_PATH", ""),
+		CertPath: getFlagOrEnvString(*flagCertPath, "CERT_PATH", ""),
 
 		DatabaseDSN:  getFlagOrEnvString(*flagDatabaseDSN, "DATABASE_DSN", ""),
 		RedisURI:     getFlagOrEnvString(*flagRedisURI, "REDIS_URI", ""),
