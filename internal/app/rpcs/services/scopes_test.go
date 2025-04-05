@@ -227,9 +227,7 @@ func Test_Scopes_Get(t *testing.T) {
 				assert.Equal(t, tt.code, st.Code())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expected.Data.Id, result.Data.Id)
-				assert.Equal(t, tt.expected.Data.Name, result.Data.Name)
-				assert.Equal(t, tt.expected.Data.Description, result.Data.Description)
+				assert.Equal(t, tt.expected, result)
 			}
 		})
 	}
@@ -326,9 +324,7 @@ func Test_Scopes_Create(t *testing.T) {
 				assert.Equal(t, tt.code, st.Code())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expected.Data.Id, result.Data.Id)
-				assert.Equal(t, tt.expected.Data.Name, result.Data.Name)
-				assert.Equal(t, tt.expected.Data.Description, result.Data.Description)
+				assert.Equal(t, tt.expected, result)
 			}
 		})
 	}
@@ -443,9 +439,7 @@ func Test_Scopes_Update(t *testing.T) {
 				assert.Equal(t, tt.code, st.Code())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expected.Data.Id, result.Data.Id)
-				assert.Equal(t, tt.expected.Data.Name, result.Data.Name)
-				assert.Equal(t, tt.expected.Data.Description, result.Data.Description)
+				assert.Equal(t, tt.expected, result)
 			}
 		})
 	}

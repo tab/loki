@@ -227,9 +227,7 @@ func Test_Permissions_Get(t *testing.T) {
 				assert.Equal(t, tt.code, st.Code())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expected.Data.Id, result.Data.Id)
-				assert.Equal(t, tt.expected.Data.Name, result.Data.Name)
-				assert.Equal(t, tt.expected.Data.Description, result.Data.Description)
+				assert.Equal(t, tt.expected, result)
 			}
 		})
 	}
@@ -326,9 +324,7 @@ func Test_Permissions_Create(t *testing.T) {
 				assert.Equal(t, tt.code, st.Code())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expected.Data.Id, result.Data.Id)
-				assert.Equal(t, tt.expected.Data.Name, result.Data.Name)
-				assert.Equal(t, tt.expected.Data.Description, result.Data.Description)
+				assert.Equal(t, tt.expected, result)
 			}
 		})
 	}
@@ -454,9 +450,7 @@ func Test_Permissions_Update(t *testing.T) {
 				assert.Equal(t, tt.code, st.Code())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expected.Data.Id, result.Data.Id)
-				assert.Equal(t, tt.expected.Data.Name, result.Data.Name)
-				assert.Equal(t, tt.expected.Data.Description, result.Data.Description)
+				assert.Equal(t, tt.expected, result)
 			}
 		})
 	}

@@ -160,6 +160,14 @@ func Test_Users_Get(t *testing.T) {
 	service := NewUsers(users, log)
 
 	id := uuid.MustParse("10000000-1000-1000-1234-000000000001")
+	roleIds := []uuid.UUID{
+		uuid.MustParse("10000000-1000-1000-1000-000000000001"),
+		uuid.MustParse("10000000-1000-1000-1000-000000000002"),
+	}
+	scopeIds := []uuid.UUID{
+		uuid.MustParse("10000000-1000-1000-2000-000000000001"),
+		uuid.MustParse("10000000-1000-1000-2000-000000000001"),
+	}
 
 	tests := []struct {
 		name     string
@@ -172,12 +180,14 @@ func Test_Users_Get(t *testing.T) {
 		{
 			name: "Success",
 			before: func() {
-				users.EXPECT().FindById(ctx, id).Return(&models.User{
+				users.EXPECT().FindUserDetailsById(ctx, id).Return(&models.User{
 					ID:             id,
 					IdentityNumber: "PNOEE-60001017869",
 					PersonalCode:   "60001017869",
 					FirstName:      "EID2016",
 					LastName:       "TESTNUMBER",
+					RoleIDs:        roleIds,
+					ScopeIDs:       scopeIds,
 				}, nil)
 			},
 			req: &proto.GetUserRequest{
@@ -190,6 +200,8 @@ func Test_Users_Get(t *testing.T) {
 					PersonalCode:   "60001017869",
 					FirstName:      "EID2016",
 					LastName:       "TESTNUMBER",
+					RoleIds:        []string{"10000000-1000-1000-1000-000000000001", "10000000-1000-1000-1000-000000000002"},
+					ScopeIds:       []string{"10000000-1000-1000-2000-000000000001", "10000000-1000-1000-2000-000000000001"},
 				},
 			},
 			error: false,
@@ -207,7 +219,7 @@ func Test_Users_Get(t *testing.T) {
 		{
 			name: "Not Found",
 			before: func() {
-				users.EXPECT().FindById(ctx, id).Return(nil, errors.ErrRecordNotFound)
+				users.EXPECT().FindUserDetailsById(ctx, id).Return(nil, errors.ErrRecordNotFound)
 			},
 			req: &proto.GetUserRequest{
 				Id: id.String(),
@@ -219,7 +231,7 @@ func Test_Users_Get(t *testing.T) {
 		{
 			name: "Error",
 			before: func() {
-				users.EXPECT().FindById(ctx, id).Return(nil, assert.AnError)
+				users.EXPECT().FindUserDetailsById(ctx, id).Return(nil, assert.AnError)
 			},
 			req: &proto.GetUserRequest{
 				Id: id.String(),
@@ -241,11 +253,7 @@ func Test_Users_Get(t *testing.T) {
 				assert.Equal(t, tt.code, st.Code())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expected.Data.Id, result.Data.Id)
-				assert.Equal(t, tt.expected.Data.IdentityNumber, result.Data.IdentityNumber)
-				assert.Equal(t, tt.expected.Data.PersonalCode, result.Data.PersonalCode)
-				assert.Equal(t, tt.expected.Data.FirstName, result.Data.FirstName)
-				assert.Equal(t, tt.expected.Data.LastName, result.Data.LastName)
+				assert.Equal(t, tt.expected, result)
 			}
 		})
 	}
@@ -359,11 +367,7 @@ func Test_Users_Create(t *testing.T) {
 				assert.Equal(t, tt.code, st.Code())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expected.Data.Id, result.Data.Id)
-				assert.Equal(t, tt.expected.Data.IdentityNumber, result.Data.IdentityNumber)
-				assert.Equal(t, tt.expected.Data.PersonalCode, result.Data.PersonalCode)
-				assert.Equal(t, tt.expected.Data.FirstName, result.Data.FirstName)
-				assert.Equal(t, tt.expected.Data.LastName, result.Data.LastName)
+				assert.Equal(t, tt.expected, result)
 			}
 		})
 	}
@@ -492,11 +496,7 @@ func Test_Users_Update(t *testing.T) {
 				assert.Equal(t, tt.code, st.Code())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expected.Data.Id, result.Data.Id)
-				assert.Equal(t, tt.expected.Data.IdentityNumber, result.Data.IdentityNumber)
-				assert.Equal(t, tt.expected.Data.PersonalCode, result.Data.PersonalCode)
-				assert.Equal(t, tt.expected.Data.FirstName, result.Data.FirstName)
-				assert.Equal(t, tt.expected.Data.LastName, result.Data.LastName)
+				assert.Equal(t, tt.expected, result)
 			}
 		})
 	}
