@@ -20,6 +20,7 @@ func NewRouter(
 	authentication middlewares.AuthenticationMiddleware,
 	authorization middlewares.AuthorizationMiddleware,
 	telemetry middlewares.TelemetryMiddleware,
+	logger middlewares.LoggerMiddleware,
 
 	health controllers.HealthController,
 	smartId controllers.SmartIdController,
@@ -38,7 +39,7 @@ func NewRouter(
 
 	r.Use(telemetry.Trace)
 	r.Use(middleware.RequestID)
-	r.Use(middleware.Logger)
+	r.Use(logger.Log)
 	r.Use(middleware.Compress(5))
 	r.Use(middleware.Heartbeat("/health"))
 	r.Use(

@@ -10,7 +10,7 @@ import (
 	"loki/internal/app/repositories"
 	"loki/internal/app/repositories/db"
 	"loki/pkg/jwt"
-	"loki/pkg/logger"
+	"loki/internal/config/logger"
 )
 
 type Tokens interface {

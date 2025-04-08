@@ -8,9 +8,9 @@ import (
 	"google.golang.org/grpc/status"
 
 	"loki/internal/app/services"
+	"loki/internal/config/logger"
 	"loki/internal/config/middlewares"
 	"loki/pkg/jwt"
-	"loki/pkg/logger"
 	"loki/pkg/rbac"
 )
 

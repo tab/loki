@@ -15,16 +15,23 @@ import (
 	"loki/internal/app/models"
 	proto "loki/internal/app/rpcs/proto/sso/v1"
 	"loki/internal/app/services"
-	"loki/pkg/logger"
+	"loki/internal/config"
+	"loki/internal/config/logger"
 )
 
 func Test_Tokens_List(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	tokens := services.NewMockTokens(ctrl)
-	log := logger.NewLogger()
 	service := NewTokens(tokens, log)
 
 	tests := []struct {
@@ -149,9 +156,15 @@ func Test_Tokens_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	tokens := services.NewMockTokens(ctrl)
-	log := logger.NewLogger()
 	service := NewTokens(tokens, log)
 
 	id := uuid.MustParse("10000000-1000-1000-6000-000000000001")

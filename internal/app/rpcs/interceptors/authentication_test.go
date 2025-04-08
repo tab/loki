@@ -10,8 +10,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+
+	"loki/internal/config"
+	"loki/internal/config/logger"
 	"loki/pkg/jwt"
-	"loki/pkg/logger"
 
 	"loki/internal/app/errors"
 	"loki/internal/app/models"
@@ -23,9 +25,15 @@ func Test_AuthenticationInterceptor_Authenticate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	mockJWT := jwt.NewMockJwt(ctrl)
 	mockUsers := services.NewMockUsers(ctrl)
-	log := logger.NewLogger()
 
 	interceptor := NewAuthenticationInterceptor(mockJWT, mockUsers, log)
 

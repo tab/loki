@@ -12,16 +12,23 @@ import (
 	"loki/internal/app/models"
 	"loki/internal/app/repositories"
 	"loki/internal/app/repositories/db"
-	"loki/pkg/logger"
+	"loki/internal/config"
+	"loki/internal/config/logger"
 )
 
 func Test_Scopes_List(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	repository := repositories.NewMockScopeRepository(ctrl)
-	log := logger.NewLogger()
 	service := NewScopes(repository, log)
 
 	tests := []struct {
@@ -99,9 +106,15 @@ func Test_Scopes_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	repository := repositories.NewMockScopeRepository(ctrl)
-	log := logger.NewLogger()
 	service := NewScopes(repository, log)
 
 	tests := []struct {
@@ -171,9 +184,15 @@ func Test_Scopes_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	repository := repositories.NewMockScopeRepository(ctrl)
-	log := logger.NewLogger()
 	service := NewScopes(repository, log)
 
 	tests := []struct {
@@ -240,9 +259,15 @@ func Test_Scopes_FindById(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	repository := repositories.NewMockScopeRepository(ctrl)
-	log := logger.NewLogger()
 	service := NewScopes(repository, log)
 
 	tests := []struct {
@@ -297,9 +322,15 @@ func Test_Scopes_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	repository := repositories.NewMockScopeRepository(ctrl)
-	log := logger.NewLogger()
 	service := NewScopes(repository, log)
 
 	id := uuid.MustParse("10000000-1000-1000-2000-000000000001")

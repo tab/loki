@@ -9,7 +9,7 @@ import (
 	"loki/internal/app/models"
 	"loki/internal/app/repositories"
 	"loki/internal/app/repositories/db"
-	"loki/pkg/logger"
+	"loki/internal/config/logger"
 )
 
 type Permissions interface {

@@ -10,16 +10,23 @@ import (
 
 	"loki/internal/app/models"
 	"loki/internal/app/repositories"
-	"loki/pkg/logger"
+	"loki/internal/config"
+	"loki/internal/config/logger"
 )
 
 func Test_Sessions_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	repository := repositories.NewMockSessionRepository(ctrl)
-	log := logger.NewLogger()
 	service := NewSessions(repository, log)
 
 	id := uuid.MustParse("5eab0e6a-c3e7-4526-a47e-398f0d31f514")
@@ -90,9 +97,15 @@ func Test_Authentication_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	repository := repositories.NewMockSessionRepository(ctrl)
-	log := logger.NewLogger()
 	service := NewSessions(repository, log)
 
 	id := uuid.MustParse("5eab0e6a-c3e7-4526-a47e-398f0d31f514")
@@ -159,9 +172,15 @@ func Test_Sessions_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	repository := repositories.NewMockSessionRepository(ctrl)
-	log := logger.NewLogger()
 	service := NewSessions(repository, log)
 
 	id := uuid.MustParse("5eab0e6a-c3e7-4526-a47e-398f0d31f514")
@@ -207,9 +226,15 @@ func Test_Sessions_FindById(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	repository := repositories.NewMockSessionRepository(ctrl)
-	log := logger.NewLogger()
 	service := NewSessions(repository, log)
 
 	id := uuid.MustParse("5eab0e6a-c3e7-4526-a47e-398f0d31f514")

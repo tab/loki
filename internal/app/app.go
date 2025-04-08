@@ -17,12 +17,12 @@ import (
 	"loki/internal/app/services/authentication"
 	"loki/internal/app/workers"
 	"loki/internal/config"
+	"loki/internal/config/logger"
 	"loki/internal/config/middlewares"
 	"loki/internal/config/router"
 	"loki/internal/config/server"
 	"loki/internal/config/telemetry"
 	"loki/pkg/jwt"
-	"loki/pkg/logger"
 )
 
 var Module = fx.Options(

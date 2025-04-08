@@ -11,9 +11,9 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"loki/internal/app/errors"
-	proto "loki/internal/app/rpcs/proto/sso/v1"
 	"loki/internal/app/services"
-	"loki/pkg/logger"
+	"loki/internal/config/logger"
+	proto "loki/internal/app/rpcs/proto/sso/v1"
 )
 
 type tokensService struct {

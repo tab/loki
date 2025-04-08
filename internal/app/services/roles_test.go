@@ -12,16 +12,23 @@ import (
 	"loki/internal/app/models"
 	"loki/internal/app/repositories"
 	"loki/internal/app/repositories/db"
-	"loki/pkg/logger"
+	"loki/internal/config"
+	"loki/internal/config/logger"
 )
 
 func Test_Roles_List(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	repository := repositories.NewMockRoleRepository(ctrl)
-	log := logger.NewLogger()
 	service := NewRoles(repository, log)
 
 	tests := []struct {
@@ -109,9 +116,15 @@ func Test_Roles_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	repository := repositories.NewMockRoleRepository(ctrl)
-	log := logger.NewLogger()
 	service := NewRoles(repository, log)
 
 	tests := []struct {
@@ -181,9 +194,15 @@ func Test_Roles_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	repository := repositories.NewMockRoleRepository(ctrl)
-	log := logger.NewLogger()
 	service := NewRoles(repository, log)
 
 	tests := []struct {
@@ -250,9 +269,15 @@ func Test_Roles_FindById(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	repository := repositories.NewMockRoleRepository(ctrl)
-	log := logger.NewLogger()
 	service := NewRoles(repository, log)
 
 	tests := []struct {
@@ -307,9 +332,15 @@ func Test_Roles_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	repository := repositories.NewMockRoleRepository(ctrl)
-	log := logger.NewLogger()
 	service := NewRoles(repository, log)
 
 	id := uuid.MustParse("10000000-1000-1000-1000-000000000001")
@@ -358,9 +389,15 @@ func Test_Roles_FindRoleDetailsById(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	repository := repositories.NewMockRoleRepository(ctrl)
-	log := logger.NewLogger()
 	service := NewRoles(repository, log)
 
 	tests := []struct {

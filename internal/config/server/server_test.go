@@ -28,6 +28,7 @@ func Test_NewWebServer(t *testing.T) {
 	mockAuthenticationMiddleware := middlewares.NewMockAuthenticationMiddleware(ctrl)
 	mockAuthorizationMiddleware := middlewares.NewMockAuthorizationMiddleware(ctrl)
 	mockTelemetryMiddleware := middlewares.NewMockTelemetryMiddleware(ctrl)
+	mockLoggerMiddleware := middlewares.NewMockLoggerMiddleware(ctrl)
 
 	mockHealthController := controllers.NewMockHealthController(ctrl)
 	mockSmartIdController := controllers.NewMockSmartIdController(ctrl)
@@ -68,12 +69,19 @@ func Test_NewWebServer(t *testing.T) {
 		DoAndReturn(func(next http.Handler) http.Handler {
 			return next
 		})
+	mockLoggerMiddleware.EXPECT().
+		Log(gomock.Any()).
+		AnyTimes().
+		DoAndReturn(func(next http.Handler) http.Handler {
+			return next
+		})
 
 	appRouter := router.NewRouter(
 		cfg,
 		mockAuthenticationMiddleware,
 		mockAuthorizationMiddleware,
 		mockTelemetryMiddleware,
+		mockLoggerMiddleware,
 		mockHealthController,
 		mockSmartIdController,
 		mockMobileIdController,
