@@ -18,7 +18,7 @@ import (
 	"loki/internal/app/rpcs"
 	"loki/internal/app/rpcs/interceptors"
 	"loki/internal/config"
-	"loki/pkg/logger"
+	"loki/internal/config/logger"
 )
 
 const (
@@ -47,8 +47,10 @@ type grpcServer struct {
 
 func NewGrpcServer(
 	cfg *config.Config,
-	authInterceptor interceptors.AuthenticationInterceptor,
 	registry *rpcs.Registry,
+	authenticationInterceptor interceptors.AuthenticationInterceptor,
+	traceInterceptor interceptors.TraceInterceptor,
+	loggerInterceptor interceptors.LoggerInterceptor,
 	log *logger.Logger,
 ) GrpcServer {
 	tlsConfig, err := setupTLS(cfg, log)
@@ -64,15 +66,16 @@ func NewGrpcServer(
 		Timeout:               KeepaliveTimeout,
 	}
 
+	unaryInterceptors := []grpc.UnaryServerInterceptor{
+		traceInterceptor.Trace(),
+		loggerInterceptor.Log(),
+		auth.UnaryServerInterceptor(authenticationInterceptor.Authenticate),
+	}
+
 	server := grpc.NewServer(
 		grpc.Creds(credentials.NewTLS(tlsConfig)),
 		grpc.KeepaliveParams(options),
-		grpc.UnaryInterceptor(
-			auth.UnaryServerInterceptor(authInterceptor.Authenticate),
-		),
-		grpc.StreamInterceptor(
-			auth.StreamServerInterceptor(authInterceptor.Authenticate),
-		),
+		grpc.ChainUnaryInterceptor(unaryInterceptors...),
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 	)
 	registry.RegisterAll(server)

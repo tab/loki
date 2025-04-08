@@ -14,17 +14,24 @@ import (
 	"loki/internal/app/models"
 	"loki/internal/app/serializers"
 	"loki/internal/app/services"
+	"loki/internal/config"
+	"loki/internal/config/logger"
 	"loki/pkg/jwt"
-	"loki/pkg/logger"
 )
 
-func Test_AuthMiddleware_Authenticate(t *testing.T) {
+func Test_AuthenticationMiddleware_Authenticate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	jwtService := jwt.NewMockJwt(ctrl)
 	users := services.NewMockUsers(ctrl)
-	log := logger.NewLogger()
 	middleware := NewAuthenticationMiddleware(jwtService, users, log)
 
 	identityNumber := "PNOEE-123456789"

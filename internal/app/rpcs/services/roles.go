@@ -11,9 +11,9 @@ import (
 
 	"loki/internal/app/errors"
 	"loki/internal/app/models"
-	proto "loki/internal/app/rpcs/proto/sso/v1"
 	"loki/internal/app/services"
-	"loki/pkg/logger"
+	"loki/internal/config/logger"
+	proto "loki/internal/app/rpcs/proto/sso/v1"
 )
 
 type rolesService struct {

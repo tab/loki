@@ -7,7 +7,7 @@ import (
 
 	"loki/internal/app/models"
 	"loki/internal/app/repositories"
-	"loki/pkg/logger"
+	"loki/internal/config/logger"
 )
 
 type Sessions interface {

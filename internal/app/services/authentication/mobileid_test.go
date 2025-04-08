@@ -13,19 +13,26 @@ import (
 	"loki/internal/app/models/dto"
 	"loki/internal/app/services"
 	"loki/internal/app/workers"
-	"loki/pkg/logger"
+	"loki/internal/config"
+	"loki/internal/config/logger"
 )
 
 func Test_MobileId_CreateSession(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	clientMock := mobileid.NewMockClient(ctrl)
 	sessionsMock := services.NewMockSessions(ctrl)
 	usersMock := services.NewMockUsers(ctrl)
 	workerMock := workers.NewMockMobileIdWorker(ctrl)
-	log := logger.NewLogger()
 
 	service := NewMobileId(clientMock, sessionsMock, usersMock, workerMock, log)
 

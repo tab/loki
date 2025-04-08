@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	AuthenticationTraceKey  = "X-Trace-ID"
+	TraceKey                = "X-Trace-ID"
 	AuthenticationTraceName = "authentication"
 )
 
@@ -28,12 +28,16 @@ func NewTelemetryMiddleware() TelemetryMiddleware {
 func (m *telemetryMiddleware) Trace(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tracer := otel.Tracer(AuthenticationTraceName)
-		traceId := r.Header.Get(AuthenticationTraceKey)
+		traceId := r.Header.Get(TraceKey)
 
 		if traceId == "" {
 			traceId = uuid.New().String()
-			r.Header.Set(AuthenticationTraceKey, traceId)
+			r.Header.Set(TraceKey, traceId)
 		}
+
+		ctx := NewContextModifier(r.Context()).
+			WithTraceId(traceId).
+			Context()
 
 		id, _ := trace.TraceIDFromHex(formatToTraceID(traceId))
 		spanCtx := trace.NewSpanContext(trace.SpanContextConfig{
@@ -41,7 +45,7 @@ func (m *telemetryMiddleware) Trace(next http.Handler) http.Handler {
 			Remote:  true,
 		})
 
-		ctx := trace.ContextWithSpanContext(r.Context(), spanCtx)
+		ctx = trace.ContextWithSpanContext(ctx, spanCtx)
 		ctx, span := tracer.Start(ctx, formatToOperationName(r.URL.Path))
 		defer span.End()
 

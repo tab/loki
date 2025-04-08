@@ -11,13 +11,21 @@ import (
 	"loki/internal/app/errors"
 	"loki/internal/app/models"
 	"loki/internal/app/repositories"
+	"loki/internal/config"
+	"loki/internal/config/logger"
 	"loki/pkg/jwt"
-	"loki/pkg/logger"
 )
 
 func Test_Tokens_List(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
 
 	ctx := context.Background()
 	permissionRepository := repositories.NewMockPermissionRepository(ctrl)
@@ -27,7 +35,6 @@ func Test_Tokens_List(t *testing.T) {
 	userRepository := repositories.NewMockUserRepository(ctrl)
 
 	jwtService := jwt.NewMockJwt(ctrl)
-	log := logger.NewLogger()
 	service := NewTokens(
 		jwtService,
 		permissionRepository,
@@ -91,6 +98,13 @@ func Test_Tokens_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	permissionRepository := repositories.NewMockPermissionRepository(ctrl)
 	roleRepository := repositories.NewMockRoleRepository(ctrl)
@@ -99,7 +113,6 @@ func Test_Tokens_Create(t *testing.T) {
 	userRepository := repositories.NewMockUserRepository(ctrl)
 
 	jwtService := jwt.NewMockJwt(ctrl)
-	log := logger.NewLogger()
 	service := NewTokens(
 		jwtService,
 		permissionRepository,
@@ -283,6 +296,13 @@ func Test_Tokens_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	permissionRepository := repositories.NewMockPermissionRepository(ctrl)
 	roleRepository := repositories.NewMockRoleRepository(ctrl)
@@ -291,7 +311,6 @@ func Test_Tokens_Update(t *testing.T) {
 	userRepository := repositories.NewMockUserRepository(ctrl)
 
 	jwtService := jwt.NewMockJwt(ctrl)
-	log := logger.NewLogger()
 	service := NewTokens(
 		jwtService,
 		permissionRepository,
@@ -491,6 +510,13 @@ func Test_Tokens_FindById(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	permissionRepository := repositories.NewMockPermissionRepository(ctrl)
 	roleRepository := repositories.NewMockRoleRepository(ctrl)
@@ -499,7 +525,6 @@ func Test_Tokens_FindById(t *testing.T) {
 	userRepository := repositories.NewMockUserRepository(ctrl)
 
 	jwtService := jwt.NewMockJwt(ctrl)
-	log := logger.NewLogger()
 	service := NewTokens(
 		jwtService,
 		permissionRepository,
@@ -558,6 +583,13 @@ func Test_Tokens_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	permissionRepository := repositories.NewMockPermissionRepository(ctrl)
 	roleRepository := repositories.NewMockRoleRepository(ctrl)
@@ -566,7 +598,6 @@ func Test_Tokens_Delete(t *testing.T) {
 	userRepository := repositories.NewMockUserRepository(ctrl)
 
 	jwtService := jwt.NewMockJwt(ctrl)
-	log := logger.NewLogger()
 	service := NewTokens(
 		jwtService,
 		permissionRepository,

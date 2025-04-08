@@ -20,7 +20,7 @@ import (
 	"loki/internal/app/rpcs"
 	"loki/internal/app/rpcs/interceptors"
 	"loki/internal/config"
-	"loki/pkg/logger"
+	"loki/internal/config/logger"
 )
 
 func Test_NewGrpcServer(t *testing.T) {
@@ -31,14 +31,24 @@ func Test_NewGrpcServer(t *testing.T) {
 
 	cfg := &config.Config{
 		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
 		GrpcAddr: "localhost:50051",
 		CertPath: certDir,
+		LogLevel: "info",
 	}
-	authInterceptor := interceptors.NewMockAuthenticationInterceptor(ctrl)
-	registry := &rpcs.Registry{}
-	log := logger.NewLogger()
+	log := logger.NewLogger(cfg)
 
-	srv := NewGrpcServer(cfg, authInterceptor, registry, log)
+	authInterceptor := interceptors.NewMockAuthenticationInterceptor(ctrl)
+	traceInterceptor := interceptors.NewMockTraceInterceptor(ctrl)
+	loggerInterceptor := interceptors.NewMockLoggerInterceptor(ctrl)
+
+	authInterceptor.EXPECT().Authenticate(gomock.Any()).AnyTimes()
+	traceInterceptor.EXPECT().Trace().AnyTimes()
+	loggerInterceptor.EXPECT().Log().AnyTimes()
+
+	registry := &rpcs.Registry{}
+
+	srv := NewGrpcServer(cfg, registry, authInterceptor, traceInterceptor, loggerInterceptor, log)
 	assert.NotNil(t, srv)
 
 	s, ok := srv.(*grpcServer)
@@ -55,14 +65,24 @@ func Test_GrpcServer_RunAndShutdown(t *testing.T) {
 
 	cfg := &config.Config{
 		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
 		GrpcAddr: "localhost:50051",
 		CertPath: certDir,
+		LogLevel: "info",
 	}
-	authInterceptor := interceptors.NewMockAuthenticationInterceptor(ctrl)
-	registry := &rpcs.Registry{}
-	log := logger.NewLogger()
+	log := logger.NewLogger(cfg)
 
-	srv := NewGrpcServer(cfg, authInterceptor, registry, log)
+	authInterceptor := interceptors.NewMockAuthenticationInterceptor(ctrl)
+	traceInterceptor := interceptors.NewMockTraceInterceptor(ctrl)
+	loggerInterceptor := interceptors.NewMockLoggerInterceptor(ctrl)
+
+	authInterceptor.EXPECT().Authenticate(gomock.Any()).AnyTimes()
+	traceInterceptor.EXPECT().Trace().AnyTimes()
+	loggerInterceptor.EXPECT().Log().AnyTimes()
+
+	registry := &rpcs.Registry{}
+
+	srv := NewGrpcServer(cfg, registry, authInterceptor, traceInterceptor, loggerInterceptor, log)
 	assert.NotNil(t, srv)
 
 	runErrCh := make(chan error, 1)
