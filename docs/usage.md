@@ -24,6 +24,7 @@ example:
 ```sh
 curl -X POST http://localhost:8080/api/auth/smart_id \
   -H "Content-Type: application/json" \
+  -H "X-Request-ID: 4de2f35d-7e30-466e-923b-aab80a424b34" \
   -H "X-Trace-ID: f4c28fec-07fd-415f-900c-37be7fb705fa" \
   -d '{ "country": "EE", "personal_code": "50001029996" }'
 ```
@@ -44,6 +45,7 @@ example:
 ```sh
 curl -X GET http://localhost:8080/api/sessions/a658556f-f2ec-42f5-86dc-2665f011d5f7 \
   -H "Content-Type: application/json" \
+  -H "X-Request-ID: 7877796b-54b9-4737-a44f-0b0bb4f5eb88" \
   -H "X-Trace-ID: f4c28fec-07fd-415f-900c-37be7fb705fa"
 ```
 
@@ -63,6 +65,7 @@ example:
 ```sh
 curl -X POST http://localhost:8080/api/sessions/a658556f-f2ec-42f5-86dc-2665f011d5f7 \
   -H "Content-Type: application/json" \
+  -H "X-Request-ID: 2aeb8bca-8af0-498f-8136-c179d3a6f1bd" \
   -H "X-Trace-ID: f4c28fec-07fd-415f-900c-37be7fb705fa"
 ```
 
@@ -142,6 +145,7 @@ example:
 curl -X GET http://localhost:8080/api/me \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
+  -H "X-Request-ID: 4844c624-4c3f-4cdf-96dd-01bc53915e02" \
   -H "X-Trace-ID: 0cbc1fe0-c29c-44d5-84a1-4ec5ddb9e08f"
 ```
 response:
@@ -180,6 +184,7 @@ example:
 ```sh
 curl -X POST http://localhost:8080/api/tokens/refresh \
   -H "Content-Type: application/json" \
+  -H "X-Request-ID: 83bc86e9-1a29-46a8-b358-6db39ab7c2f5" \
   -H "X-Trace-ID: 754cfd21-69b2-436a-af5f-737932cfd874"
   -d '{ "refresh_token": "<REFRESH_TOKEN>" }'
 ```

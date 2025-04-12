@@ -20,15 +20,13 @@ Before starting this application, you must have the loki-infrastructure running:
 ```sh
 git clone git@github.com/tab/loki-infrastructure.git
 cd loki-infrastructure
-```
 
-```sh
 docker-compose up
 ```
 
 ## Setup and Configuration
 
-**Environment Variables**:
+### Environment Variables
 
 Use `.env` files (e.g., `.env.development`) or provide environment variables for:
 
@@ -37,7 +35,84 @@ Use `.env` files (e.g., `.env.development`) or provide environment variables for
 - `SMART_ID_API_URL`, `MOBILE_ID_API_URL` and corresponding relying on party credentials
 - `TELEMETRY_URI` for OpenTelemetry
 
-**Database Migrations**:
+### Generate Certificates and Keys
+
+Before running the services, you need to generate certificates for mTLS and keys for JWT signing:
+
+#### JWT Signing Keys
+
+```sh
+mkdir -p certs/jwt
+
+openssl genrsa -out certs/jwt/private.key 4096
+openssl rsa -in certs/jwt/private.key -pubout -out certs/jwt/public.key
+```
+
+#### mTLS Certificates
+
+```sh
+# Generate CA
+openssl genrsa -out certs/ca.key 4096
+openssl req -new -x509 -key certs/ca.key -sha256 -subj "/CN=Loki CA" -out certs/ca.pem -days 3650
+
+# Generate Server Certificate
+openssl genrsa -out certs/server.key 4096
+openssl req -new -key certs/server.key -out certs/server.csr -config <(
+cat <<-EOF
+[req]
+default_bits = 4096
+prompt = no
+default_md = sha256
+req_extensions = req_ext
+distinguished_name = dn
+
+[dn]
+CN = loki-backend
+
+[req_ext]
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = localhost
+DNS.2 = backend
+IP.1 = 127.0.0.1
+IP.2 = 0.0.0.0
+EOF
+)
+
+openssl x509 -req -in certs/server.csr -CA certs/ca.pem -CAkey certs/ca.key -CAcreateserial -out certs/server.pem -days 825 -sha256 -extfile <(
+cat <<-EOF
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = localhost
+DNS.2 = backend
+IP.1 = 127.0.0.1
+IP.2 = 0.0.0.0
+EOF
+)
+
+# Generate Client Certificate
+openssl genrsa -out certs/client.key 4096
+openssl req -new -key certs/client.key -out certs/client.csr -config <(
+cat <<-EOF
+[req]
+default_bits = 4096
+prompt = no
+default_md = sha256
+distinguished_name = dn
+
+[dn]
+CN = loki-backoffice
+EOF
+)
+
+openssl x509 -req -in certs/client.csr -CA certs/ca.pem -CAkey certs/ca.key -CAcreateserial -out certs/client.pem -days 825 -sha256
+```
+
+For more detailed information on certificates, see [Certificates Documentation](docs/certificates.md).
+
+### Database Migrations
 
 Run the following command to apply database migrations:
 
@@ -45,17 +120,21 @@ Run the following command to apply database migrations:
 GO_ENV=development make db:drop db:create db:migrate
 ```
 
-**Run the Services**:
+### Run application
 
 ```sh
 docker-compose build
 docker-compose up
 ```
 
-**Check health status**:
+### Check health status
 
 ```sh
-curl -X GET http://localhost:8080/health
+curl -X GET http://localhost:8080/live
+```
+
+```sh
+curl -X GET http://localhost:8080/ready
 ```
 
 ## Documentation
@@ -65,6 +144,15 @@ curl -X GET http://localhost:8080/health
 ## API Documentation
 
 Swagger file is available at [api/swagger.yaml](https://github.com/tab/loki/blob/master/api/swagger.yaml)
+
+## Related Repositories
+
+- [Loki Infrastructure](https://github.com/tab/loki-infrastructure) - Infrastructure setup for the Loki ecosystem
+- [Loki Backoffice](https://github.com/tab/loki-backoffice) - Backoffice service
+- [Loki Proto](https://github.com/tab/loki-proto) - Protocol buffer definitions
+- [Loki Frontend](https://github.com/tab/loki-frontend) - Frontend application
+- [Smart-ID Client](https://github.com/tab/smartid) - Smart-ID client used for authentication
+- [Mobile-ID Client](https://github.com/tab/mobileid) - Mobile-ID client used for authentication
 
 ## Architecture
 
