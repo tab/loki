@@ -1,0 +1,14 @@
+services:
+  backoffice:
+    environment:
+      - APP_NAME=loki-backoffice
+      - APP_ADDRESS=0.0.0.0:8081
+      - GRPC_ADDRESS=loki:50051
+      - CERT_PATH=/run/certs
+      - DATABASE_DSN=postgres://postgres:postgres@postgres:5432/loki-backoffice-test?sslmode=disable
+      - LOG_LEVEL=debug
+    container_name: loki-backoffice
+    networks:
+      - loki-network
+    extra_hosts:
+      - "postgres:host-gateway"

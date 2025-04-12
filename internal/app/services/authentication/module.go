@@ -8,7 +8,7 @@ import (
 	"go.uber.org/fx"
 
 	"loki/internal/config"
-	"loki/pkg/logger"
+	"loki/internal/config/logger"
 )
 
 const (

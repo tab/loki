@@ -5,7 +5,7 @@ import (
 
 	"loki/internal/app/models"
 	"loki/internal/config"
-	"loki/pkg/logger"
+	"loki/internal/config/logger"
 )
 
 const AuthenticationSuccess = "SUCCESS"

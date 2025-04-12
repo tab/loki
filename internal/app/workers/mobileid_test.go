@@ -11,18 +11,25 @@ import (
 
 	"loki/internal/app/models"
 	"loki/internal/app/services"
-	"loki/pkg/logger"
+	"loki/internal/config"
+	"loki/internal/config/logger"
 )
 
 func Test_MobileIdWorker_Perform(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	sessionsMock := services.NewMockSessions(ctrl)
 	usersMock := services.NewMockUsers(ctrl)
 	workerMock := mobileid.NewMockWorker(ctrl)
-	log := logger.NewLogger()
 
 	worker := NewMobileIdWorker(sessionsMock, usersMock, workerMock, log)
 

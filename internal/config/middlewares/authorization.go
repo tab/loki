@@ -7,8 +7,8 @@ import (
 	"loki/internal/app/errors"
 	"loki/internal/app/serializers"
 	"loki/internal/app/services"
+	"loki/internal/config/logger"
 	"loki/pkg/jwt"
-	"loki/pkg/logger"
 	"loki/pkg/rbac"
 )
 

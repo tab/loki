@@ -9,11 +9,13 @@ import (
 
 type Claim struct{}
 type Token struct{}
+type TraceId struct{}
 type CurrentUser struct{}
 
 type Modifier interface {
 	WithClaim(claims *jwt.Payload) Modifier
 	WithToken(token string) Modifier
+	WithTraceId(traceId string) Modifier
 	WithCurrentUser(user *models.User) Modifier
 	Context() context.Context
 }
@@ -33,6 +35,11 @@ func (m *modifier) WithClaim(claims *jwt.Payload) Modifier {
 
 func (m *modifier) WithToken(token string) Modifier {
 	m.ctx = context.WithValue(m.ctx, Token{}, token)
+	return m
+}
+
+func (m *modifier) WithTraceId(traceId string) Modifier {
+	m.ctx = context.WithValue(m.ctx, TraceId{}, traceId)
 	return m
 }
 

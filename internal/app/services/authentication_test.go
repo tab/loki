@@ -10,7 +10,7 @@ import (
 
 	"loki/internal/app/models"
 	"loki/internal/config"
-	"loki/pkg/logger"
+	"loki/internal/config/logger"
 )
 
 func Test_Authentication_Complete(t *testing.T) {
@@ -31,10 +31,11 @@ func Test_Authentication_Complete(t *testing.T) {
 			RelyingPartyUUID: "00000000-0000-0000-0000-000000000000",
 			Text:             "Enter PIN1",
 		},
+		LogLevel: "info",
 	}
 	sessionsService := NewMockSessions(ctrl)
 	tokensService := NewMockTokens(ctrl)
-	log := logger.NewLogger()
+	log := logger.NewLogger(cfg)
 
 	id := uuid.MustParse("5eab0e6a-c3e7-4526-a47e-398f0d31f514")
 	sessionId := id.String()

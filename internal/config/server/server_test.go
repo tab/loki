@@ -10,13 +10,12 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"loki/internal/app/controllers"
-	"loki/internal/app/controllers/backoffice"
 	"loki/internal/config"
 	"loki/internal/config/middlewares"
 	"loki/internal/config/router"
 )
 
-func Test_NewServer(t *testing.T) {
+func Test_NewWebServer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -26,8 +25,8 @@ func Test_NewServer(t *testing.T) {
 	}
 
 	mockAuthenticationMiddleware := middlewares.NewMockAuthenticationMiddleware(ctrl)
-	mockAuthorizationMiddleware := middlewares.NewMockAuthorizationMiddleware(ctrl)
 	mockTelemetryMiddleware := middlewares.NewMockTelemetryMiddleware(ctrl)
+	mockLoggerMiddleware := middlewares.NewMockLoggerMiddleware(ctrl)
 
 	mockHealthController := controllers.NewMockHealthController(ctrl)
 	mockSmartIdController := controllers.NewMockSmartIdController(ctrl)
@@ -36,34 +35,20 @@ func Test_NewServer(t *testing.T) {
 	mockTokensController := controllers.NewMockTokensController(ctrl)
 	mockUsersController := controllers.NewMockUsersController(ctrl)
 
-	mockBackofficePermissionsController := backoffice.NewMockBackofficePermissionsController(ctrl)
-	mockBackofficeRolesController := backoffice.NewMockBackofficeRolesController(ctrl)
-	mockBackofficeScopesController := backoffice.NewMockBackofficeScopesController(ctrl)
-	mockBackofficeTokensController := backoffice.NewMockBackofficeTokensController(ctrl)
-	mockBackofficeUsersController := backoffice.NewMockBackofficeUsersController(ctrl)
-
 	mockAuthenticationMiddleware.EXPECT().
 		Authenticate(gomock.Any()).
 		AnyTimes().
 		DoAndReturn(func(next http.Handler) http.Handler {
 			return next
 		})
-	mockAuthorizationMiddleware.EXPECT().
-		Authorize(gomock.Any()).
+	mockTelemetryMiddleware.EXPECT().
+		Trace(gomock.Any()).
 		AnyTimes().
 		DoAndReturn(func(next http.Handler) http.Handler {
 			return next
 		})
-	mockAuthorizationMiddleware.EXPECT().
-		Check(gomock.Any()).
-		AnyTimes().
-		DoAndReturn(func(permission string) func(http.Handler) http.Handler {
-			return func(next http.Handler) http.Handler {
-				return next
-			}
-		})
-	mockTelemetryMiddleware.EXPECT().
-		Trace(gomock.Any()).
+	mockLoggerMiddleware.EXPECT().
+		Log(gomock.Any()).
 		AnyTimes().
 		DoAndReturn(func(next http.Handler) http.Handler {
 			return next
@@ -72,25 +57,20 @@ func Test_NewServer(t *testing.T) {
 	appRouter := router.NewRouter(
 		cfg,
 		mockAuthenticationMiddleware,
-		mockAuthorizationMiddleware,
 		mockTelemetryMiddleware,
+		mockLoggerMiddleware,
 		mockHealthController,
 		mockSmartIdController,
 		mockMobileIdController,
 		mockSessionsController,
 		mockTokensController,
 		mockUsersController,
-		mockBackofficePermissionsController,
-		mockBackofficeRolesController,
-		mockBackofficeScopesController,
-		mockBackofficeTokensController,
-		mockBackofficeUsersController,
 	)
 
-	srv := NewServer(cfg, appRouter)
+	srv := NewWebServer(cfg, appRouter)
 	assert.NotNil(t, srv)
 
-	s, ok := srv.(*server)
+	s, ok := srv.(*webServer)
 	assert.True(t, ok)
 
 	assert.Equal(t, cfg.AppAddr, s.httpServer.Addr)
@@ -100,13 +80,13 @@ func Test_NewServer(t *testing.T) {
 	assert.Equal(t, 120*time.Second, s.httpServer.IdleTimeout)
 }
 
-func Test_Server_RunAndShutdown(t *testing.T) {
+func Test_WebServer_RunAndShutdown(t *testing.T) {
 	cfg := &config.Config{
 		AppEnv:  "test",
 		AppAddr: "localhost:5000",
 	}
 	handler := http.NewServeMux()
-	srv := NewServer(cfg, handler)
+	srv := NewWebServer(cfg, handler)
 
 	runErrCh := make(chan error, 1)
 	go func() {

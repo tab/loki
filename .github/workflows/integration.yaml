@@ -1,0 +1,170 @@
+name: Integration
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+  push:
+    branches:
+      - master
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Tests
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16.4-alpine
+        env:
+          POSTGRES_HOST: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7.4-alpine
+        env:
+          REDIS_HOST: redis
+          REDIS_PORT: 6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Show GitHub workspace vars
+        run: |
+          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+          echo "RUNNER_WORKSPACE: $RUNNER_WORKSPACE"
+          mkdir -p $GITHUB_WORKSPACE/tmp
+
+      - name: Checkout loki repository
+        uses: actions/checkout@v4
+        with:
+          path: loki
+
+      - name: Checkout loki-backoffice repository
+        uses: actions/checkout@v4
+        with:
+          repository: tab/loki-backoffice
+          path: loki-backoffice
+          ref: feature/grpc
+          token: ${{ secrets.ACCESS_TOKEN }}
+
+      - name: Set repository paths
+        run: |
+          echo "LOKI_REPO=$GITHUB_WORKSPACE/loki" >> $GITHUB_ENV
+          echo "LOKI_BACKOFFICE_REPO=$GITHUB_WORKSPACE/loki-backoffice" >> $GITHUB_ENV
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.1'
+          cache: true
+          cache-dependency-path: |
+            ${{ env.LOKI_REPO }}/go.sum
+            ${{ env.LOKI_BACKOFFICE_REPO }}/go.sum
+
+      - name: Cache Goose
+        id: cache-goose
+        uses: actions/cache@v4
+        with:
+          path: ~/go/bin/goose
+          key: ${{ runner.os }}-goose-latest
+
+      - name: Install Goose
+        if: steps.cache-goose.outputs.cache-hit != 'true'
+        run: go install github.com/pressly/goose/v3/cmd/goose@latest
+
+      - name: Setup database
+        working-directory: ${{ env.LOKI_REPO }}/.github/actions/integration
+        env:
+          LOKI_REPO: ${{ env.LOKI_REPO }}
+          LOKI_BACKOFFICE_REPO: ${{ env.LOKI_BACKOFFICE_REPO }}
+        run: |
+          make db:create
+          make db:migrate
+
+      - name: Generate certificates
+        working-directory: ${{ env.LOKI_REPO }}/.github/actions/integration
+        env:
+          LOKI_REPO: ${{ env.LOKI_REPO }}
+          LOKI_BACKOFFICE_REPO: ${{ env.LOKI_BACKOFFICE_REPO }}
+        run: |
+          make certs:generate
+
+      - name: Cache Docker build context
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.LOKI_REPO }}/.docker-cache
+            ${{ env.LOKI_BACKOFFICE_REPO }}/.docker-cache
+          key: ${{ runner.os }}-docker-latest
+
+      - name: Start services
+        working-directory: ${{ env.LOKI_REPO }}/.github/actions/integration
+        env:
+          LOKI_REPO: ${{ env.LOKI_REPO }}
+          LOKI_BACKOFFICE_REPO: ${{ env.LOKI_BACKOFFICE_REPO }}
+          DOCKER_BUILDKIT: 1
+          COMPOSE_DOCKER_CLI_BUILD: 1
+        run: |
+          make docker:network
+          make docker:start
+          make check:services
+
+      - name: Cache Lua and dependencies
+        id: cache-lua
+        uses: actions/cache@v4
+        with:
+          path: |
+            /usr/bin/lua*
+            /usr/local/lib/luarocks
+            /usr/local/share/lua
+          key: ${{ runner.os }}-lua-latest
+
+      - name: Install Lua and dependencies
+        if: steps.cache-lua.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.3 liblua5.3-dev luarocks
+          sudo luarocks install luasocket
+          sudo luarocks install lua-cjson
+          sudo luarocks install uuid
+
+      - name: Run integration tests
+        working-directory: ${{ env.LOKI_REPO }}/.github/actions/integration
+        run: make run
+
+      - name: Collect logs if tests failed
+        if: failure()
+        run: |
+          echo "Collecting logs from services..."
+          mkdir -p logs
+          docker logs loki > logs/loki-logs.txt 2>&1 || true
+          docker logs loki-backoffice > logs/loki-backoffice-logs.txt 2>&1 || true
+
+      - name: Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs
+          path: logs/
+          if-no-files-found: ignore
+
+      - name: Cleanup
+        if: always()
+        working-directory: ${{ env.LOKI_REPO }}/.github/actions/integration
+        run: make cleanup

@@ -9,7 +9,7 @@ import (
 	"loki/internal/app/models"
 	"loki/internal/app/repositories"
 	"loki/internal/app/repositories/db"
-	"loki/pkg/logger"
+	"loki/internal/config/logger"
 )
 
 type Roles interface {
@@ -38,6 +38,7 @@ func (r *roles) List(ctx context.Context, pagination *Pagination) ([]models.Role
 	collection, total, err := r.repository.List(ctx, pagination.Limit(), pagination.Offset())
 
 	if err != nil {
+		r.log.Error().Err(err).Msg("Failed to fetch roles")
 		return nil, 0, errors.ErrFailedToFetchResults
 	}
 
@@ -51,7 +52,8 @@ func (r *roles) Create(ctx context.Context, params *models.Role) (*models.Role, 
 		PermissionIDs: params.PermissionIDs,
 	})
 	if err != nil {
-		return nil, err
+		r.log.Error().Err(err).Msg("Failed to create role")
+		return nil, errors.ErrFailedToCreateRecord
 	}
 
 	return role, nil
@@ -65,7 +67,8 @@ func (r *roles) Update(ctx context.Context, params *models.Role) (*models.Role, 
 		PermissionIDs: params.PermissionIDs,
 	})
 	if err != nil {
-		return nil, err
+		r.log.Error().Err(err).Msg("Failed to update role")
+		return nil, errors.ErrFailedToUpdateRecord
 	}
 
 	return role, nil
@@ -74,7 +77,8 @@ func (r *roles) Update(ctx context.Context, params *models.Role) (*models.Role, 
 func (r *roles) FindById(ctx context.Context, id uuid.UUID) (*models.Role, error) {
 	role, err := r.repository.FindById(ctx, id)
 	if err != nil {
-		return nil, err
+		r.log.Error().Err(err).Msg("Failed to find role by id")
+		return nil, errors.ErrRecordNotFound
 	}
 
 	return role, nil
@@ -83,7 +87,8 @@ func (r *roles) FindById(ctx context.Context, id uuid.UUID) (*models.Role, error
 func (r *roles) Delete(ctx context.Context, id uuid.UUID) (bool, error) {
 	ok, err := r.repository.Delete(ctx, id)
 	if err != nil {
-		return false, err
+		r.log.Error().Err(err).Msg("Failed to delete role")
+		return false, errors.ErrFailedToDeleteRecord
 	}
 
 	return ok, nil
@@ -92,7 +97,8 @@ func (r *roles) Delete(ctx context.Context, id uuid.UUID) (bool, error) {
 func (r *roles) FindRoleDetailsById(ctx context.Context, id uuid.UUID) (*models.Role, error) {
 	role, err := r.repository.FindRoleDetailsById(ctx, id)
 	if err != nil {
-		return nil, err
+		r.log.Error().Err(err).Msg("Failed to find role details by id")
+		return nil, errors.ErrRecordNotFound
 	}
 
 	return role, nil

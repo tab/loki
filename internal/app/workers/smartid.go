@@ -11,7 +11,7 @@ import (
 
 	"loki/internal/app/models"
 	"loki/internal/app/services"
-	"loki/pkg/logger"
+	"loki/internal/config/logger"
 )
 
 type SmartIdWorker interface {
