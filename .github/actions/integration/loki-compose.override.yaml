@@ -1,0 +1,16 @@
+services:
+  backend:
+    environment:
+      - APP_NAME=loki
+      - APP_ADDRESS=0.0.0.0:8080
+      - GRPC_ADDRESS=0.0.0.0:50051
+      - CERT_PATH=/run/certs
+      - DATABASE_DSN=postgres://postgres:postgres@postgres:5432/loki-test?sslmode=disable
+      - REDIS_URI=redis://redis:6379/1
+      - LOG_LEVEL=debug
+    container_name: loki
+    networks:
+      - loki-network
+    extra_hosts:
+      - "postgres:host-gateway"
+      - "redis:host-gateway"
