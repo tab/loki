@@ -1,5 +1,6 @@
-LOKI_REPO ?= $(shell pwd)/../../loki
-LOKI_BACKOFFICE_REPO ?= $(shell pwd)/../../loki-backoffice
+LOKI_HOME ?= ""
+LOKI_REPO ?= ${LOKI_HOME}/loki
+LOKI_BACKOFFICE_REPO ?= ${LOKI_HOME}/loki-backoffice
 
 LOKI_DB_NAME = loki-test
 BACKOFFICE_DB_NAME = loki-backoffice-test
