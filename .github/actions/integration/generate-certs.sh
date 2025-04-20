@@ -20,7 +20,7 @@ cp "$LOKI_REPO/certs/jwt/public.key" "$LOKI_BACKOFFICE_REPO/certs/jwt/public.key
 
 echo "Generating Certificate Authority (CA)..."
 openssl genrsa -out "$LOKI_REPO/certs/ca.key" 4096
-openssl req -new -x509 -key "$LOKI_REPO/certs/ca.key" -sha256 -subj "/CN=Loki CA" \
+openssl req -new -x509 -key "$LOKI_REPO/certs/ca.key" -sha256 -subj '/CN=Loki CA' \
     -out "$LOKI_REPO/certs/ca.pem" -days 3650
 cp "$LOKI_REPO/certs/ca.pem" "$LOKI_BACKOFFICE_REPO/certs/ca.pem"
 

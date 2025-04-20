@@ -31,7 +31,7 @@ Generate a private key for your CA
 
 ```sh
 openssl genrsa -out certs/ca.key 4096
-openssl req -new -x509 -key certs/ca.key -sha256 -subj "/CN=Loki CA" -out certs/ca.pem -days 3650
+openssl req -new -x509 -key certs/ca.key -sha256 -subj '/CN=Loki CA' -out certs/ca.pem -days 3650
 ```
 
 ### Generate the Server Certificate

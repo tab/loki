@@ -53,7 +53,7 @@ openssl rsa -in certs/jwt/private.key -pubout -out certs/jwt/public.key
 ```sh
 # Generate CA
 openssl genrsa -out certs/ca.key 4096
-openssl req -new -x509 -key certs/ca.key -sha256 -subj "/CN=Loki CA" -out certs/ca.pem -days 3650
+openssl req -new -x509 -key certs/ca.key -sha256 -subj '/CN=Loki CA' -out certs/ca.pem -days 3650
 
 # Generate Server Certificate
 openssl genrsa -out certs/server.key 4096
