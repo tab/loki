@@ -17,7 +17,7 @@ require (
 	github.com/redis/go-redis/v9 v9.7.3
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.10.0
-	github.com/tab/mobileid v0.1.1
+	github.com/tab/mobileid v0.2.0
 	github.com/tab/smartid v0.2.1
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.60.0
 	go.opentelemetry.io/otel v1.35.0
