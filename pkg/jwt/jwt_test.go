@@ -1,10 +1,17 @@
 package jwt
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
 	"loki/internal/app/errors"
@@ -12,19 +19,25 @@ import (
 )
 
 func Test_NewJWT(t *testing.T) {
-	cfg := &config.Config{
-		SecretKey: "jwt-secret-key",
-	}
-	service := NewJWT(cfg)
+	tempDir := generateTestKeys(t)
 
+	cfg := &config.Config{
+		CertPath: tempDir,
+	}
+	service, err := NewJWT(cfg)
+
+	assert.NoError(t, err)
 	assert.NotNil(t, service)
 }
 
 func Test_JWT_Generate(t *testing.T) {
+	tempDir := generateTestKeys(t)
+
 	cfg := &config.Config{
-		SecretKey: "jwt-secret-key",
+		CertPath: tempDir,
 	}
-	service := NewJWT(cfg)
+	service, err := NewJWT(cfg)
+	require.NoError(t, err)
 
 	type result struct {
 		header string
@@ -38,10 +51,13 @@ func Test_JWT_Generate(t *testing.T) {
 		{
 			name: "Success",
 			payload: Payload{
-				ID: "PNOEE-30303039914",
+				ID:          "PNOEE-30303039914",
+				Roles:       []string{"admin"},
+				Permissions: []string{"read:all"},
+				Scope:       []string{"service-name"},
 			},
 			expected: result{
-				header: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+				header: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9",
 			},
 		},
 		{
@@ -50,7 +66,7 @@ func Test_JWT_Generate(t *testing.T) {
 				ID: "",
 			},
 			expected: result{
-				header: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+				header: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9",
 			},
 		},
 	}
@@ -66,10 +82,13 @@ func Test_JWT_Generate(t *testing.T) {
 }
 
 func Test_JWT_Verify(t *testing.T) {
+	tempDir := generateTestKeys(t)
+
 	cfg := &config.Config{
-		SecretKey: "jwt-secret-key",
+		CertPath: tempDir,
 	}
-	service := NewJWT(cfg)
+	service, err := NewJWT(cfg)
+	require.NoError(t, err)
 
 	tests := []struct {
 		name     string
@@ -79,7 +98,10 @@ func Test_JWT_Verify(t *testing.T) {
 		{
 			name: "Success",
 			payload: Payload{
-				ID: "PNOEE-30303039914",
+				ID:          "PNOEE-30303039914",
+				Roles:       []string{"admin"},
+				Permissions: []string{"read:all"},
+				Scope:       []string{"service-name"},
 			},
 			expected: true,
 		},
@@ -165,10 +187,13 @@ func Test_JWT_Verify_Mocked(t *testing.T) {
 }
 
 func Test_JWT_Decode(t *testing.T) {
+	tempDir := generateTestKeys(t)
+
 	cfg := &config.Config{
-		SecretKey: "jwt-secret-key",
+		CertPath: tempDir,
 	}
-	service := NewJWT(cfg)
+	service, err := NewJWT(cfg)
+	require.NoError(t, err)
 
 	tests := []struct {
 		name     string
@@ -178,10 +203,16 @@ func Test_JWT_Decode(t *testing.T) {
 		{
 			name: "Success",
 			payload: Payload{
-				ID: "PNOEE-30303039914",
+				ID:          "PNOEE-30303039914",
+				Roles:       []string{"admin"},
+				Permissions: []string{"read:all"},
+				Scope:       []string{"service-name"},
 			},
 			expected: &Payload{
-				ID: "PNOEE-30303039914",
+				ID:          "PNOEE-30303039914",
+				Roles:       []string{"admin"},
+				Permissions: []string{"read:all"},
+				Scope:       []string{"service-name"},
 			},
 		},
 	}
@@ -263,4 +294,39 @@ func Test_JWT_Decode_Mocked(t *testing.T) {
 			}
 		})
 	}
+}
+
+func generateTestKeys(t *testing.T) string {
+	tempDir, err := os.MkdirTemp("", "jwt-test-*")
+	require.NoError(t, err)
+
+	t.Cleanup(func() { os.RemoveAll(tempDir) })
+
+	jwtDir := filepath.Join(tempDir, Dir)
+	err = os.MkdirAll(jwtDir, 0755)
+	require.NoError(t, err)
+
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+
+	privateKeyBytes := x509.MarshalPKCS1PrivateKey(privateKey)
+	privateKeyPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: privateKeyBytes,
+	})
+
+	publicKeyBytes, err := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
+	require.NoError(t, err)
+	publicKeyPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: publicKeyBytes,
+	})
+
+	err = os.WriteFile(filepath.Join(jwtDir, PrivateKeyFile), privateKeyPEM, 0600)
+	require.NoError(t, err)
+
+	err = os.WriteFile(filepath.Join(jwtDir, PublicKeyFile), publicKeyPEM, 0644)
+	require.NoError(t, err)
+
+	return tempDir
 }

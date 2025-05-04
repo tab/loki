@@ -13,5 +13,7 @@ Designed to be easily integrated into microservices architectures and provides l
 
 ## Contents
 
+- [Repositories](repositories.md)
 - [Installation](installation.md)
+- [Certificates](certificates.md)
 - [Usage](usage.md)

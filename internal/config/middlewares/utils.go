@@ -26,3 +26,8 @@ func CurrentClaimFromContext(ctx context.Context) (*jwt.Payload, bool) {
 	c, ok := ctx.Value(Claim{}).(*jwt.Payload)
 	return c, ok
 }
+
+func CurrentTraceIdFromContext(ctx context.Context) (string, bool) {
+	t, ok := ctx.Value(TraceId{}).(string)
+	return t, ok
+}

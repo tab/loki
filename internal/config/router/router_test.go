@@ -9,7 +9,6 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"loki/internal/app/controllers"
-	"loki/internal/app/controllers/backoffice"
 	"loki/internal/config"
 	"loki/internal/config/middlewares"
 )
@@ -24,8 +23,8 @@ func Test_HealthCheck(t *testing.T) {
 	}
 
 	mockAuthenticationMiddleware := middlewares.NewMockAuthenticationMiddleware(ctrl)
-	mockAuthorizationMiddleware := middlewares.NewMockAuthorizationMiddleware(ctrl)
 	mockTelemetryMiddleware := middlewares.NewMockTelemetryMiddleware(ctrl)
+	mockLoggerMiddleware := middlewares.NewMockLoggerMiddleware(ctrl)
 
 	mockHealthController := controllers.NewMockHealthController(ctrl)
 	mockSmartIdController := controllers.NewMockSmartIdController(ctrl)
@@ -34,34 +33,20 @@ func Test_HealthCheck(t *testing.T) {
 	mockTokensController := controllers.NewMockTokensController(ctrl)
 	mockUsersController := controllers.NewMockUsersController(ctrl)
 
-	mockBackofficePermissionsController := backoffice.NewMockBackofficePermissionsController(ctrl)
-	mockBackofficeRolesController := backoffice.NewMockBackofficeRolesController(ctrl)
-	mockBackofficeScopesController := backoffice.NewMockBackofficeScopesController(ctrl)
-	mockBackofficeTokensController := backoffice.NewMockBackofficeTokensController(ctrl)
-	mockBackofficeUsersController := backoffice.NewMockBackofficeUsersController(ctrl)
-
 	mockAuthenticationMiddleware.EXPECT().
 		Authenticate(gomock.Any()).
 		AnyTimes().
 		DoAndReturn(func(next http.Handler) http.Handler {
 			return next
 		})
-	mockAuthorizationMiddleware.EXPECT().
-		Authorize(gomock.Any()).
+	mockTelemetryMiddleware.EXPECT().
+		Trace(gomock.Any()).
 		AnyTimes().
 		DoAndReturn(func(next http.Handler) http.Handler {
 			return next
 		})
-	mockAuthorizationMiddleware.EXPECT().
-		Check(gomock.Any()).
-		AnyTimes().
-		DoAndReturn(func(permission string) func(http.Handler) http.Handler {
-			return func(next http.Handler) http.Handler {
-				return next
-			}
-		})
-	mockTelemetryMiddleware.EXPECT().
-		Trace(gomock.Any()).
+	mockLoggerMiddleware.EXPECT().
+		Log(gomock.Any()).
 		AnyTimes().
 		DoAndReturn(func(next http.Handler) http.Handler {
 			return next
@@ -70,19 +55,14 @@ func Test_HealthCheck(t *testing.T) {
 	router := NewRouter(
 		cfg,
 		mockAuthenticationMiddleware,
-		mockAuthorizationMiddleware,
 		mockTelemetryMiddleware,
+		mockLoggerMiddleware,
 		mockHealthController,
 		mockSmartIdController,
 		mockMobileIdController,
 		mockSessionsController,
 		mockTokensController,
 		mockUsersController,
-		mockBackofficePermissionsController,
-		mockBackofficeRolesController,
-		mockBackofficeScopesController,
-		mockBackofficeTokensController,
-		mockBackofficeUsersController,
 	)
 
 	req := httptest.NewRequest(http.MethodHead, "/health", nil)

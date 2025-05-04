@@ -11,13 +11,21 @@ import (
 	"loki/internal/app/errors"
 	"loki/internal/app/models"
 	"loki/internal/app/repositories"
+	"loki/internal/config"
+	"loki/internal/config/logger"
 	"loki/pkg/jwt"
-	"loki/pkg/logger"
 )
 
 func Test_Tokens_List(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
 
 	ctx := context.Background()
 	permissionRepository := repositories.NewMockPermissionRepository(ctrl)
@@ -27,7 +35,6 @@ func Test_Tokens_List(t *testing.T) {
 	userRepository := repositories.NewMockUserRepository(ctrl)
 
 	jwtService := jwt.NewMockJwt(ctrl)
-	log := logger.NewLogger()
 	service := NewTokens(
 		jwtService,
 		permissionRepository,
@@ -91,6 +98,13 @@ func Test_Tokens_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	permissionRepository := repositories.NewMockPermissionRepository(ctrl)
 	roleRepository := repositories.NewMockRoleRepository(ctrl)
@@ -99,7 +113,6 @@ func Test_Tokens_Create(t *testing.T) {
 	userRepository := repositories.NewMockUserRepository(ctrl)
 
 	jwtService := jwt.NewMockJwt(ctrl)
-	log := logger.NewLogger()
 	service := NewTokens(
 		jwtService,
 		permissionRepository,
@@ -169,10 +182,10 @@ func Test_Tokens_Create(t *testing.T) {
 		{
 			name: "Failed to find user",
 			before: func() {
-				userRepository.EXPECT().FindById(ctx, user.ID).Return(user, assert.AnError)
+				userRepository.EXPECT().FindById(ctx, user.ID).Return(user, errors.ErrRecordNotFound)
 			},
 			expected: nil,
-			err:      assert.AnError,
+			err:      errors.ErrRecordNotFound,
 		},
 		{
 			name: "Failed to find user roles",
@@ -283,6 +296,13 @@ func Test_Tokens_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	permissionRepository := repositories.NewMockPermissionRepository(ctrl)
 	roleRepository := repositories.NewMockRoleRepository(ctrl)
@@ -291,7 +311,6 @@ func Test_Tokens_Update(t *testing.T) {
 	userRepository := repositories.NewMockUserRepository(ctrl)
 
 	jwtService := jwt.NewMockJwt(ctrl)
-	log := logger.NewLogger()
 	service := NewTokens(
 		jwtService,
 		permissionRepository,
@@ -482,6 +501,151 @@ func Test_Tokens_Update(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.expected.AccessToken, result.AccessToken)
 				assert.Equal(t, tt.expected.RefreshToken, result.RefreshToken)
+			}
+		})
+	}
+}
+
+func Test_Tokens_FindById(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
+	ctx := context.Background()
+	permissionRepository := repositories.NewMockPermissionRepository(ctrl)
+	roleRepository := repositories.NewMockRoleRepository(ctrl)
+	scopeRepository := repositories.NewMockScopeRepository(ctrl)
+	tokenRepository := repositories.NewMockTokenRepository(ctrl)
+	userRepository := repositories.NewMockUserRepository(ctrl)
+
+	jwtService := jwt.NewMockJwt(ctrl)
+	service := NewTokens(
+		jwtService,
+		permissionRepository,
+		roleRepository,
+		scopeRepository,
+		tokenRepository,
+		userRepository,
+		log,
+	)
+
+	id, err := uuid.NewRandom()
+	assert.NoError(t, err)
+
+	tests := []struct {
+		name     string
+		before   func()
+		expected *models.Token
+		error    error
+	}{
+		{
+			name: "Success",
+			before: func() {
+				tokenRepository.EXPECT().FindById(ctx, id).Return(&models.Token{}, nil)
+			},
+			expected: &models.Token{},
+			error:    nil,
+		},
+		{
+			name: "Error",
+			before: func() {
+				tokenRepository.EXPECT().FindById(ctx, id).Return(nil, errors.ErrRecordNotFound)
+			},
+			expected: nil,
+			error:    errors.ErrRecordNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.before()
+
+			result, err := service.FindById(ctx, id)
+
+			if tt.error != nil {
+				assert.Error(t, err)
+				assert.Nil(t, result)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected, result)
+			}
+		})
+	}
+}
+
+func Test_Tokens_Delete(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
+	ctx := context.Background()
+	permissionRepository := repositories.NewMockPermissionRepository(ctrl)
+	roleRepository := repositories.NewMockRoleRepository(ctrl)
+	scopeRepository := repositories.NewMockScopeRepository(ctrl)
+	tokenRepository := repositories.NewMockTokenRepository(ctrl)
+	userRepository := repositories.NewMockUserRepository(ctrl)
+
+	jwtService := jwt.NewMockJwt(ctrl)
+	service := NewTokens(
+		jwtService,
+		permissionRepository,
+		roleRepository,
+		scopeRepository,
+		tokenRepository,
+		userRepository,
+		log,
+	)
+
+	id, err := uuid.NewRandom()
+	assert.NoError(t, err)
+
+	tests := []struct {
+		name     string
+		before   func()
+		expected bool
+		error    error
+	}{
+		{
+			name: "Success",
+			before: func() {
+				tokenRepository.EXPECT().Delete(ctx, id).Return(true, nil)
+			},
+			expected: true,
+		},
+		{
+			name: "Error",
+			before: func() {
+				tokenRepository.EXPECT().Delete(ctx, id).Return(false, errors.ErrFailedToDeleteRecord)
+			},
+			expected: false,
+			error:    errors.ErrFailedToDeleteRecord,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.before()
+
+			result, err := service.Delete(ctx, id)
+
+			if tt.error != nil {
+				assert.Error(t, err)
+				assert.False(t, result)
+			} else {
+				assert.NoError(t, err)
+				assert.True(t, result)
 			}
 		})
 	}

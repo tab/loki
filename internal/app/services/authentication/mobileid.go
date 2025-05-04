@@ -10,7 +10,7 @@ import (
 	"loki/internal/app/models/dto"
 	"loki/internal/app/services"
 	"loki/internal/app/workers"
-	"loki/pkg/logger"
+	"loki/internal/config/logger"
 )
 
 type MobileIdProvider interface {

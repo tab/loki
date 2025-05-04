@@ -21,6 +21,10 @@ coverage:
 
 ignore:
   - "internal/app/repositories/db/*.go"
+  - "internal/app/rpcs/**/*.pb.go"
   - "**/*_mock.go"
   - "**/*_test.go"
+  - "**/*.pb.go"
+  - "**/*.pb.gw.go"
+  - "**/*.sql.go"
   - "**/module.go"

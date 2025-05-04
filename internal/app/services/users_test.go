@@ -8,19 +8,27 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
+	"loki/internal/app/errors"
 	"loki/internal/app/models"
 	"loki/internal/app/repositories"
 	"loki/internal/app/repositories/db"
-	"loki/pkg/logger"
+	"loki/internal/config"
+	"loki/internal/config/logger"
 )
 
 func Test_Users_List(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	repository := repositories.NewMockUserRepository(ctrl)
-	log := logger.NewLogger()
 	service := NewUsers(repository, log)
 
 	tests := []struct {
@@ -67,15 +75,16 @@ func Test_Users_List(t *testing.T) {
 				},
 			},
 			total: uint64(2),
+			error: nil,
 		},
 		{
 			name: "Error",
 			before: func() {
-				repository.EXPECT().List(ctx, uint64(10), uint64(0)).Return(nil, uint64(0), assert.AnError)
+				repository.EXPECT().List(ctx, uint64(10), uint64(0)).Return(nil, uint64(0), errors.ErrFailedToFetchResults)
 			},
 			expected: nil,
 			total:    uint64(0),
-			error:    assert.AnError,
+			error:    errors.ErrFailedToFetchResults,
 		},
 	}
 
@@ -105,9 +114,15 @@ func Test_Users_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	repository := repositories.NewMockUserRepository(ctrl)
-	log := logger.NewLogger()
 	service := NewUsers(repository, log)
 
 	id, err := uuid.NewRandom()
@@ -155,10 +170,10 @@ func Test_Users_Create(t *testing.T) {
 					PersonalCode:   "123456789",
 					FirstName:      "John",
 					LastName:       "Doe",
-				}).Return(nil, assert.AnError)
+				}).Return(nil, errors.ErrFailedToCreateRecord)
 			},
 			expected: nil,
-			error:    assert.AnError,
+			error:    errors.ErrFailedToCreateRecord,
 		},
 	}
 
@@ -188,9 +203,15 @@ func Test_Users_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	repository := repositories.NewMockUserRepository(ctrl)
-	log := logger.NewLogger()
 	service := NewUsers(repository, log)
 
 	id, err := uuid.NewRandom()
@@ -240,10 +261,10 @@ func Test_Users_Update(t *testing.T) {
 					PersonalCode:   "123456789",
 					FirstName:      "John",
 					LastName:       "Doe",
-				}).Return(nil, assert.AnError)
+				}).Return(nil, errors.ErrFailedToUpdateRecord)
 			},
 			expected: nil,
-			error:    assert.AnError,
+			error:    errors.ErrFailedToUpdateRecord,
 		},
 	}
 
@@ -274,9 +295,15 @@ func Test_Users_FindById(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	repository := repositories.NewMockUserRepository(ctrl)
-	log := logger.NewLogger()
 	service := NewUsers(repository, log)
 
 	id, err := uuid.NewRandom()
@@ -338,9 +365,15 @@ func Test_Users_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	repository := repositories.NewMockUserRepository(ctrl)
-	log := logger.NewLogger()
 	service := NewUsers(repository, log)
 
 	id, err := uuid.NewRandom()
@@ -362,10 +395,10 @@ func Test_Users_Delete(t *testing.T) {
 		{
 			name: "Error",
 			before: func() {
-				repository.EXPECT().Delete(ctx, id).Return(false, assert.AnError)
+				repository.EXPECT().Delete(ctx, id).Return(false, errors.ErrFailedToDeleteRecord)
 			},
 			expected: false,
-			error:    assert.AnError,
+			error:    errors.ErrFailedToDeleteRecord,
 		},
 	}
 
@@ -390,9 +423,15 @@ func Test_Users_FindByIdentityNumber(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	repository := repositories.NewMockUserRepository(ctrl)
-	log := logger.NewLogger()
 	service := NewUsers(repository, log)
 
 	id, err := uuid.NewRandom()
@@ -428,10 +467,10 @@ func Test_Users_FindByIdentityNumber(t *testing.T) {
 		{
 			name: "Error",
 			before: func() {
-				repository.EXPECT().FindByIdentityNumber(ctx, identityNumber).Return(nil, assert.AnError)
+				repository.EXPECT().FindByIdentityNumber(ctx, identityNumber).Return(nil, errors.ErrRecordNotFound)
 			},
 			expected: nil,
-			error:    assert.AnError,
+			error:    errors.ErrRecordNotFound,
 		},
 	}
 
@@ -456,9 +495,15 @@ func Test_Users_FindUserDetailsById(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	cfg := &config.Config{
+		AppEnv:   "test",
+		AppAddr:  "localhost:8080",
+		LogLevel: "info",
+	}
+	log := logger.NewLogger(cfg)
+
 	ctx := context.Background()
 	repository := repositories.NewMockUserRepository(ctrl)
-	log := logger.NewLogger()
 	service := NewUsers(repository, log)
 
 	id, err := uuid.NewRandom()
@@ -524,10 +569,10 @@ func Test_Users_FindUserDetailsById(t *testing.T) {
 		{
 			name: "Error",
 			before: func() {
-				repository.EXPECT().FindUserDetailsById(ctx, id).Return(nil, assert.AnError)
+				repository.EXPECT().FindUserDetailsById(ctx, id).Return(nil, errors.ErrRecordNotFound)
 			},
 			expected: nil,
-			error:    assert.AnError,
+			error:    errors.ErrRecordNotFound,
 		},
 	}
 
