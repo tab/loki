@@ -5,7 +5,7 @@ go 1.24
 require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.5-20250307204501-0409229c3780.1
 	github.com/bufbuild/protovalidate-go v0.9.1
-	github.com/exaring/otelpgx v0.9.0
+	github.com/exaring/otelpgx v0.9.3
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-chi/cors v1.2.1
 	github.com/golang-jwt/jwt/v5 v5.2.2
