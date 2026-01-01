@@ -79,7 +79,7 @@ jobs:
 
       - name: Cache Goose
         id: cache-goose
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/go/bin/goose
           key: ${{ runner.os }}-goose-latest
@@ -106,7 +106,7 @@ jobs:
           make certs:generate
 
       - name: Cache Docker build context
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ${{ env.LOKI_REPO }}/.docker-cache
@@ -127,7 +127,7 @@ jobs:
 
       - name: Cache Lua and dependencies
         id: cache-lua
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             /usr/bin/lua*
